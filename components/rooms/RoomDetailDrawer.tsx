@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   X,
   BedDouble,
@@ -13,6 +14,7 @@ import {
   Wrench,
   AlertCircle,
   ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { RoomWithCategory } from '../../lib/rooms/queries';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
@@ -142,7 +144,7 @@ export default function RoomDetailDrawer({
               </div>
             </div>
 
-            {/* Change Status Quick Actions (Phase 2 Realtime Test) */}
+            {/* Change Status Quick Actions */}
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5">
                 Quick Status Change (Live Realtime Sync)
@@ -233,13 +235,19 @@ export default function RoomDetailDrawer({
               </div>
             </div>
 
-            {/* Guest & Reservation Placeholder (Phase 3) */}
-            <div className="p-4 bg-white rounded-xl border border-dashed border-border-subtle text-center space-y-2">
-              <Calendar className="w-6 h-6 text-brand-forest mx-auto opacity-70" />
-              <p className="text-xs font-semibold text-ink">Active Reservation & Guest Info</p>
-              <p className="text-[11px] text-ink-muted">
-                Guest details, stay dates, and billing will be linked here in <strong>Phase 3 (Bookings & Guests)</strong>.
-              </p>
+            {/* Action to Book Room */}
+            <div className="p-4 bg-brand-sand rounded-xl border border-border-subtle flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-ink">New Reservation</p>
+                <p className="text-[11px] text-ink-muted">Book this room for a walk-in or advance guest</p>
+              </div>
+              <Link
+                href={`/bookings/new?roomId=${room.id}`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-medium transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Book Room</span>
+              </Link>
             </div>
           </div>
 

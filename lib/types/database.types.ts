@@ -40,7 +40,7 @@ export type BookingSource =
 
 export type PaymentMode = 'cash' | 'upi' | 'bank_transfer' | 'card' | 'other';
 
-export type PaymentType = 'advance' | 'running' | 'settlement' | 'refund';
+export type PaymentType = 'advance' | 'partial' | 'running' | 'settlement' | 'refund';
 
 export interface HotelSettings {
   gst_enabled: boolean;
