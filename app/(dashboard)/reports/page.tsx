@@ -1,22 +1,37 @@
-import { BarChart3 } from 'lucide-react';
+import { getDailyReport, getMonthlyReport } from '../../../lib/reports/queries';
+import DailyReportView from '../../../components/reports/DailyReport';
+import MonthlyReportView from '../../../components/reports/MonthlyReport';
+import ReportsTabs from '../../../components/reports/ReportsTabs';
 
-export default function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams?: { tab?: string };
+}) {
+  const activeTab = searchParams?.tab === 'monthly' ? 'monthly' : 'daily';
+
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+
+  const [dailyReport, monthlyReport] = await Promise.all([
+    getDailyReport(today),
+    getMonthlyReport(now.getFullYear(), now.getMonth() + 1),
+  ]);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-display text-brand-forest">Reports & Analytics</h1>
-        <p className="text-body text-ink-muted">Occupancy, ADR, RevPAR, and daily cash report</p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-border-subtle p-12 text-center">
-        <div className="inline-flex p-3 bg-brand-sand rounded-xl mb-3">
-          <BarChart3 className="w-8 h-8 text-brand-forest" />
-        </div>
-        <h3 className="text-h2 text-ink">Owner Reports & Daily Cash Flow</h3>
-        <p className="text-body text-ink-muted max-w-md mx-auto mt-1">
-          Coming in <strong>Phase 5 (Dashboard & Reports)</strong> with automated daily cash reconciliation.
+        <p className="text-body text-ink-muted">
+          Daily cash report, monthly occupancy, ADR, and RevPAR
         </p>
       </div>
+
+      <ReportsTabs
+        activeTab={activeTab}
+        dailyReport={dailyReport}
+        monthlyReport={monthlyReport}
+      />
     </div>
   );
 }
