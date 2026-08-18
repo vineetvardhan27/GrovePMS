@@ -88,7 +88,7 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
     <button
       type="button"
       onClick={() => onClick(room)}
-      className={`relative w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[110px] md:min-h-[120px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-forest ${
+      className={`relative w-full text-left p-3.5 sm:p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[115px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-forest ${
         config.bgClass
       } ${config.borderClass} ${
         isSelected ? 'ring-2 ring-brand-forest ring-offset-2 scale-[1.02]' : ''
@@ -113,12 +113,12 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
       </div>
 
       {/* Bottom row: Category & Rate + Status label */}
-      <div className="mt-3 pt-2 border-t border-black/5 w-full flex items-end justify-between gap-1">
-        <div className="min-w-0">
+      <div className="mt-2.5 pt-2 border-t border-black/5 w-full flex items-end justify-between gap-1.5">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-ink truncate">
             {room.category.name}
           </p>
-          <p className="text-[11px] text-ink-muted tabular-nums">
+          <p className="text-[11px] text-ink-muted tabular-nums truncate">
             {formatCurrency(room.category.base_rate)}/night
           </p>
         </div>

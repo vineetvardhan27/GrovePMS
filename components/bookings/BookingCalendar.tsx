@@ -44,41 +44,44 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
   return (
     <div className="space-y-6">
       {/* Calendar Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-subtle">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-border-subtle">
         <div className="flex items-center gap-2">
           <Link
             href="/bookings"
-            className="p-2 rounded-lg bg-white border border-border-subtle text-ink-muted hover:text-ink hover:bg-brand-sand transition-colors"
+            className="flex items-center justify-center w-11 h-11 rounded-lg bg-white border border-border-subtle text-ink-muted hover:text-ink hover:bg-brand-sand transition-colors shrink-0"
+            aria-label="Back to Bookings"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h2 className="text-h1 text-brand-forest">Room Booking Calendar</h2>
-            <p className="text-xs text-ink-muted">Timeline view of room occupancies and arrivals</p>
+          <div className="min-w-0">
+            <h2 className="text-h1 text-brand-forest truncate">Booking Calendar</h2>
+            <p className="text-xs text-ink-muted truncate">Timeline view of room occupancies</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           {/* Date Navigation */}
-          <div className="flex items-center bg-white rounded-lg border border-border-subtle p-1 shadow-2xs">
+          <div className="flex-1 sm:flex-initial flex items-center justify-between bg-white rounded-lg border border-border-subtle p-1 shadow-2xs">
             <button
               type="button"
               onClick={handlePrev}
-              className="p-1.5 rounded hover:bg-brand-sand text-ink-muted hover:text-ink transition-colors cursor-pointer"
+              className="p-2 rounded hover:bg-brand-sand text-ink-muted hover:text-ink transition-colors cursor-pointer min-h-[38px] flex items-center justify-center"
+              aria-label="Previous Week"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={handleToday}
-              className="px-3 py-1 text-xs font-semibold text-brand-forest hover:bg-brand-sand rounded transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold text-brand-forest hover:bg-brand-sand rounded transition-colors cursor-pointer min-h-[38px]"
             >
               Today
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="p-1.5 rounded hover:bg-brand-sand text-ink-muted hover:text-ink transition-colors cursor-pointer"
+              className="p-2 rounded hover:bg-brand-sand text-ink-muted hover:text-ink transition-colors cursor-pointer min-h-[38px] flex items-center justify-center"
+              aria-label="Next Week"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -86,7 +89,7 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
 
           <Link
             href="/bookings/new"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-medium transition-colors shadow-2xs"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-semibold transition-colors shadow-2xs min-h-touch shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>New Booking</span>
@@ -95,7 +98,7 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
       </div>
 
       {/* Calendar Grid Container */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             {/* Table Header: Days */}
@@ -199,7 +202,7 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
       {selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white rounded-2xl border border-border-subtle shadow-xl overflow-hidden">
-            <div className="p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between">
+            <div className="p-5 md:p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between">
               <div>
                 <span className="text-xs font-mono font-bold text-ink-muted uppercase">
                   Booking #{selectedBooking.booking_number}
@@ -209,14 +212,15 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}
-                className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                className="flex items-center justify-center w-11 h-11 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                aria-label="Close Booking Details"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 p-3 bg-brand-sand/50 rounded-xl border border-border-subtle">
+            <div className="p-5 md:p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-brand-sand/50 rounded-lg border border-border-subtle">
                 <div>
                   <span className="text-ink-muted block">Assigned Room</span>
                   <span className="font-bold text-ink text-sm font-serif">
@@ -268,7 +272,7 @@ export default function BookingCalendar({ rooms, bookings }: BookingCalendarProp
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}
-                className="px-4 py-2 bg-brand-forest hover:bg-brand-forest-light text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="w-full bg-brand-forest hover:bg-brand-forest-light text-white rounded-lg text-sm font-medium py-3 transition-colors cursor-pointer min-h-touch"
               >
                 Close
               </button>

@@ -19,6 +19,7 @@ import {
 import { getCurrentStaff, ROLE_NAV_ITEMS } from '../../lib/auth/session';
 import { signOut } from '../(auth)/login/actions';
 import { StaffRole } from '../../lib/types/database.types';
+import MobileNavDrawer from '../../components/shared/MobileNavDrawer';
 
 const ALL_NAV_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -57,10 +58,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-sand">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-brand-forest text-white flex flex-col shrink-0 border-r border-brand-forest-light">
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <aside className="hidden md:flex md:w-64 bg-brand-forest text-white flex-col shrink-0 border-r border-brand-forest-light">
         {/* Brand Header */}
-        <div className="p-4 md:p-6 flex items-center gap-3 border-b border-brand-forest-light">
+        <div className="p-6 flex items-center gap-3 border-b border-brand-forest-light">
           <div className="p-2.5 bg-white/10 rounded-xl">
             <Hotel className="w-6 h-6 text-brand-sand" />
           </div>
@@ -126,29 +127,32 @@ export default async function DashboardLayout({
 
       {/* Main content area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <header className="h-16 bg-white/85 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-ink">
-              {staff.hotel_name}
-            </span>
-            <span className="text-xs text-ink-muted">/</span>
-            <span className="text-xs text-ink-muted capitalize">{staff.role} View</span>
+        {/* Top bar (Responsive on mobile) */}
+        <header className="h-16 bg-white/85 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Mobile Hamburger Drawer Toggle */}
+            <MobileNavDrawer staff={staff} authorizedPaths={authorizedPaths} />
+
+            <div className="flex items-center gap-1.5 min-w-0 truncate">
+              <span className="text-sm font-medium text-ink truncate">
+                {staff.hotel_name}
+              </span>
+              <span className="text-xs text-ink-muted">/</span>
+              <span className="text-xs text-ink-muted capitalize truncate">{staff.role} View</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/login"
-              className="text-xs text-ink-muted hover:text-brand-forest underline"
+              className="text-xs text-ink-muted hover:text-brand-forest font-medium px-2.5 py-1.5 rounded-lg border border-border-subtle bg-brand-sand/60 hover:bg-brand-sand transition-colors min-h-[36px] flex items-center"
             >
               Switch Role
             </Link>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-tiny font-medium bg-status-green/15 text-status-green">
-              Live Session
-            </span>
           </div>
         </header>
 
-        <div className="p-6 md:p-8 flex-1">
+        <div className="p-4 sm:p-6 md:p-8 flex-1">
           {children}
         </div>
       </main>

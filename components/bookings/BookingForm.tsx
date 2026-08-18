@@ -580,11 +580,11 @@ export default function BookingForm({
       </div>
 
       {/* Form Submission */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-5 py-3 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-ink text-sm font-medium transition-colors cursor-pointer min-h-touch"
+          className="w-full sm:w-auto px-5 py-3 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-ink text-sm font-medium transition-colors cursor-pointer min-h-touch text-center"
         >
           Cancel
         </button>
@@ -592,7 +592,7 @@ export default function BookingForm({
         <button
           type="submit"
           disabled={isSubmitting || isCheckingAvailability || Boolean(availabilityConflict)}
-          className="px-8 py-3 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-base font-medium transition-colors cursor-pointer min-h-touch flex items-center gap-2 shadow-sm disabled:opacity-50"
+          className="w-full sm:w-auto px-8 py-3 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-base font-medium transition-colors cursor-pointer min-h-touch flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
         >
           {isSubmitting ? (
             <span>Creating Reservation...</span>

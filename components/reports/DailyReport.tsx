@@ -36,15 +36,17 @@ export default function DailyReportView({ initialReport }: DailyReportViewProps)
   const [selectedDate, setSelectedDate] = useState(initialReport.date);
   const [report, setReport] = useState<DailyReport>(initialReport);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const handleDateChange = async (date: string) => {
     setSelectedDate(date);
+    setFetchError(null);
     setIsLoading(true);
     try {
       const newReport = await fetchDailyReport(date);
       setReport(newReport);
     } catch {
-      // noop
+      setFetchError('Could not load report for this date. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -55,21 +57,21 @@ export default function DailyReportView({ initialReport }: DailyReportViewProps)
   return (
     <div className={`space-y-6 transition-opacity ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <CalendarDays className="w-4 h-4 text-ink-muted" />
+          <CalendarDays className="w-4 h-4 text-ink-muted shrink-0" />
           <input
             type="date"
             value={selectedDate}
             max={new Date().toISOString().split('T')[0]}
             onChange={(e) => handleDateChange(e.target.value)}
-            className="px-3 py-2 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px]"
+            className="w-full sm:w-auto px-3 py-2.5 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
           />
         </div>
         <button
           type="button"
           onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors cursor-pointer min-h-[38px] print:hidden"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors cursor-pointer min-h-touch print:hidden"
         >
           <Printer className="w-3.5 h-3.5" />
           <span>Print Report</span>
@@ -84,7 +86,7 @@ export default function DailyReportView({ initialReport }: DailyReportViewProps)
       </div>
 
       {/* Collection Summary */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 md:p-6">
         <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-4">Collection Summary</h3>
 
         {report.collection === 0 ? (
@@ -94,21 +96,21 @@ export default function DailyReportView({ initialReport }: DailyReportViewProps)
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4">
               {modeEntries.map(([mode, amount]) => {
                 const config = MODE_CONFIG[mode] || MODE_CONFIG.other;
                 const ModeIcon = config.icon;
                 return (
-                  <div key={mode} className="p-4 bg-brand-sand/60 rounded-xl border border-border-subtle">
+                  <div key={mode} className="p-3.5 sm:p-4 bg-brand-sand/60 rounded-lg border border-border-subtle">
                     <ModeIcon className={`w-4 h-4 mb-1.5 ${config.color}`} />
                     <p className="text-xs text-ink-muted font-medium">{config.label}</p>
-                    <p className="text-lg font-bold text-ink tabular-nums">{formatCurrency(amount)}</p>
+                    <p className="text-base sm:text-lg font-bold text-ink tabular-nums">{formatCurrency(amount)}</p>
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-brand-forest font-bold text-brand-forest text-lg">
+            <div className="flex items-center justify-between pt-4 border-t border-brand-forest font-bold text-brand-forest text-base sm:text-lg">
               <span>Total Collected</span>
               <span className="tabular-nums">{formatCurrency(report.collection)}</span>
             </div>
@@ -118,9 +120,9 @@ export default function DailyReportView({ initialReport }: DailyReportViewProps)
       </div>
 
       {/* Arrivals & Departures */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Arrivals */}
-        <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
+        <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 md:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-4 h-4 text-status-amber" />
             <h3 className="text-sm font-bold text-ink">Arrivals ({report.arrivals.length})</h3>

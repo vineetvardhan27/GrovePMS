@@ -1,112 +1,79 @@
 import Link from 'next/link';
 import {
-  BedDouble,
+  CheckCircle2,
   Users,
-  CreditCard,
-  Sparkles,
-  ArrowUpRight,
-  TrendingUp,
   Clock,
-  LogOut,
+  Calendar,
+  Sparkles,
+  Wrench,
   ShieldAlert,
   Plus,
-  FileText,
+  BedDouble,
+  Receipt,
+  CreditCard,
+  BarChart3,
+  TrendingUp,
   Banknote,
   Smartphone,
   Building2,
   MoreHorizontal,
-  CheckCircle2,
-  CalendarDays,
-  Wrench,
+  ArrowRight,
+  LogOut,
 } from 'lucide-react';
 import { getCurrentStaff } from '../../../lib/auth/session';
 import { getDashboardStats } from '../../../lib/reports/queries';
+import { getRooms, getRoomCategories } from '../../../lib/rooms/queries';
 import { formatCurrency } from '../../../lib/utils/currency';
-import { formatDate } from '../../../lib/utils/dates';
+import DashboardRoomGrid from '../../../components/dashboard/DashboardRoomGrid';
 
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams?: { access_denied?: string };
 }) {
-  const staff = await getCurrentStaff();
-  const stats = await getDashboardStats();
+  const [staff, stats, rooms, categories] = await Promise.all([
+    getCurrentStaff(),
+    getDashboardStats(),
+    getRooms(),
+    getRoomCategories(),
+  ]);
+
   const isAccessDenied = searchParams?.access_denied === 'true';
 
-  const kpiCards = [
+  // Primary Room Status Indicators (Rank 1 Priority - large Inter tabular numbers)
+  const roomStatusKPIs = [
     {
       label: 'Available',
       value: stats.rooms.available,
-      icon: BedDouble,
-      color: 'text-status-green',
-      accent: 'border-l-status-green',
+      icon: CheckCircle2,
+      colorClass: 'text-status-green',
+      borderClass: 'border-l-status-green',
       href: '/rooms',
     },
     {
       label: 'Occupied',
       value: stats.rooms.occupied,
       icon: Users,
-      color: 'text-status-red',
-      accent: 'border-l-status-red',
+      colorClass: 'text-status-red',
+      borderClass: 'border-l-status-red',
       href: '/rooms',
     },
     {
       label: 'Reserved',
       value: stats.rooms.reserved,
-      icon: Clock,
-      color: 'text-status-blue',
-      accent: 'border-l-status-blue',
+      icon: Calendar,
+      colorClass: 'text-status-blue',
+      borderClass: 'border-l-status-blue',
       href: '/bookings',
     },
     {
       label: 'Arriving Today',
       value: stats.today.arrivals.length,
-      icon: CalendarDays,
-      color: 'text-status-amber',
-      accent: 'border-l-status-amber',
+      icon: Clock,
+      colorClass: 'text-status-amber',
+      borderClass: 'border-l-status-amber',
       href: '/bookings',
     },
-    {
-      label: "Today's Departures",
-      value: stats.today.departures.length,
-      icon: LogOut,
-      color: 'text-status-blue',
-      accent: 'border-l-status-blue',
-      href: '/billing',
-    },
-    {
-      label: "Today's Collection",
-      value: formatCurrency(stats.today.collection),
-      icon: TrendingUp,
-      color: 'text-status-green',
-      accent: 'border-l-status-green',
-      href: '/payments',
-    },
-    {
-      label: 'Pending Balance',
-      value: formatCurrency(stats.pending.totalBalance),
-      icon: CreditCard,
-      color: 'text-status-amber',
-      accent: 'border-l-status-amber',
-      href: '/billing',
-    },
-    {
-      label: 'Cleaning Needed',
-      value: stats.cleaningNeeded,
-      icon: Sparkles,
-      color: 'text-status-orange',
-      accent: 'border-l-status-orange',
-      href: '/rooms',
-    },
-  ];
-
-  const quickActions = [
-    { label: 'New Booking', icon: Plus, href: '/bookings/new', color: 'bg-brand-forest text-white hover:bg-brand-forest-light' },
-    { label: 'Room Grid', icon: BedDouble, href: '/rooms', color: 'bg-white border border-border-subtle text-ink hover:bg-brand-sand' },
-    { label: 'Billing', icon: FileText, href: '/billing', color: 'bg-white border border-border-subtle text-ink hover:bg-brand-sand' },
-    { label: 'Payments', icon: Banknote, href: '/payments', color: 'bg-white border border-border-subtle text-ink hover:bg-brand-sand' },
-    { label: 'Reports', icon: TrendingUp, href: '/reports', color: 'bg-white border border-border-subtle text-ink hover:bg-brand-sand' },
-    { label: 'Guests', icon: Users, href: '/guests', color: 'bg-white border border-border-subtle text-ink hover:bg-brand-sand' },
   ];
 
   const modeIcons: Record<string, any> = {
@@ -116,15 +83,20 @@ export default async function DashboardPage({
     bank_transfer: Building2,
     other: MoreHorizontal,
   };
+
   const modeLabels: Record<string, string> = {
-    cash: 'Cash', upi: 'UPI', card: 'Card', bank_transfer: 'Bank', other: 'Other',
+    cash: 'Cash',
+    upi: 'UPI',
+    card: 'Card',
+    bank_transfer: 'Bank Transfer',
+    other: 'Other',
   };
 
   return (
     <div className="space-y-8">
       {/* Access Denied Alert */}
       {isAccessDenied && (
-        <div className="p-4 bg-action-danger/10 border border-action-danger/25 rounded-xl flex items-start gap-3 text-action-danger">
+        <div className="p-4 bg-action-danger/10 border border-action-danger/30 rounded-lg flex items-start gap-3 text-action-danger">
           <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-sm">Restricted Access</p>
@@ -135,56 +107,107 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      {/* Page Title & Greeting */}
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 pb-1 border-b border-border-subtle">
         <div>
-          <h1 className="text-display text-brand-forest">
+          <h1 className="text-display font-serif text-brand-forest">
             Good {getGreeting()}, {staff?.full_name?.split(' ')[0]}
           </h1>
-          <p className="text-body text-ink-muted">
-            {staff?.role && <span className="capitalize">{staff.role}</span>} · {staff?.hotel_name} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          <p className="text-body text-ink-muted mt-1">
+            {staff?.hotel_name} · <span className="capitalize">{staff?.role}</span> ·{' '}
+            {new Date().toLocaleDateString('en-IN', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
           </p>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">Quick Actions</h2>
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={action.label}
-                href={action.href}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-2xs min-h-touch ${action.color}`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{action.label}</span>
-              </Link>
-            );
-          })}
+      {/* Quick Actions (Design.md §4: rounded-lg, primary solid brand-forest, secondary distinct) */}
+      <div className="space-y-2.5">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
+          {/* Primary Action (Prominent full-width on mobile) */}
+          <Link
+            href="/bookings/new"
+            className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 bg-brand-forest hover:bg-brand-forest-light text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-2xs min-h-touch cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Booking</span>
+          </Link>
+
+          {/* Secondary Actions */}
+          <Link
+            href="/rooms"
+            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
+          >
+            <BedDouble className="w-4 h-4 text-ink-muted" />
+            <span>Room Chart</span>
+          </Link>
+
+          <Link
+            href="/billing"
+            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
+          >
+            <Receipt className="w-4 h-4 text-ink-muted" />
+            <span>Billing</span>
+          </Link>
+
+          <Link
+            href="/payments"
+            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
+          >
+            <CreditCard className="w-4 h-4 text-ink-muted" />
+            <span>Payments</span>
+          </Link>
+
+          <Link
+            href="/reports"
+            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
+          >
+            <BarChart3 className="w-4 h-4 text-ink-muted" />
+            <span>Reports</span>
+          </Link>
+
+          <Link
+            href="/guests"
+            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
+          >
+            <Users className="w-4 h-4 text-ink-muted" />
+            <span>Guests</span>
+          </Link>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">Live Property Status</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {kpiCards.map((card) => {
-            const Icon = card.icon;
+      {/* Primary Visual Element: Live Room Status Counters */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+          Current Property Status
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {roomStatusKPIs.map((kpi) => {
+            const Icon = kpi.icon;
             return (
               <Link
-                href={card.href}
-                key={card.label}
-                className={`group bg-white rounded-xl p-5 border border-border-subtle border-l-4 ${card.accent} shadow-2xs hover:shadow-md transition-all`}
+                key={kpi.label}
+                href={kpi.href}
+                className={`bg-white rounded-lg p-4 border border-border-subtle border-l-4 ${kpi.borderClass} shadow-2xs hover:shadow-md transition-all group cursor-pointer`}
               >
                 <div className="flex items-center justify-between text-ink-muted mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{card.label}</span>
-                  <Icon className={`w-4 h-4 ${card.color}`} />
+                  <span className="text-xs font-semibold uppercase tracking-wider">
+                    {kpi.label}
+                  </span>
+                  <div className="p-1 rounded bg-brand-sand">
+                    <Icon className={`w-4 h-4 ${kpi.colorClass}`} />
+                  </div>
                 </div>
-                <p className={`text-2xl md:text-3xl font-serif font-bold tabular-nums ${card.color}`}>
-                  {card.value}
+                {/* Numeric KPIs in Inter tabular-nums (Design.md §2) */}
+                <p className={`text-2xl md:text-3xl font-bold font-sans tabular-nums ${kpi.colorClass}`}>
+                  {kpi.value}
                 </p>
               </Link>
             );
@@ -192,152 +215,233 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* Today's Collection Breakdown + Arrivals/Departures */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Signature Section: Live Room Grid (Design.md §0) */}
+      <div>
+        <DashboardRoomGrid initialRooms={rooms} categories={categories} />
+      </div>
 
-        {/* Today's Collection by Mode */}
-        <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-ink">Today's Collection</h3>
-            <span className="text-xl font-serif font-bold text-brand-forest tabular-nums">
-              {formatCurrency(stats.today.collection)}
-            </span>
-          </div>
-          {stats.today.collection === 0 ? (
-            <p className="text-xs text-ink-muted text-center py-4">No payments recorded today.</p>
-          ) : (
-            <div className="space-y-2">
-              {Object.entries(stats.today.collectionByMode).map(([mode, amount]) => {
-                if (amount === 0) return null;
-                const ModeIcon = modeIcons[mode] || MoreHorizontal;
-                return (
-                  <div key={mode} className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 text-ink-muted">
-                      <ModeIcon className="w-3.5 h-3.5" />
-                      {modeLabels[mode] || mode}
-                    </span>
-                    <span className="font-bold text-ink tabular-nums">{formatCurrency(amount)}</span>
-                  </div>
-                );
-              })}
+      {/* Secondary Information Hierarchy: Operations & Financial Panels (Non-Redundant) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Panel 1: Financial Overview (Single source of financial truth) */}
+        <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 space-y-5 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+              <div>
+                <h3 className="text-h2 font-bold text-ink">Financial Summary</h3>
+                <p className="text-xs text-ink-muted mt-0.5">Today's collection & outstanding balances</p>
+              </div>
+              <div className="p-2 bg-status-green/10 rounded-lg text-status-green">
+                <TrendingUp className="w-5 h-5" />
+              </div>
             </div>
-          )}
-          <div className="mt-4 pt-3 border-t border-border-subtle">
-            <Link href="/payments" className="text-xs text-brand-forest hover:underline flex items-center gap-1">
+
+            {/* Collection Total & Mode Breakdown */}
+            <div className="p-4 bg-brand-sand/50 rounded-lg border border-border-subtle space-y-3">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                  Today's Collection
+                </span>
+                <span className="text-2xl font-bold font-sans text-brand-forest tabular-nums">
+                  {formatCurrency(stats.today.collection)}
+                </span>
+              </div>
+
+              {stats.today.collection === 0 ? (
+                <p className="text-xs text-ink-muted italic pt-1 border-t border-border-subtle">
+                  No payments recorded so far today.
+                </p>
+              ) : (
+                <div className="pt-2 border-t border-border-subtle grid grid-cols-2 gap-2 text-xs">
+                  {Object.entries(stats.today.collectionByMode).map(([mode, amount]) => {
+                    if (amount === 0) return null;
+                    const ModeIcon = modeIcons[mode] || MoreHorizontal;
+                    return (
+                      <div key={mode} className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded border border-border-subtle">
+                        <span className="flex items-center gap-1.5 text-ink-muted">
+                          <ModeIcon className="w-3.5 h-3.5 text-brand-forest" />
+                          <span>{modeLabels[mode] || mode}</span>
+                        </span>
+                        <span className="font-semibold text-ink tabular-nums">
+                          {formatCurrency(amount)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Pending Balance Row */}
+            <div className="flex items-center justify-between p-4 bg-status-amber/10 rounded-lg border border-status-amber/25">
+              <div>
+                <p className="text-xs font-semibold text-status-amber uppercase tracking-wider">
+                  Pending Balance
+                </p>
+                <p className="text-xs text-ink-muted mt-0.5">
+                  Across {stats.pending.bookingCount} active reservation{stats.pending.bookingCount === 1 ? '' : 's'}
+                </p>
+              </div>
+              <span className="text-xl font-bold font-sans text-status-amber tabular-nums">
+                {formatCurrency(stats.pending.totalBalance)}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border-subtle flex items-center justify-between text-xs">
+            <Link
+              href="/payments"
+              className="font-semibold text-brand-forest hover:text-brand-forest-light hover:underline flex items-center gap-1"
+            >
               <span>View all payments</span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/billing"
+              className="font-semibold text-brand-forest hover:text-brand-forest-light hover:underline flex items-center gap-1"
+            >
+              <span>Manage guest bills</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
 
-        {/* Today's Arrivals */}
-        <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-ink">Arriving Today</h3>
-            <span className="px-2.5 py-0.5 bg-status-amber/15 text-status-amber border border-status-amber/30 rounded-lg text-xs font-bold">
-              {stats.today.arrivals.length}
-            </span>
-          </div>
-          {stats.today.arrivals.length === 0 ? (
-            <p className="text-xs text-ink-muted text-center py-4">No arrivals scheduled today.</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.today.arrivals.slice(0, 4).map((b) => (
-                <div key={b.id} className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-ink text-xs truncate">{b.guest.full_name}</p>
-                    <p className="text-[11px] text-ink-muted">
-                      Room {b.room.room_number} · {b.adults} Adults
-                    </p>
-                  </div>
-                  <Link
-                    href="/bookings"
-                    className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg bg-status-green/15 border border-status-green/30 text-status-green text-[11px] font-semibold hover:bg-status-green/25 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                    Check In
-                  </Link>
+        {/* Panel 2: Today's Movements & Housekeeping Operations */}
+        <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 space-y-5 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+              <div>
+                <h3 className="text-h2 font-bold text-ink">Guest Operations</h3>
+                <p className="text-xs text-ink-muted mt-0.5">Today's scheduled arrivals and departures</p>
+              </div>
+              <div className="p-2 bg-brand-sand rounded-lg text-brand-forest">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Arrivals List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink-muted">
+                <span>Arrivals Scheduled</span>
+                <span className="px-2 py-0.5 rounded bg-status-amber/15 text-status-amber border border-status-amber/30 text-[11px] font-bold">
+                  {stats.today.arrivals.length}
+                </span>
+              </div>
+
+              {stats.today.arrivals.length === 0 ? (
+                <p className="text-xs text-ink-muted p-3 bg-brand-sand/30 rounded-lg text-center">
+                  No arrivals scheduled for today.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {stats.today.arrivals.slice(0, 3).map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-2.5 rounded-lg border border-border-subtle bg-brand-sand/30 flex items-center justify-between text-xs"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-ink truncate">{b.guest.full_name}</p>
+                        <p className="text-[11px] text-ink-muted">
+                          Room {b.room.room_number} ({b.room.category.name})
+                        </p>
+                      </div>
+                      <Link
+                        href="/bookings"
+                        className="shrink-0 px-2.5 py-1 rounded bg-status-green/15 border border-status-green/30 text-status-green font-semibold hover:bg-status-green/25 transition-colors"
+                      >
+                        Check In
+                      </Link>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {stats.today.arrivals.length > 4 && (
-                <p className="text-xs text-ink-muted">+{stats.today.arrivals.length - 4} more</p>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Today's Departures */}
-        <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-ink">Departing Today</h3>
-            <span className="px-2.5 py-0.5 bg-status-blue/15 text-status-blue border border-status-blue/30 rounded-lg text-xs font-bold">
-              {stats.today.departures.length}
-            </span>
-          </div>
-          {stats.today.departures.length === 0 ? (
-            <p className="text-xs text-ink-muted text-center py-4">No checkouts due today.</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.today.departures.slice(0, 4).map((b) => {
-                const balance = Math.max(0, b.total_amount - b.advance_amount);
-                return (
-                  <div key={b.id} className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-ink text-xs truncate">{b.guest.full_name}</p>
-                      <p className="text-[11px] text-ink-muted">
-                        Room {b.room.room_number}
-                        {balance > 0 && <span className="text-status-amber"> · {formatCurrency(balance)} due</span>}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/billing/${b.id}`}
-                      className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-forest/10 border border-brand-forest/30 text-brand-forest text-[11px] font-semibold hover:bg-brand-forest/20 transition-colors"
-                    >
-                      <FileText className="w-3 h-3" />
-                      Bill
+            {/* Departures List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink-muted">
+                <span>Departures Scheduled</span>
+                <span className="px-2 py-0.5 rounded bg-status-blue/15 text-status-blue border border-status-blue/30 text-[11px] font-bold">
+                  {stats.today.departures.length}
+                </span>
+              </div>
+
+              {stats.today.departures.length === 0 ? (
+                <p className="text-xs text-ink-muted p-3 bg-brand-sand/30 rounded-lg text-center">
+                  No checkouts due today.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {stats.today.departures.slice(0, 3).map((b) => {
+                    const balance = Math.max(0, b.total_amount - b.advance_amount);
+                    return (
+                      <div
+                        key={b.id}
+                        className="p-2.5 rounded-lg border border-border-subtle bg-brand-sand/30 flex items-center justify-between text-xs"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold text-ink truncate">{b.guest.full_name}</p>
+                          <p className="text-[11px] text-ink-muted">
+                            Room {b.room.room_number}
+                            {balance > 0 && (
+                              <span className="text-status-amber font-medium">
+                                {' '}· {formatCurrency(balance)} due
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/billing/${b.id}`}
+                          className="shrink-0 px-2.5 py-1 rounded bg-brand-forest/10 border border-brand-forest/30 text-brand-forest font-semibold hover:bg-brand-forest/20 transition-colors"
+                        >
+                          Checkout Bill
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Housekeeping & Maintenance Status summary */}
+            {(stats.cleaningNeeded > 0 || stats.rooms.maintenance > 0) && (
+              <div className="pt-2 border-t border-border-subtle flex flex-wrap gap-2 text-xs">
+                {stats.cleaningNeeded > 0 && (
+                  <div className="flex-1 flex items-center justify-between p-2.5 bg-status-orange/10 border border-status-orange/25 rounded-lg">
+                    <span className="flex items-center gap-1.5 text-status-orange font-medium">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{stats.cleaningNeeded} Needs Cleaning</span>
+                    </span>
+                    <Link href="/rooms" className="text-status-orange font-semibold hover:underline">
+                      View →
                     </Link>
                   </div>
-                );
-              })}
-              {stats.today.departures.length > 4 && (
-                <p className="text-xs text-ink-muted">+{stats.today.departures.length - 4} more</p>
-              )}
-            </div>
-          )}
+                )}
+                {stats.rooms.maintenance > 0 && (
+                  <div className="flex-1 flex items-center justify-between p-2.5 bg-status-slate/10 border border-status-slate/25 rounded-lg">
+                    <span className="flex items-center gap-1.5 text-status-slate font-medium">
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>{stats.rooms.maintenance} Maintenance</span>
+                    </span>
+                    <Link href="/rooms" className="text-status-slate font-semibold hover:underline">
+                      View →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-border-subtle flex items-center justify-between text-xs">
+            <Link
+              href="/bookings"
+              className="font-semibold text-brand-forest hover:text-brand-forest-light hover:underline flex items-center gap-1"
+            >
+              <span>Open booking register</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Room Status Summary Row */}
-      {(stats.cleaningNeeded > 0 || stats.rooms.maintenance > 0) && (
-        <div className="grid grid-cols-2 gap-4">
-          {stats.cleaningNeeded > 0 && (
-            <div className="bg-status-orange/10 border border-status-orange/25 rounded-xl p-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-status-orange shrink-0" />
-              <div>
-                <p className="font-semibold text-sm text-ink">
-                  {stats.cleaningNeeded} Room{stats.cleaningNeeded > 1 ? 's' : ''} Need Cleaning
-                </p>
-                <Link href="/rooms" className="text-xs text-status-orange hover:underline">
-                  View room grid →
-                </Link>
-              </div>
-            </div>
-          )}
-          {stats.rooms.maintenance > 0 && (
-            <div className="bg-status-red/10 border border-status-red/25 rounded-xl p-4 flex items-center gap-3">
-              <Wrench className="w-5 h-5 text-status-red shrink-0" />
-              <div>
-                <p className="font-semibold text-sm text-ink">
-                  {stats.rooms.maintenance} Room{stats.rooms.maintenance > 1 ? 's' : ''} Under Maintenance
-                </p>
-                <Link href="/rooms" className="text-xs text-status-red hover:underline">
-                  View room grid →
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

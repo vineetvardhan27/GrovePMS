@@ -89,24 +89,22 @@ export default function BookingList({ initialBookings }: BookingListProps) {
   return (
     <div className="space-y-6">
       {/* Header controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-subtle">
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search booking #, guest, room..."
-              className="pl-9 pr-3 py-1.5 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px] w-64"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-border-subtle">
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search booking #, guest, room..."
+            className="w-full pl-9 pr-3 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
+          />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <Link
             href="/bookings/calendar"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors min-h-[38px]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors min-h-touch"
           >
             <CalendarDays className="w-4 h-4 text-brand-forest" />
             <span>Calendar View</span>
@@ -114,7 +112,7 @@ export default function BookingList({ initialBookings }: BookingListProps) {
 
           <Link
             href="/bookings/new"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-medium transition-colors shadow-2xs min-h-[38px]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-semibold transition-colors shadow-2xs min-h-touch"
           >
             <Plus className="w-4 h-4" />
             <span>New Booking</span>
@@ -129,7 +127,7 @@ export default function BookingList({ initialBookings }: BookingListProps) {
             key={st}
             type="button"
             onClick={() => setStatusFilter(st)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition-colors cursor-pointer ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-medium border capitalize transition-colors cursor-pointer min-h-touch flex items-center ${
               statusFilter === st
                 ? 'bg-brand-forest text-white border-brand-forest'
                 : 'bg-white text-ink border-border-subtle hover:bg-brand-sand'
@@ -141,7 +139,7 @@ export default function BookingList({ initialBookings }: BookingListProps) {
       </div>
 
       {/* Bookings Table */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-sand-dark/60 border-b border-border-subtle text-ink font-semibold uppercase tracking-wider">

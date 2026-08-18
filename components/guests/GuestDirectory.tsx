@@ -50,15 +50,15 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
   return (
     <div className="space-y-6">
       {/* Search Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-subtle">
-        <div className="relative">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-border-subtle">
+        <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, phone, city..."
-            className="pl-9 pr-4 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px] w-72"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
           />
         </div>
 
@@ -68,7 +68,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
       </div>
 
       {/* Guest Table */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-sand-dark/60 border-b border-border-subtle text-ink font-semibold uppercase tracking-wider">
@@ -150,7 +150,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                         <button
                           type="button"
                           onClick={() => setSelectedGuest(guest)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-brand-forest text-xs font-medium transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-brand-forest text-xs font-medium transition-colors cursor-pointer min-h-[36px]"
                         >
                           <History className="w-3.5 h-3.5" />
                           <span>History</span>
@@ -173,9 +173,9 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
             className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-white shadow-xl flex flex-col justify-between border-l border-border-subtle">
-              <div className="p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 md:pl-10">
+            <div className="w-screen max-w-full md:max-w-md bg-white shadow-xl flex flex-col justify-between border-l border-border-subtle">
+              <div className="p-5 md:p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between">
                 <div>
                   <h3 className="text-h2 text-brand-forest font-bold">{selectedGuest.full_name}</h3>
                   <p className="text-xs text-ink-muted mt-0.5">{selectedGuest.phone}</p>
@@ -183,15 +183,16 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                 <button
                   type="button"
                   onClick={() => setSelectedGuest(null)}
-                  className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                  className="flex items-center justify-center w-11 h-11 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                  aria-label="Close Guest History"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              <div className="p-5 md:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
                 {/* Guest Stats Card */}
-                <div className="grid grid-cols-2 gap-3 p-4 bg-brand-sand/50 rounded-xl border border-border-subtle">
+                <div className="grid grid-cols-2 gap-3 p-4 bg-brand-sand/50 rounded-lg border border-border-subtle">
                   <div>
                     <span className="text-ink-muted block">Total Stays</span>
                     <span className="text-lg font-bold text-ink font-serif">{selectedGuest.total_stays || 1} Visits</span>
@@ -216,7 +217,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                       {guestBookings.map((b) => (
                         <div
                           key={b.id}
-                          className="p-3.5 rounded-xl border border-border-subtle bg-white shadow-2xs space-y-2"
+                          className="p-3.5 rounded-lg border border-border-subtle bg-white shadow-2xs space-y-2"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-mono font-bold text-ink">{b.booking_number}</span>
@@ -245,7 +246,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                 <button
                   type="button"
                   onClick={() => setSelectedGuest(null)}
-                  className="px-4 py-2 bg-brand-forest hover:bg-brand-forest-light text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="w-full bg-brand-forest hover:bg-brand-forest-light text-white rounded-lg text-sm font-medium py-3 transition-colors cursor-pointer min-h-touch"
                 >
                   Done
                 </button>

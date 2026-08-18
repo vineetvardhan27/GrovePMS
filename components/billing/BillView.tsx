@@ -74,10 +74,10 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Bill Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border-subtle">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-4 border-b border-border-subtle">
+        <div className="flex items-center justify-between sm:justify-start gap-3">
           {/* GST Toggle */}
-          <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white border border-border-subtle rounded-lg px-3 py-2 hover:bg-brand-sand transition-colors">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none bg-white border border-border-subtle rounded-lg px-3 py-2.5 hover:bg-brand-sand transition-colors min-h-touch">
             <div className="relative">
               <input
                 type="checkbox"
@@ -96,7 +96,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
           </label>
 
           {/* Payment Status Badge */}
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${badge.class}`}>
+          <span className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold border ${badge.class} min-h-touch`}>
             {badge.label}
           </span>
         </div>
@@ -107,7 +107,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
               type="button"
               disabled={isCheckingOut}
               onClick={handleCheckOut}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-status-red hover:bg-status-red/80 text-white text-xs font-semibold transition-colors cursor-pointer shadow-2xs disabled:opacity-60 min-h-[38px]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-status-red hover:bg-status-red/80 text-white text-xs font-semibold transition-colors cursor-pointer shadow-2xs disabled:opacity-60 min-h-touch"
             >
               {isCheckingOut ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Checking Out...</span></>
@@ -120,7 +120,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors cursor-pointer min-h-[38px]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-border-subtle hover:bg-brand-sand text-ink text-xs font-medium transition-colors cursor-pointer min-h-touch"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Bill</span>
@@ -138,11 +138,11 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
       {/* Bill Document */}
       <div
         id="bill-print-area"
-        className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden"
+        className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden"
       >
         {/* Hotel Header */}
-        <div className="p-8 bg-brand-sand border-b border-border-subtle text-center">
-          <h1 className="text-3xl font-serif font-bold text-brand-forest">{initialBill.hotel_name}</h1>
+        <div className="p-6 md:p-8 bg-brand-sand border-b border-border-subtle text-center">
+          <h1 className="text-2xl md:text-3xl font-serif font-bold text-brand-forest">{initialBill.hotel_name}</h1>
           <p className="text-xs text-ink-muted mt-1">{initialBill.hotel_address}</p>
           {initialBill.hotel_gst_number && (
             <p className="text-xs text-ink-muted">GSTIN: {initialBill.hotel_gst_number}</p>
@@ -154,12 +154,13 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
         </div>
 
         {/* Booking & Guest Info Grid */}
-        <div className="p-6 grid grid-cols-2 gap-6 border-b border-border-subtle bg-brand-sand/30 text-xs">
+        <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 border-b border-border-subtle bg-brand-sand/30 text-xs">
           <div className="space-y-1.5">
+            <span className="text-[10px] uppercase font-bold text-ink-muted">Guest Details</span>
             <p className="font-bold text-ink text-sm">{initialBill.guest_name}</p>
             <p className="text-ink-muted">{initialBill.guest_phone}</p>
           </div>
-          <div className="space-y-1 text-right">
+          <div className="space-y-1 text-left sm:text-right">
             <p><span className="text-ink-muted">Booking #: </span><span className="font-mono font-bold text-ink">{initialBill.booking_number}</span></p>
             <p><span className="text-ink-muted">Room: </span><span className="font-bold text-ink">Room {initialBill.room_number} ({initialBill.category_name})</span></p>
             <p><span className="text-ink-muted">Check-In: </span><span className="font-semibold text-ink">{formatDate(initialBill.check_in_date)}</span></p>

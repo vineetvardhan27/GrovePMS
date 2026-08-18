@@ -80,9 +80,9 @@ export default function PaymentsList({
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Today's Collection */}
-        <div className="bg-white rounded-2xl border border-border-subtle p-5 shadow-2xs">
+        <div className="bg-white rounded-lg border border-border-subtle p-5 shadow-2xs">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="p-2 bg-status-green/15 rounded-lg">
               <Calendar className="w-4 h-4 text-status-green" />
@@ -93,7 +93,7 @@ export default function PaymentsList({
         </div>
 
         {/* Total Collected */}
-        <div className="bg-white rounded-2xl border border-border-subtle p-5 shadow-2xs">
+        <div className="bg-white rounded-lg border border-border-subtle p-5 shadow-2xs">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="p-2 bg-brand-sand rounded-lg">
               <TrendingUp className="w-4 h-4 text-brand-forest" />
@@ -104,7 +104,7 @@ export default function PaymentsList({
         </div>
 
         {/* Transactions Count */}
-        <div className="bg-white rounded-2xl border border-border-subtle p-5 shadow-2xs">
+        <div className="bg-white rounded-lg border border-border-subtle p-5 shadow-2xs">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="p-2 bg-status-blue/15 rounded-lg">
               <CreditCard className="w-4 h-4 text-status-blue" />
@@ -116,9 +116,9 @@ export default function PaymentsList({
       </div>
 
       {/* Mode Breakdown */}
-      <div className="bg-white rounded-2xl border border-border-subtle p-5 shadow-2xs">
+      <div className="bg-white rounded-lg border border-border-subtle p-5 shadow-2xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-3">Collection by Mode</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
           {modeBreakdown.map(({ mode, total, count }) => {
             const config = MODE_ICONS[mode];
             const ModeIcon = config.icon;
@@ -127,7 +127,7 @@ export default function PaymentsList({
                 key={mode}
                 type="button"
                 onClick={() => setModeFilter(modeFilter === mode ? 'all' : mode)}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3 rounded-lg border text-left transition-all cursor-pointer min-h-touch ${
                   modeFilter === mode
                     ? 'border-brand-forest bg-brand-forest text-white'
                     : 'border-border-subtle bg-brand-sand/30 hover:bg-brand-sand text-ink'
@@ -144,22 +144,22 @@ export default function PaymentsList({
       </div>
 
       {/* Filter & Search */}
-      <div className="flex items-center gap-3">
-        <div className="relative">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative w-full sm:w-64">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search booking #, guest, room..."
-            className="pl-9 pr-3 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px] w-64"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
           />
         </div>
         {modeFilter !== 'all' && (
           <button
             type="button"
             onClick={() => setModeFilter('all')}
-            className="px-3 py-1.5 rounded-lg bg-brand-sand text-xs text-ink border border-border-subtle hover:bg-brand-sand-dark transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-lg bg-brand-sand text-xs text-ink border border-border-subtle hover:bg-brand-sand-dark transition-colors cursor-pointer min-h-touch"
           >
             Clear filter
           </button>
@@ -167,7 +167,7 @@ export default function PaymentsList({
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-sand-dark/60 border-b border-border-subtle text-ink font-semibold uppercase tracking-wider">

@@ -119,7 +119,7 @@ export default function RoomCategoriesManager({
       )}
 
       {/* Action Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-sm text-ink-muted">
           Categories define rates, guest capacity, and room pricing across the PMS.
         </p>
@@ -128,7 +128,7 @@ export default function RoomCategoriesManager({
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 bg-brand-forest hover:bg-brand-forest-light text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer min-h-touch"
+            className="flex items-center justify-center gap-2 bg-brand-forest hover:bg-brand-forest-light text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer min-h-touch w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
@@ -137,23 +137,24 @@ export default function RoomCategoriesManager({
       </div>
 
       {/* Categories Cards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {categories.map((category) => (
           <div
             key={category.id}
-            className="bg-white rounded-xl border border-border-subtle p-5 shadow-2xs flex flex-col justify-between space-y-4"
+            className="bg-white rounded-lg border border-border-subtle p-5 shadow-2xs flex flex-col justify-between space-y-4"
           >
             <div>
               <div className="flex items-start justify-between">
-                <div className="p-2.5 bg-brand-sand rounded-xl text-brand-forest">
+                <div className="p-2.5 bg-brand-sand rounded-lg text-brand-forest">
                   <BedDouble className="w-6 h-6" />
                 </div>
                 {canEdit && (
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(category)}
-                    className="p-2 rounded-lg text-ink-muted hover:text-brand-forest hover:bg-brand-sand transition-colors cursor-pointer"
+                    className="flex items-center justify-center w-11 h-11 rounded-lg text-ink-muted hover:text-brand-forest hover:bg-brand-sand transition-colors cursor-pointer"
                     title="Edit Category"
+                    aria-label="Edit Category"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -205,21 +206,22 @@ export default function RoomCategoriesManager({
       {/* Edit / Create Modal */}
       {editingCategory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white rounded-2xl border border-border-subtle shadow-xl overflow-hidden">
-            <div className="p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between">
+          <div className="w-full max-w-lg bg-white rounded-2xl border border-border-subtle shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-5 md:p-6 bg-brand-sand border-b border-border-subtle flex items-center justify-between shrink-0">
               <h2 className="text-h2 text-brand-forest">
                 {isCreatingNew ? 'Add New Room Category' : `Edit Category: ${editingCategory.name}`}
               </h2>
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                className="flex items-center justify-center w-11 h-11 rounded-lg text-ink-muted hover:text-ink hover:bg-white transition-colors cursor-pointer"
+                aria-label="Close Modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="p-5 md:p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="name">
                   Category Name *
@@ -231,7 +233,7 @@ export default function RoomCategoriesManager({
                   required
                   defaultValue={editingCategory.name}
                   placeholder="e.g. Executive Suite"
-                  className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                  className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
                 />
               </div>
 
@@ -245,11 +247,11 @@ export default function RoomCategoriesManager({
                   rows={2}
                   defaultValue={editingCategory.description || ''}
                   placeholder="Room features, bed size, view, etc."
-                  className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
+                  className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="base_rate">
                     Base Rate (₹/night) *
@@ -261,7 +263,7 @@ export default function RoomCategoriesManager({
                     min="0"
                     required
                     defaultValue={editingCategory.base_rate}
-                    className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch font-bold"
                   />
                 </div>
 
@@ -276,12 +278,12 @@ export default function RoomCategoriesManager({
                     min="0"
                     defaultValue={editingCategory.weekend_rate || ''}
                     placeholder="Leave blank for same"
-                    className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="max_occupancy">
                     Max Occupancy (Guests) *
@@ -294,7 +296,7 @@ export default function RoomCategoriesManager({
                     max="10"
                     required
                     defaultValue={editingCategory.max_occupancy}
-                    className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
                   />
                 </div>
 
@@ -308,23 +310,23 @@ export default function RoomCategoriesManager({
                     type="number"
                     min="0"
                     defaultValue={editingCategory.extra_bed_rate || 0}
-                    className="w-full px-3.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-3 border-t border-border-subtle">
+              <div className="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-border-subtle">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2.5 rounded-lg border border-border-subtle text-ink-muted hover:bg-brand-sand text-sm font-medium transition-colors cursor-pointer min-h-touch"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-border-subtle text-ink-muted hover:bg-brand-sand text-sm font-medium transition-colors cursor-pointer min-h-touch text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer min-h-touch flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer min-h-touch flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? <span>Saving...</span> : <span>Save Category</span>}
                 </button>

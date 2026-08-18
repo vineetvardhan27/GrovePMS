@@ -74,12 +74,12 @@ export default function MonthlyReportView({ initialReport }: MonthlyReportViewPr
   return (
     <div className={`space-y-6 transition-opacity ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
       {/* Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <CalendarDays className="w-4 h-4 text-ink-muted" />
         <select
           value={selectedMonth}
           onChange={(e) => handleChange(selectedYear, Number(e.target.value))}
-          className="px-3 py-2 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px]"
+          className="px-3 py-2.5 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
         >
           {MONTH_NAMES.map((name, i) => (
             <option key={i + 1} value={i + 1}>{name}</option>
@@ -88,7 +88,7 @@ export default function MonthlyReportView({ initialReport }: MonthlyReportViewPr
         <select
           value={selectedYear}
           onChange={(e) => handleChange(Number(e.target.value), selectedMonth)}
-          className="px-3 py-2 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px]"
+          className="px-3 py-2.5 bg-white border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
         >
           {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
             <option key={y} value={y}>{y}</option>
@@ -105,19 +105,19 @@ export default function MonthlyReportView({ initialReport }: MonthlyReportViewPr
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.label}
-              className={`bg-white rounded-xl p-5 border border-border-subtle border-l-4 ${card.accent} shadow-2xs`}
+              className={`bg-white rounded-lg p-4 sm:p-5 border border-border-subtle border-l-4 ${card.accent} shadow-2xs`}
             >
               <div className="flex items-center justify-between text-ink-muted mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider">{card.label}</span>
                 <Icon className={`w-4 h-4 ${card.color}`} />
               </div>
-              <p className={`text-2xl font-serif font-bold tabular-nums ${card.color}`}>{card.value}</p>
+              <p className={`text-xl sm:text-2xl font-serif font-bold tabular-nums ${card.color}`}>{card.value}</p>
               <p className="text-[11px] text-ink-muted mt-1">{card.sub}</p>
             </div>
           );
@@ -125,7 +125,7 @@ export default function MonthlyReportView({ initialReport }: MonthlyReportViewPr
       </div>
 
       {/* Revenue vs Collected vs Pending */}
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs p-6">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 md:p-6">
         <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-4">Revenue Summary</h3>
 
         <div className="space-y-3">

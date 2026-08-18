@@ -127,34 +127,34 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
     <div className="space-y-6">
       {/* Top action bar with Realtime indicator */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border-subtle">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-start gap-3">
           <h2 className="text-h1 text-brand-forest">Room Status Grid</h2>
           <RealtimeRoomSubscriber onRoomUpdated={handleRoomUpdated} />
         </div>
 
         {/* Group by toggle & Search */}
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search room #..."
-              className="pl-9 pr-3 py-1.5 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-[38px] w-36 sm:w-44"
+              className="w-full sm:w-44 pl-9 pr-3 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
             />
           </div>
 
           <button
             type="button"
             onClick={() => setGroupByFloor(!groupByFloor)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer min-h-[38px] ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer min-h-touch ${
               groupByFloor
                 ? 'bg-brand-forest text-white border-brand-forest'
                 : 'bg-white text-ink border-border-subtle hover:bg-brand-sand'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-4 h-4" />
             <span>{groupByFloor ? 'Floor View' : 'Flat Grid'}</span>
           </button>
         </div>
@@ -165,7 +165,7 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
         <button
           type="button"
           onClick={() => setStatusFilter('all')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer min-h-touch flex items-center ${
             statusFilter === 'all'
               ? 'bg-brand-forest text-white border-brand-forest shadow-xs'
               : 'bg-white text-ink border-border-subtle hover:bg-brand-sand'
@@ -183,7 +183,7 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
               key={key}
               type="button"
               onClick={() => setStatusFilter(key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer min-h-touch ${
                 isSelected
                   ? 'bg-brand-forest text-white border-brand-forest shadow-xs'
                   : `bg-white ${cfg.textClass} border-border-subtle hover:bg-brand-sand`
@@ -201,7 +201,7 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
 
       {/* Rooms Display */}
       {filteredRooms.length === 0 ? (
-        <div className="bg-white rounded-xl border border-border-subtle p-12 text-center">
+        <div className="bg-white rounded-lg border border-border-subtle p-10 text-center">
           <BedDouble className="w-8 h-8 text-ink-muted mx-auto mb-2 opacity-50" />
           <p className="text-sm font-medium text-ink">No rooms match your filter criteria.</p>
           <button
@@ -211,7 +211,7 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
               setSearchQuery('');
               setCategoryFilter('all');
             }}
-            className="mt-3 text-xs text-brand-forest font-medium underline"
+            className="mt-3 text-xs text-brand-forest font-semibold underline p-2 min-h-touch inline-flex items-center"
           >
             Clear filters
           </button>

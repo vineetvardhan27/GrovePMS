@@ -77,6 +77,17 @@
 
 ## 6. Session Log (append-only, most recent at top)
 
+**2026-08-18 — Owner Dashboard Redesign & Design System Alignment**
+- Did:
+  1. Brought Live Room Chart directly onto `/dashboard` via `DashboardRoomGrid.tsx` with realtime synchronization, floor grouping, status color badges, and interactive detail drawer.
+  2. Fixed button shapes to `rounded-lg` per Design.md §4; primary action ("New Booking") styled with solid `brand-forest` fill, 16px+ label, and 44px+ touch target; secondary actions clearly secondary in `brand-sand-dark/60`.
+  3. Audited and unified status icons across KPI cards (`CheckCircle2`, `Users`, `Calendar`, `Clock`) with consistent size, position, and status borders.
+  4. Established clear visual hierarchy: Large Inter tabular-nums for room status counters, consolidated Financial Summary panel (collapsing collection total, mode breakdown, and pending balance), and Operations panel (arrivals, departures, housekeeping alerts).
+  5. Cleaned up header chrome: Removed competing glowing "Live Session" pill badge; simplified "Switch Role" button.
+  6. Enforced typography rules: Fraunces serif restricted to page titles/section headers; numeric KPIs and currency in Inter tabular-nums.
+- Verified working: Verified full dashboard layout and rendering via browser subagent screenshot.
+- Anything the next session needs to know: `DashboardRoomGrid` uses `RoomCard` with `rounded-lg` styling and realtime sync via BroadcastChannel / Supabase Realtime channel.
+
 **2026-08-18 — Phase 1 Auth & Roles Complete**
 - Did: Implemented `0004_auth_triggers.sql`, `lib/auth/session.ts`, `app/(auth)/login/actions.ts`, interactive login form with role switcher, role-gated `middleware.ts`, and role-filtered navigation in `app/(dashboard)/layout.tsx`.
 - Verified working: Tested Owner, Manager, Reception, and Housekeeping logins in browser subagent. Verified navigation filtering per role and route gating (blocking unauthorized paths with "Restricted Access" dashboard banner). Verified Sign Out flow.

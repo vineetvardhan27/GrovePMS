@@ -100,7 +100,7 @@ export default function RecordPaymentForm({
             required
             value={amount || ''}
             onChange={(e) => setAmount(Number(e.target.value))}
-            className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-[40px]"
+            className="w-full px-3 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
           />
         </div>
 
@@ -112,7 +112,7 @@ export default function RecordPaymentForm({
             id="payment_mode_rec"
             value={mode}
             onChange={(e) => setMode(e.target.value as PaymentMode)}
-            className="w-full px-2.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-[40px]"
+            className="w-full px-3 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
           >
             {PAYMENT_MODES.map((m) => (
               <option key={m.value} value={m.value}>
@@ -132,7 +132,7 @@ export default function RecordPaymentForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="e.g. UPI ref: 12345"
-            className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-[40px]"
+            className="w-full px-3 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function RecordPaymentForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-6 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer flex items-center gap-2 shadow-2xs disabled:opacity-60 min-h-[40px]"
+          className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-2xs disabled:opacity-60 min-h-touch"
         >
           {isSubmitting ? (
             <>

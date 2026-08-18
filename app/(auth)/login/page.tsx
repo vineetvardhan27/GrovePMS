@@ -80,13 +80,13 @@ export default function LoginPage() {
   const [state, formAction] = useFormState(signIn, null);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-brand-sand">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-6 bg-white border border-border-subtle rounded-2xl shadow-sm overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-6 md:p-8 bg-brand-sand">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-0 bg-white border border-border-subtle rounded-lg shadow-sm overflow-hidden">
         {/* Left column: Login Form */}
-        <div className="md:col-span-6 p-6 md:p-8 flex flex-col justify-between">
+        <div className="md:col-span-6 p-5 sm:p-6 md:p-8 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-brand-forest text-white rounded-xl">
+              <div className="p-3 bg-brand-forest text-white rounded-lg">
                 <Hotel className="w-7 h-7" />
               </div>
               <div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                     required
                     defaultValue="owner@hotelgreeneryview.com"
                     placeholder="staff@hotelgreeneryview.com"
-                    className="w-full pl-10 pr-4 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full pl-10 pr-4 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch text-base md:text-sm"
                   />
                 </div>
               </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
                     required
                     defaultValue="password123"
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+                    className="w-full pl-10 pr-4 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch text-base md:text-sm"
                   />
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 pt-4 border-t border-border-subtle flex items-center justify-between text-xs text-ink-muted">
-            <Link href="/" className="hover:text-brand-forest underline">
+            <Link href="/" className="hover:text-brand-forest underline p-1 min-h-touch inline-flex items-center">
               ← Return to Home
             </Link>
             <span>Phase 1 — Auth & Roles</span>
@@ -154,7 +154,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right column: Test Role Switcher */}
-        <div className="md:col-span-6 bg-brand-sand-dark/60 p-6 md:p-8 border-t md:border-t-0 md:border-l border-border-subtle flex flex-col justify-between">
+        <div className="md:col-span-6 bg-brand-sand-dark/60 p-5 sm:p-6 md:p-8 border-t md:border-t-0 md:border-l border-border-subtle flex flex-col justify-between">
           <div>
             <div className="mb-4">
               <h2 className="text-h2 text-brand-forest">Instant Test Accounts</h2>
@@ -170,7 +170,7 @@ export default function LoginPage() {
                   <form key={account.role} action={() => switchDemoRole(account.role)}>
                     <button
                       type="submit"
-                      className={`w-full text-left bg-white p-3.5 rounded-xl border border-border-subtle shadow-2xs transition-all cursor-pointer ${account.color}`}
+                      className={`w-full text-left bg-white p-3.5 rounded-lg border border-border-subtle shadow-2xs transition-all cursor-pointer min-h-touch ${account.color}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
