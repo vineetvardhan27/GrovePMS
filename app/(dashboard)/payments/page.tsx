@@ -1,22 +1,42 @@
-import { CreditCard } from 'lucide-react';
+import { localPaymentsStore } from '../../../lib/bookings/queries';
+import { localBookingsStore } from '../../../lib/bookings/queries';
+import PaymentsList from '../../../components/payments/PaymentsList';
 
-export default function PaymentsPage() {
+export default async function PaymentsPage() {
+  // Build enriched payment records with booking/guest context
+  const payments = localPaymentsStore.map((p) => {
+    const booking = localBookingsStore.find((b) => b.id === p.booking_id);
+    return {
+      ...p,
+      booking_number: booking?.booking_number ?? '—',
+      guest_name: booking?.guest.full_name ?? 'Unknown Guest',
+      guest_phone: booking?.guest.phone ?? '',
+      room_number: booking?.room.room_number ?? '—',
+    };
+  });
+
+  // Today's collection
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayTotal = payments
+    .filter((p) => p.created_at.startsWith(todayStr))
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  const allTimeTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-display text-brand-forest">Payments & Collections</h1>
-        <p className="text-body text-ink-muted">Cash, UPI, and card transaction records</p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-border-subtle p-12 text-center">
-        <div className="inline-flex p-3 bg-brand-sand rounded-xl mb-3">
-          <CreditCard className="w-8 h-8 text-brand-forest" />
-        </div>
-        <h3 className="text-h2 text-ink">Payment Collection Records</h3>
-        <p className="text-body text-ink-muted max-w-md mx-auto mt-1">
-          Coming in <strong>Phase 4 (Check-In / Check-Out & Billing)</strong> with real-time settlement logging.
+        <p className="text-body text-ink-muted">
+          All payment transactions — advances, partial payments, and settlements
         </p>
       </div>
+
+      <PaymentsList
+        payments={payments}
+        todayTotal={todayTotal}
+        allTimeTotal={allTimeTotal}
+      />
     </div>
   );
 }
