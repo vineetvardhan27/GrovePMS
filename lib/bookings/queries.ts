@@ -45,115 +45,11 @@ export interface BookingWithDetails {
   payments: PaymentRecord[];
 }
 
-export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
-  {
-    id: 'e0000000-0000-0000-0000-000000000001',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    booking_number: 'HGV-202608-1001',
-    room_id: 'd0000000-0000-0000-0000-000000000103', // Room 103 (Occupied)
-    guest_id: 'e0000000-0000-0000-0000-000000000001',
-    check_in_date: '2026-08-17',
-    check_out_date: '2026-08-20',
-    adults: 2,
-    children: 0,
-    rate_per_night: 2500,
-    total_amount: 7500,
-    advance_amount: 3000,
-    payment_status: 'advance_received',
-    booking_status: 'checked_in',
-    source: 'walk_in',
-    remarks: 'Requested high floor next time',
-    created_at: '2026-08-17T12:30:00.000Z',
-    updated_at: '2026-08-17T13:00:00.000Z',
-    guest: DEFAULT_GUESTS[0],
-    room: DEFAULT_ROOMS[2],
-    payments: [
-      {
-        id: 'p0000000-0000-0000-0000-000000000001',
-        hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'e0000000-0000-0000-0000-000000000001',
-        amount: 3000,
-        payment_mode: 'upi',
-        payment_type: 'advance',
-        notes: 'Advance received via GPay',
-        created_at: '2026-08-17T12:30:00.000Z',
-      },
-    ],
-  },
-  {
-    id: 'e0000000-0000-0000-0000-000000000002',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    booking_number: 'HGV-202608-1002',
-    room_id: 'd0000000-0000-0000-0000-000000000202', // Room 202 (Arriving Today)
-    guest_id: 'e0000000-0000-0000-0000-000000000002',
-    check_in_date: '2026-08-18',
-    check_out_date: '2026-08-21',
-    adults: 1,
-    children: 0,
-    rate_per_night: 3500,
-    total_amount: 10500,
-    advance_amount: 10500,
-    payment_status: 'fully_paid',
-    booking_status: 'confirmed',
-    source: 'direct',
-    remarks: 'Arriving by train around 2 PM',
-    created_at: '2026-08-15T10:00:00.000Z',
-    updated_at: '2026-08-15T10:00:00.000Z',
-    guest: DEFAULT_GUESTS[1],
-    room: DEFAULT_ROOMS[5],
-    payments: [
-      {
-        id: 'p0000000-0000-0000-0000-000000000002',
-        hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'e0000000-0000-0000-0000-000000000002',
-        amount: 10500,
-        payment_mode: 'bank_transfer',
-        payment_type: 'advance',
-        notes: 'Full prepayment via IMPS',
-        created_at: '2026-08-15T10:00:00.000Z',
-      },
-    ],
-  },
-  {
-    id: 'e0000000-0000-0000-0000-000000000003',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    booking_number: 'HGV-202608-1003',
-    room_id: 'd0000000-0000-0000-0000-000000000203', // Room 203 (Reserved)
-    guest_id: 'e0000000-0000-0000-0000-000000000003',
-    check_in_date: '2026-08-20',
-    check_out_date: '2026-08-23',
-    adults: 3,
-    children: 1,
-    rate_per_night: 3500,
-    total_amount: 12600, // 3 nights + extra bed
-    advance_amount: 2000,
-    payment_status: 'advance_received',
-    booking_status: 'confirmed',
-    source: 'whatsapp',
-    remarks: 'Need extra mattress for child',
-    created_at: '2026-08-16T15:00:00.000Z',
-    updated_at: '2026-08-16T15:00:00.000Z',
-    guest: DEFAULT_GUESTS[2],
-    room: DEFAULT_ROOMS[6],
-    payments: [
-      {
-        id: 'p0000000-0000-0000-0000-000000000003',
-        hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'e0000000-0000-0000-0000-000000000003',
-        amount: 2000,
-        payment_mode: 'upi',
-        payment_type: 'advance',
-        notes: 'WhatsApp booking advance',
-        created_at: '2026-08-16T15:00:00.000Z',
-      },
-    ],
-  },
-];
+export const DEFAULT_BOOKINGS: BookingWithDetails[] = [];
 
-export let localBookingsStore: BookingWithDetails[] = [...DEFAULT_BOOKINGS];
-export let localPaymentsStore: PaymentRecord[] = [
-  ...DEFAULT_BOOKINGS.flatMap((b) => b.payments),
-];
+export let localBookingsStore: BookingWithDetails[] = [];
+export let localPaymentsStore: PaymentRecord[] = [];
+
 
 export async function getBookings(
   hotelId?: string,

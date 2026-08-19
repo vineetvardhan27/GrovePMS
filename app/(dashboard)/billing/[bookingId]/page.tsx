@@ -5,10 +5,13 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 interface BillPageProps {
   params: { bookingId: string };
   searchParams?: { gst?: string };
 }
+
 
 export default async function BillPage({ params, searchParams }: BillPageProps) {
   const includeGst = searchParams?.gst !== 'false'; // GST on by default

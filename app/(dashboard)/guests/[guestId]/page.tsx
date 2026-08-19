@@ -6,9 +6,12 @@ import { notFound } from 'next/navigation';
 import { formatCurrency } from '../../../../lib/utils/currency';
 import { formatDate } from '../../../../lib/utils/dates';
 
+export const dynamic = 'force-dynamic';
+
 interface GuestDetailPageProps {
   params: { guestId: string };
 }
+
 
 export default async function GuestDetailPage({ params }: GuestDetailPageProps) {
   const [guest, allBookings] = await Promise.all([

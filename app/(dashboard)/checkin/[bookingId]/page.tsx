@@ -6,9 +6,12 @@ import { formatCurrency } from '../../../../lib/utils/currency';
 import { formatDate } from '../../../../lib/utils/dates';
 import CheckInClientAction from './CheckInClientAction';
 
+export const dynamic = 'force-dynamic';
+
 interface CheckInPageProps {
   params: { bookingId: string };
 }
+
 
 export default async function CheckInPage({ params }: CheckInPageProps) {
   const booking = await getBookingById(params.bookingId);

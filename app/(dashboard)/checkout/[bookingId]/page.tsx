@@ -5,10 +5,13 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 interface CheckoutPageProps {
   params: { bookingId: string };
   searchParams?: { gst?: string };
 }
+
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
   const includeGst = searchParams?.gst !== 'false';

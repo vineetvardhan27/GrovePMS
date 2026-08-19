@@ -15,52 +15,10 @@ export interface Guest {
   updated_at: string;
 }
 
-export const DEFAULT_GUESTS: Guest[] = [
-  {
-    id: 'b0000000-0000-0000-0000-000000000001',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    full_name: 'Amit Patel',
-    phone: '+91 98234 56789',
-    email: 'amit.patel@example.com',
-    id_type: 'Aadhaar',
-    id_number: '•••• •••• 1234',
-    address: 'Mumbai, Maharashtra',
-    total_stays: 3,
-    total_spent: 18500,
-    created_at: '2026-06-10T10:00:00.000Z',
-    updated_at: '2026-08-15T14:30:00.000Z',
-  },
-  {
-    id: 'b0000000-0000-0000-0000-000000000002',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    full_name: 'Dr. Sunita Rao',
-    phone: '+91 98450 11223',
-    email: 'sunita.rao@health.org',
-    id_type: 'Passport',
-    id_number: 'Z••••••8',
-    address: 'Bangalore, Karnataka',
-    total_stays: 1,
-    total_spent: 7000,
-    created_at: '2026-07-20T12:00:00.000Z',
-    updated_at: '2026-07-22T11:00:00.000Z',
-  },
-  {
-    id: 'b0000000-0000-0000-0000-000000000003',
-    hotel_id: 'a0000000-0000-0000-0000-000000000001',
-    full_name: 'Vikram & Ananya Malhotra',
-    phone: '+91 99887 76655',
-    email: 'vikram.m@techcorp.in',
-    id_type: 'Driving License',
-    id_number: 'DL-••••••••',
-    address: 'Delhi NCR',
-    total_stays: 2,
-    total_spent: 16500,
-    created_at: '2026-08-01T09:00:00.000Z',
-    updated_at: '2026-08-17T18:00:00.000Z',
-  },
-];
+export const DEFAULT_GUESTS: Guest[] = [];
 
-export let localGuestsStore: Guest[] = [...DEFAULT_GUESTS];
+export let localGuestsStore: Guest[] = [];
+
 
 export async function getGuests(hotelId?: string, query?: string): Promise<Guest[]> {
   try {
