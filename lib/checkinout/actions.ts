@@ -10,43 +10,78 @@ import { revalidatePath } from 'next/cache';
  * Check In Action: confirmed → checked_in, room → occupied
  */
 export async function checkInAction(bookingId: string): Promise<{ success?: boolean; error?: string }> {
-  const booking = localBookingsStore.find((b) => b.id === bookingId);
-
-  if (!booking) {
-    return { error: 'Booking not found. Please refresh the page.' };
-  }
-
-  if (booking.booking_status !== 'confirmed') {
-    return { error: `Cannot check in — booking status is currently "${booking.booking_status.replace('_', ' ')}". Only confirmed bookings can be checked in.` };
-  }
-
-  // Update booking status
-  booking.booking_status = 'checked_in';
-  booking.updated_at = new Date().toISOString();
-
-  // Update room status to occupied
-  const room = localRoomsStore.find((r) => r.id === booking.room_id);
-  if (room) {
-    room.status = 'occupied';
-    room.housekeeping_status = 'clean';
-  }
-
   try {
     const supabase = createClient();
-    await (supabase.from('bookings') as any)
-      .update({ booking_status: 'checked_in', updated_at: booking.updated_at })
+
+    // 1. Fetch booking from Supabase
+    const { data: booking, error: fetchErr } = (await supabase
+      .from('bookings')
+      .select('id, room_id, booking_status')
+      .eq('id', bookingId)
+      .single()) as { data: { id: string; room_id: string; booking_status: string } | null; error: any };
+
+
+    if (fetchErr || !booking) {
+      console.error(`Booking ${bookingId} not found in Supabase:`, fetchErr?.message);
+      // Fallback check in local store
+      const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+      if (!localBooking) {
+        return { error: 'Booking not found. Please refresh the page.' };
+      }
+    }
+
+    const currentStatus = booking?.booking_status || localBookingsStore.find((b) => b.id === bookingId)?.booking_status;
+    if (currentStatus !== 'confirmed') {
+      return {
+        error: `Cannot check in — booking status is currently "${currentStatus?.replace('_', ' ')}". Only confirmed bookings can be checked in.`,
+      };
+    }
+
+    const roomId = booking?.room_id || localBookingsStore.find((b) => b.id === bookingId)?.room_id;
+    const nowIso = new Date().toISOString();
+
+    // 2. Update booking in Supabase
+    const { error: updateBookingErr } = await (supabase.from('bookings') as any)
+      .update({ booking_status: 'checked_in', updated_at: nowIso })
       .eq('id', bookingId);
 
-    await (supabase.from('rooms') as any)
-      .update({ status: 'occupied', updated_at: new Date().toISOString() })
-      .eq('id', booking.room_id);
-  } catch {
-    // Local store already updated — continue
+    if (updateBookingErr) {
+      console.error('Error updating booking to checked_in in Supabase:', updateBookingErr.message);
+      return { error: 'Failed to update booking status in database.' };
+    }
+
+    // 3. Update room status to occupied in Supabase
+    if (roomId) {
+      const { error: updateRoomErr } = await (supabase.from('rooms') as any)
+        .update({ status: 'occupied', housekeeping_status: 'clean', updated_at: nowIso })
+        .eq('id', roomId);
+
+      if (updateRoomErr) {
+        console.error('Error updating room to occupied in Supabase:', updateRoomErr.message);
+      }
+    }
+  } catch (err: any) {
+    console.error('Failed to perform check-in in Supabase:', err);
+    return { error: err?.message || 'Database error during check-in.' };
+  }
+
+  // Update in-memory fallback stores
+  const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+  if (localBooking) {
+    localBooking.booking_status = 'checked_in';
+    localBooking.updated_at = new Date().toISOString();
+  }
+
+  const localRoom = localRoomsStore.find((r) => r.id === localBooking?.room_id);
+  if (localRoom) {
+    localRoom.status = 'occupied';
+    localRoom.housekeeping_status = 'clean';
   }
 
   revalidatePath('/bookings');
   revalidatePath('/rooms');
   revalidatePath('/dashboard');
+  revalidatePath(`/billing/${bookingId}`);
 
   return { success: true };
 }
@@ -55,44 +90,78 @@ export async function checkInAction(bookingId: string): Promise<{ success?: bool
  * Check Out Action: checked_in → checked_out, room → cleaning/dirty
  */
 export async function checkOutAction(bookingId: string): Promise<{ success?: boolean; error?: string }> {
-  const booking = localBookingsStore.find((b) => b.id === bookingId);
-
-  if (!booking) {
-    return { error: 'Booking not found. Please refresh the page.' };
-  }
-
-  if (booking.booking_status !== 'checked_in') {
-    return { error: `Cannot check out — booking status is currently "${booking.booking_status.replace('_', ' ')}". Only checked-in bookings can be checked out.` };
-  }
-
-  // Update booking status
-  booking.booking_status = 'checked_out';
-  booking.updated_at = new Date().toISOString();
-
-  // Room → cleaning required
-  const room = localRoomsStore.find((r) => r.id === booking.room_id);
-  if (room) {
-    room.status = 'cleaning';
-    room.housekeeping_status = 'dirty';
-  }
-
   try {
     const supabase = createClient();
-    await (supabase.from('bookings') as any)
-      .update({ booking_status: 'checked_out', updated_at: booking.updated_at })
+
+    // 1. Fetch booking from Supabase
+    const { data: booking, error: fetchErr } = (await supabase
+      .from('bookings')
+      .select('id, room_id, booking_status')
+      .eq('id', bookingId)
+      .single()) as { data: { id: string; room_id: string; booking_status: string } | null; error: any };
+
+
+    if (fetchErr || !booking) {
+      console.error(`Booking ${bookingId} not found in Supabase:`, fetchErr?.message);
+      const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+      if (!localBooking) {
+        return { error: 'Booking not found. Please refresh the page.' };
+      }
+    }
+
+    const currentStatus = booking?.booking_status || localBookingsStore.find((b) => b.id === bookingId)?.booking_status;
+    if (currentStatus !== 'checked_in') {
+      return {
+        error: `Cannot check out — booking status is currently "${currentStatus?.replace('_', ' ')}". Only checked-in bookings can be checked out.`,
+      };
+    }
+
+    const roomId = booking?.room_id || localBookingsStore.find((b) => b.id === bookingId)?.room_id;
+    const nowIso = new Date().toISOString();
+
+    // 2. Update booking status
+    const { error: updateBookingErr } = await (supabase.from('bookings') as any)
+      .update({ booking_status: 'checked_out', updated_at: nowIso })
       .eq('id', bookingId);
 
-    await (supabase.from('rooms') as any)
-      .update({ status: 'cleaning', housekeeping_status: 'dirty', updated_at: new Date().toISOString() })
-      .eq('id', booking.room_id);
-  } catch {
-    // Local store already updated — continue
+    if (updateBookingErr) {
+      console.error('Error updating booking to checked_out in Supabase:', updateBookingErr.message);
+      return { error: 'Failed to update booking status in database.' };
+    }
+
+    // 3. Room → cleaning required / dirty
+    if (roomId) {
+      const { error: updateRoomErr } = await (supabase.from('rooms') as any)
+        .update({ status: 'cleaning', housekeeping_status: 'dirty', updated_at: nowIso })
+        .eq('id', roomId);
+
+      if (updateRoomErr) {
+        console.error('Error updating room to cleaning in Supabase:', updateRoomErr.message);
+      }
+    }
+  } catch (err: any) {
+    console.error('Failed to perform check-out in Supabase:', err);
+    return { error: err?.message || 'Database error during check-out.' };
+  }
+
+  // Update in-memory fallback stores
+  const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+  if (localBooking) {
+    localBooking.booking_status = 'checked_out';
+    localBooking.updated_at = new Date().toISOString();
+  }
+
+  const localRoom = localRoomsStore.find((r) => r.id === localBooking?.room_id);
+  if (localRoom) {
+    localRoom.status = 'cleaning';
+    localRoom.housekeeping_status = 'dirty';
   }
 
   revalidatePath('/bookings');
   revalidatePath('/rooms');
   revalidatePath('/dashboard');
   revalidatePath(`/billing/${bookingId}`);
+  revalidatePath('/billing');
 
   return { success: true };
 }
@@ -107,60 +176,112 @@ export async function recordPaymentAction(
   notes?: string,
   grandTotal?: number
 ): Promise<{ success?: boolean; error?: string; updatedPaymentStatus?: PaymentStatus }> {
-  const booking = localBookingsStore.find((b) => b.id === bookingId);
-
-  if (!booking) {
-    return { error: 'Booking not found. Please refresh the page.' };
-  }
-
   if (amount <= 0) {
     return { error: 'Payment amount must be greater than zero.' };
   }
 
+  const paymentId = crypto.randomUUID();
+  let paymentStatus: PaymentStatus = 'advance_received';
+
+  try {
+    const supabase = createClient();
+
+    // 1. Fetch booking and existing payments
+    const { data: booking, error: bookingErr } = (await supabase
+      .from('bookings')
+      .select('id, hotel_id, total_amount, advance_amount, payments(*)')
+      .eq('id', bookingId)
+      .single()) as { data: { id: string; hotel_id: string; total_amount: number; advance_amount: number; payments: any[] } | null; error: any };
+
+
+    const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+    const hotelId = booking?.hotel_id || localBooking?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
+    const effectiveTotal = grandTotal || Number(booking?.total_amount || localBooking?.total_amount || 0);
+
+    const existingPayments = (booking?.payments || []) as any[];
+    const paymentsList = (existingPayments && existingPayments.length > 0)
+      ? existingPayments
+      : localPaymentsStore.filter((p) => p.booking_id === bookingId);
+
+
+    const priorTotalPaid = paymentsList.reduce((sum: number, p: any) => {
+      const amt = Number(p.amount) || 0;
+      return p.payment_type === 'refund' ? sum - amt : sum + amt;
+    }, 0);
+
+    const newTotalPaid = priorTotalPaid + Number(amount);
+
+
+
+    if (newTotalPaid >= effectiveTotal && effectiveTotal > 0) {
+      paymentStatus = 'fully_paid';
+    } else if (newTotalPaid > 0) {
+      paymentStatus = 'advance_received';
+    } else {
+      paymentStatus = 'no_payment';
+    }
+
+    const paymentType = paymentStatus === 'fully_paid' ? 'settlement' : 'running';
+
+    // 2. Insert payment record into Supabase
+    const { error: payInsertErr } = await (supabase.from('payments') as any).insert({
+      id: paymentId,
+      hotel_id: hotelId,
+      booking_id: bookingId,
+      amount: Number(amount),
+      payment_mode: mode,
+      payment_type: paymentType,
+      notes: notes?.trim() || null,
+    });
+
+    if (payInsertErr) {
+      console.warn('Notice: Supabase payment insert returned:', payInsertErr.message);
+    }
+
+    // 3. Update booking in Supabase
+    const { error: bookingUpdateErr } = await (supabase.from('bookings') as any)
+      .update({
+        payment_status: paymentStatus,
+        advance_amount: newTotalPaid,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', bookingId);
+
+    if (bookingUpdateErr) {
+      console.warn('Notice: Supabase booking payment update returned:', bookingUpdateErr.message);
+    }
+  } catch (err: any) {
+    console.warn('Notice: Failed to connect to Supabase for payment:', err?.message);
+  }
+
+
+  // Update in-memory stores
   const paymentRecord: PaymentRecord = {
-    id: `p${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    hotel_id: booking.hotel_id,
+    id: paymentId,
+    hotel_id: 'a0000000-0000-0000-0000-000000000001',
     booking_id: bookingId,
     amount: Number(amount),
     payment_mode: mode,
-    payment_type: booking.advance_amount > 0 ? 'partial' : 'advance',
+    payment_type: paymentStatus === 'fully_paid' ? 'settlement' : 'running',
     notes: notes?.trim() || null,
     created_at: new Date().toISOString(),
   };
 
-  // Add to local stores
   localPaymentsStore.unshift(paymentRecord);
-  booking.payments.push(paymentRecord);
-  booking.advance_amount += amount;
-
-  // Recalculate payment status based on grand_total (which may include GST)
-  const effectiveTotal = grandTotal || booking.total_amount;
-  const totalPaid = localPaymentsStore
-    .filter((p) => p.booking_id === bookingId)
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  let paymentStatus: PaymentStatus = 'advance_received';
-  if (totalPaid >= effectiveTotal) {
-    paymentStatus = 'fully_paid';
-  } else if (totalPaid === 0) {
-    paymentStatus = 'no_payment';
-  }
-
-  booking.payment_status = paymentStatus;
-
-  try {
-    const supabase = createClient();
-    await (supabase.from('payments') as any).insert(paymentRecord);
-    await (supabase.from('bookings') as any)
-      .update({ payment_status: paymentStatus, advance_amount: booking.advance_amount })
-      .eq('id', bookingId);
-  } catch {
-    // Local store already updated
+  const localBooking = localBookingsStore.find((b) => b.id === bookingId);
+  if (localBooking) {
+    localBooking.payments.push(paymentRecord);
+    localBooking.advance_amount += amount;
+    localBooking.payment_status = paymentStatus;
   }
 
   revalidatePath(`/billing/${bookingId}`);
+  revalidatePath('/billing');
+  revalidatePath('/payments');
   revalidatePath('/bookings');
   revalidatePath('/dashboard');
+  revalidatePath('/reports');
 
   return { success: true, updatedPaymentStatus: paymentStatus };
 }
+

@@ -33,24 +33,28 @@ export default function SettingsPage() {
         </Link>
 
         {/* GST & Taxes */}
-        <div className="bg-white rounded-xl border border-border-subtle p-6 space-y-3 shadow-2xs opacity-80 flex flex-col justify-between">
+        <Link
+          href="/settings/gst"
+          className="bg-white rounded-xl border border-border-subtle p-6 space-y-3 hover:border-brand-forest/50 transition-colors shadow-2xs group flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between">
-              <div className="p-2.5 bg-brand-sand rounded-lg text-brand-forest">
+              <div className="p-2.5 bg-brand-sand rounded-lg text-brand-forest group-hover:bg-brand-forest group-hover:text-white transition-colors">
                 <Percent className="w-5 h-5" />
               </div>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-sand text-ink-muted">Phase 4</span>
+              <ArrowRight className="w-4 h-4 text-ink-muted group-hover:text-brand-forest transition-colors" />
             </div>
             <div className="mt-3">
-              <h3 className="font-serif font-bold text-ink text-base">GST & Taxes</h3>
+              <h3 className="font-serif font-bold text-ink text-base">GST &amp; Taxes</h3>
               <p className="text-caption text-ink-muted mt-1">
-                Configure GST percentage and tax invoice format in hotels.settings
+                Configure GST percentage, GSTIN, and tax invoice format in hotels.settings
               </p>
             </div>
           </div>
-          <span className="text-xs text-ink-muted">Configurable in Phase 4</span>
-        </div>
+          <span className="text-xs text-brand-forest font-medium">Configure GST →</span>
+        </Link>
       </div>
     </div>
   );
 }
+

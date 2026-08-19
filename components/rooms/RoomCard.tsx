@@ -19,6 +19,20 @@ interface RoomCardProps {
   isSelected?: boolean;
 }
 
+// Human-readable floor names — kept in sync with RoomGrid.tsx
+// Floor integer mapping: Basement=0, Ground=1, First=2, Second=3, Upper=4
+const FLOOR_NAMES: Record<number, string> = {
+  0: 'Basement',
+  1: 'Ground Floor',
+  2: 'First Floor',
+  3: 'Second Floor',
+  4: 'Upper Floor',
+};
+
+function getFloorLabel(floor: number): string {
+  return FLOOR_NAMES[floor] ?? `Floor ${floor}`;
+}
+
 export const STATUS_CONFIG: Record<
   RoomStatus,
   {
@@ -102,7 +116,7 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
             {room.room_number}
           </span>
           <span className="block text-[11px] text-ink-muted font-medium">
-            Floor {room.floor}
+            {getFloorLabel(room.floor)}
           </span>
         </div>
 

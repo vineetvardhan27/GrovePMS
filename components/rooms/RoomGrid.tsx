@@ -25,6 +25,20 @@ interface RoomGridProps {
   categories: RoomCategory[];
 }
 
+// Human-readable names for each floor level
+// Floor integer mapping: Basement=0, Ground=1, First=2, Second=3, Upper=4
+const FLOOR_NAMES: Record<number, string> = {
+  0: 'Basement',
+  1: 'Ground Floor',
+  2: 'First Floor',
+  3: 'Second Floor',
+  4: 'Upper Floor',
+};
+
+function getFloorLabel(floorNum: number): string {
+  return FLOOR_NAMES[floorNum] ?? `Floor ${floorNum}`;
+}
+
 export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
   const [rooms, setRooms] = useState<RoomWithCategory[]>(initialRooms);
   const [selectedRoom, setSelectedRoom] = useState<RoomWithCategory | null>(null);
@@ -102,26 +116,34 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
     return counts;
   }, [rooms]);
 
-  // Filtered rooms
+  // Filtered rooms — search matches room number, category name, or floor name
   const filteredRooms = useMemo(() => {
     return rooms.filter((r) => {
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
       if (categoryFilter !== 'all' && r.category_id !== categoryFilter) return false;
-      if (searchQuery.trim() && !r.room_number.includes(searchQuery.trim())) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const floorName = getFloorLabel(r.floor).toLowerCase();
+        const matchesRoom = r.room_number.toLowerCase().includes(q);
+        const matchesCategory = r.category.name.toLowerCase().includes(q);
+        const matchesFloor = floorName.includes(q);
+        if (!matchesRoom && !matchesCategory && !matchesFloor) return false;
+      }
       return true;
     });
   }, [rooms, statusFilter, categoryFilter, searchQuery]);
 
-  // Group rooms by floor
+  // Group rooms by floor (preserving floor 0 for Basement)
   const floors = useMemo(() => {
     const floorMap: Record<number, RoomWithCategory[]> = {};
     filteredRooms.forEach((room) => {
-      const f = room.floor || 1;
+      const f = room.floor !== undefined && room.floor !== null ? room.floor : 1;
       if (!floorMap[f]) floorMap[f] = [];
       floorMap[f].push(room);
     });
     return Object.entries(floorMap).sort(([a], [b]) => Number(a) - Number(b));
   }, [filteredRooms]);
+
 
   return (
     <div className="space-y-6">
@@ -140,7 +162,7 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search room #..."
+              placeholder="Search room, category, floor..."
               className="w-full sm:w-44 pl-9 pr-3 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
             />
           </div>
@@ -229,10 +251,12 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
                 <div className="flex items-center justify-between bg-brand-sand-dark/60 px-4 py-2 rounded-lg border border-border-subtle">
                   <div className="flex items-center gap-2">
                     <span className="font-serif font-bold text-sm text-brand-forest">
-                      Floor {floorNum}
+                      {getFloorLabel(Number(floorNum))}
                     </span>
                     <span className="text-xs text-ink-muted">
-                      ({floorRooms.length} rooms)
+                      {Number(floorNum) === 0
+                        ? `(${floorRooms.length} apartment)`
+                        : `(${floorRooms.length} ${floorRooms.length === 1 ? 'room' : 'rooms'})`}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs">
@@ -244,6 +268,14 @@ export default function RoomGrid({ initialRooms, categories }: RoomGridProps) {
                     </span>
                   </div>
                 </div>
+
+                {/* Restaurant area note — Second Floor physical area, not a room */}
+                {Number(floorNum) === 3 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-brand-sand border border-border-subtle text-xs text-ink-muted">
+                    <span className="text-base">🍽️</span>
+                    <span>Restaurant &amp; Dining area also on this floor (not a guest room)</span>
+                  </div>
+                )}
 
                 {/* Rooms Grid for this floor */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

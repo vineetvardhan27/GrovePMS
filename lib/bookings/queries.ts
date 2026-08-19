@@ -47,11 +47,11 @@ export interface BookingWithDetails {
 
 export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
   {
-    id: 'b0000000-0000-0000-0000-000000000001',
+    id: 'e0000000-0000-0000-0000-000000000001',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     booking_number: 'HGV-202608-1001',
-    room_id: 'r0000000-0000-0000-0000-000000000103', // Room 103 (Occupied)
-    guest_id: 'g0000000-0000-0000-0000-000000000001',
+    room_id: 'd0000000-0000-0000-0000-000000000103', // Room 103 (Occupied)
+    guest_id: 'e0000000-0000-0000-0000-000000000001',
     check_in_date: '2026-08-17',
     check_out_date: '2026-08-20',
     adults: 2,
@@ -71,7 +71,7 @@ export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
       {
         id: 'p0000000-0000-0000-0000-000000000001',
         hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'b0000000-0000-0000-0000-000000000001',
+        booking_id: 'e0000000-0000-0000-0000-000000000001',
         amount: 3000,
         payment_mode: 'upi',
         payment_type: 'advance',
@@ -81,11 +81,11 @@ export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
     ],
   },
   {
-    id: 'b0000000-0000-0000-0000-000000000002',
+    id: 'e0000000-0000-0000-0000-000000000002',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     booking_number: 'HGV-202608-1002',
-    room_id: 'r0000000-0000-0000-0000-000000000202', // Room 202 (Arriving Today)
-    guest_id: 'g0000000-0000-0000-0000-000000000002',
+    room_id: 'd0000000-0000-0000-0000-000000000202', // Room 202 (Arriving Today)
+    guest_id: 'e0000000-0000-0000-0000-000000000002',
     check_in_date: '2026-08-18',
     check_out_date: '2026-08-21',
     adults: 1,
@@ -105,7 +105,7 @@ export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
       {
         id: 'p0000000-0000-0000-0000-000000000002',
         hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'b0000000-0000-0000-0000-000000000002',
+        booking_id: 'e0000000-0000-0000-0000-000000000002',
         amount: 10500,
         payment_mode: 'bank_transfer',
         payment_type: 'advance',
@@ -115,11 +115,11 @@ export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
     ],
   },
   {
-    id: 'b0000000-0000-0000-0000-000000000003',
+    id: 'e0000000-0000-0000-0000-000000000003',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     booking_number: 'HGV-202608-1003',
-    room_id: 'r0000000-0000-0000-0000-000000000203', // Room 203 (Reserved)
-    guest_id: 'g0000000-0000-0000-0000-000000000003',
+    room_id: 'd0000000-0000-0000-0000-000000000203', // Room 203 (Reserved)
+    guest_id: 'e0000000-0000-0000-0000-000000000003',
     check_in_date: '2026-08-20',
     check_out_date: '2026-08-23',
     adults: 3,
@@ -139,7 +139,7 @@ export const DEFAULT_BOOKINGS: BookingWithDetails[] = [
       {
         id: 'p0000000-0000-0000-0000-000000000003',
         hotel_id: 'a0000000-0000-0000-0000-000000000001',
-        booking_id: 'b0000000-0000-0000-0000-000000000003',
+        booking_id: 'e0000000-0000-0000-0000-000000000003',
         amount: 2000,
         payment_mode: 'upi',
         payment_type: 'advance',
@@ -181,11 +181,27 @@ export async function getBookings(
     }
 
     const { data, error } = await q;
-    if (!error && data && data.length > 0) {
-      return data as BookingWithDetails[];
+    if (error) {
+      console.error('Error fetching bookings from Supabase:', error.message);
+      return localBookingsStore;
     }
-  } catch {
-    // Fallback
+    if (data && data.length > 0) {
+      let result = data as BookingWithDetails[];
+      if (searchQuery && searchQuery.trim()) {
+        const s = searchQuery.trim().toLowerCase();
+        result = result.filter(
+          (b) =>
+            b.booking_number?.toLowerCase().includes(s) ||
+            b.guest?.full_name?.toLowerCase().includes(s) ||
+            b.guest?.phone?.toLowerCase().includes(s) ||
+            b.room?.room_number?.toLowerCase().includes(s)
+        );
+      }
+      return result;
+    }
+
+  } catch (err) {
+    console.error('Failed to connect to Supabase for bookings:', err);
   }
 
   let result = [...localBookingsStore];
@@ -222,12 +238,17 @@ export async function getBookingById(bookingId: string): Promise<BookingWithDeta
       .eq('id', bookingId)
       .single();
 
-    if (!error && data) {
+    if (error) {
+      console.error(`Error fetching booking ${bookingId} from Supabase:`, error.message);
+      return localBookingsStore.find((b) => b.id === bookingId) || null;
+    }
+    if (data) {
       return data as BookingWithDetails;
     }
-  } catch {
-    // Fallback
+  } catch (err) {
+    console.error(`Failed to connect to Supabase for booking ${bookingId}:`, err);
   }
 
   return localBookingsStore.find((b) => b.id === bookingId) || null;
 }
+

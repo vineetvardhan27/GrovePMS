@@ -17,7 +17,7 @@ export interface Guest {
 
 export const DEFAULT_GUESTS: Guest[] = [
   {
-    id: 'g0000000-0000-0000-0000-000000000001',
+    id: 'b0000000-0000-0000-0000-000000000001',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     full_name: 'Amit Patel',
     phone: '+91 98234 56789',
@@ -31,7 +31,7 @@ export const DEFAULT_GUESTS: Guest[] = [
     updated_at: '2026-08-15T14:30:00.000Z',
   },
   {
-    id: 'g0000000-0000-0000-0000-000000000002',
+    id: 'b0000000-0000-0000-0000-000000000002',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     full_name: 'Dr. Sunita Rao',
     phone: '+91 98450 11223',
@@ -45,7 +45,7 @@ export const DEFAULT_GUESTS: Guest[] = [
     updated_at: '2026-07-22T11:00:00.000Z',
   },
   {
-    id: 'g0000000-0000-0000-0000-000000000003',
+    id: 'b0000000-0000-0000-0000-000000000003',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     full_name: 'Vikram & Ananya Malhotra',
     phone: '+91 99887 76655',
@@ -76,11 +76,16 @@ export async function getGuests(hotelId?: string, query?: string): Promise<Guest
     }
 
     const { data, error } = await q;
-    if (!error && data && data.length > 0) {
+    if (error) {
+      console.error('Error fetching guests from Supabase:', error.message);
+      return localGuestsStore;
+    }
+    if (data && data.length > 0) {
       return data as Guest[];
     }
-  } catch {
-    // Fallback
+
+  } catch (err) {
+    console.error('Failed to connect to Supabase for guests:', err);
   }
 
   let result = [...localGuestsStore];
@@ -100,12 +105,17 @@ export async function getGuestById(guestId: string): Promise<Guest | null> {
   try {
     const supabase = createClient();
     const { data, error } = await supabase.from('guests').select('*').eq('id', guestId).single();
-    if (!error && data) {
+    if (error) {
+      console.error(`Error fetching guest ${guestId} from Supabase:`, error.message);
+      return localGuestsStore.find((g) => g.id === guestId) || null;
+    }
+    if (data) {
       return data as Guest;
     }
-  } catch {
-    // Fallback
+  } catch (err) {
+    console.error(`Failed to connect to Supabase for guest ${guestId}:`, err);
   }
 
   return localGuestsStore.find((g) => g.id === guestId) || null;
 }
+

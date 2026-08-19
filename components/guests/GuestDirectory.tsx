@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Users,
   Search,
@@ -147,20 +148,29 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                       </td>
 
                       <td className="p-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedGuest(guest)}
-                          className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-brand-forest text-xs font-medium transition-colors cursor-pointer min-h-[36px]"
-                        >
-                          <History className="w-3.5 h-3.5" />
-                          <span>History</span>
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            href={`/guests/${guest.id}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-subtle bg-white hover:bg-brand-sand text-brand-forest text-xs font-medium transition-colors"
+                          >
+                            <span>Profile</span>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedGuest(guest)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-subtle bg-brand-sand hover:bg-brand-sand-dark text-ink text-xs font-medium transition-colors cursor-pointer"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                            <span>Stays</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
                 })
               )}
             </tbody>
+
           </table>
         </div>
       </div>

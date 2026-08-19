@@ -15,18 +15,24 @@ export async function updateRoomStatusAction(
 
   try {
     const supabase = createClient();
-    await (supabase.from('rooms') as any)
+    const { error } = await (supabase.from('rooms') as any)
       .update({
         status: newStatus,
         housekeeping_status: hkStatus,
         updated_at: new Date().toISOString(),
       })
       .eq('id', roomId);
-  } catch {
-    // Update local memory store fallback
+
+    if (error) {
+      console.error('Error updating room status in Supabase:', error.message);
+      return { success: false, error: 'Failed to update room status in database.' };
+    }
+  } catch (err: any) {
+    console.error('Failed to update room status:', err);
+    return { success: false, error: err?.message || 'Database connection error.' };
   }
 
-  // Update in-memory fallback
+  // Update in-memory store
   const idx = localRoomsStore.findIndex((r) => r.id === roomId);
   if (idx >= 0) {
     localRoomsStore[idx] = {
@@ -43,7 +49,7 @@ export async function updateRoomStatusAction(
 }
 
 export async function saveRoomCategoryAction(category: Partial<RoomCategory>) {
-  const id = category.id || `c${Date.now()}`;
+  const id = category.id && category.id.trim() !== '' ? category.id : crypto.randomUUID();
   const categoryData: RoomCategory = {
     id,
     hotel_id: category.hotel_id || 'a0000000-0000-0000-0000-000000000001',
@@ -57,9 +63,14 @@ export async function saveRoomCategoryAction(category: Partial<RoomCategory>) {
 
   try {
     const supabase = createClient();
-    await (supabase.from('room_categories') as any).upsert(categoryData);
-  } catch {
-    // Fallback
+    const { error } = await (supabase.from('room_categories') as any).upsert(categoryData);
+    if (error) {
+      console.error('Error upserting room category in Supabase:', error.message);
+      return { success: false, error: 'Failed to save room category to database.' };
+    }
+  } catch (err: any) {
+    console.error('Failed to save room category:', err);
+    return { success: false, error: err?.message || 'Database connection error.' };
   }
 
   const existingIdx = localCategoriesStore.findIndex((c) => c.id === id);
@@ -71,6 +82,8 @@ export async function saveRoomCategoryAction(category: Partial<RoomCategory>) {
 
   revalidatePath('/settings/room-categories');
   revalidatePath('/rooms');
+  revalidatePath('/dashboard');
 
   return { success: true, category: categoryData };
 }
+

@@ -80,9 +80,20 @@ export default function DashboardRoomGrid({
     await updateRoomStatusAction(roomId, newStatus, newHousekeepingStatus);
   };
 
-  // Group rooms by floor
-  const floors = [1, 2, 3].map((f) => ({
+  // Human-readable floor names
+  const FLOOR_NAMES: Record<number, string> = {
+    0: 'Basement',
+    1: 'Ground Floor',
+    2: 'First Floor',
+    3: 'Second Floor',
+    4: 'Upper Floor',
+  };
+
+  // Group rooms by floor dynamically based on available rooms (0 to 4)
+  const uniqueFloors = Array.from(new Set(rooms.map((r) => r.floor))).sort((a, b) => a - b);
+  const floors = (uniqueFloors.length > 0 ? uniqueFloors : [0, 1, 2, 3, 4]).map((f) => ({
     floor: f,
+    label: FLOOR_NAMES[f] ?? `Floor ${f}`,
     rooms: rooms.filter((r) => r.floor === f),
   }));
 
@@ -105,14 +116,14 @@ export default function DashboardRoomGrid({
       </div>
 
       {/* Floors grid */}
-      <div className="space-y-4">
-        {floors.map(({ floor, rooms: floorRooms }) => (
+      <div className="space-y-5">
+        {floors.map(({ floor, label, rooms: floorRooms }) => (
           <div key={floor} className="space-y-2.5">
             <div className="flex items-center justify-between text-xs font-medium text-ink-muted px-1">
               <span className="font-serif font-bold text-brand-forest">
-                Floor {floor}
+                {label}
               </span>
-              <span>{floorRooms.length} Rooms</span>
+              <span>{floorRooms.length} {floorRooms.length === 1 ? 'Unit' : 'Rooms'}</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -128,6 +139,7 @@ export default function DashboardRoomGrid({
           </div>
         ))}
       </div>
+
 
       {/* Drawer */}
       <RoomDetailDrawer

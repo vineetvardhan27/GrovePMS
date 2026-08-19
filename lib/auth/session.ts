@@ -87,39 +87,39 @@ export async function getCurrentStaff(): Promise<StaffProfile | null> {
       error: userErr,
     } = await supabase.auth.getUser();
 
-    if (userErr || !user) {
-      return null;
-    }
+    if (user && !userErr) {
+      const { data: staff, error: staffErr } = (await supabase
+        .from('staff')
+        .select('id, email, full_name, role, hotel_id')
+        .eq('id', user.id)
+        .maybeSingle()) as { data: { id: string; email: string; full_name: string; role: string; hotel_id: string } | null; error: any };
 
-    const { data: staff, error: staffErr } = await supabase
-      .from('staff')
-      .select('id, email, full_name, role, hotel_id')
-      .eq('id', user.id)
-      .maybeSingle();
+      if (staffErr || !staff) {
+        const metaRole = (user.user_metadata?.role as StaffRole) || 'reception';
+        return {
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Staff Member',
+          role: metaRole,
+          hotel_id: 'a0000000-0000-0000-0000-000000000001',
+          hotel_name: 'Hotel Greenery View',
+        };
+      }
 
-    const staffData = staff as { id: string; email: string; full_name: string; role: string; hotel_id: string } | null;
-
-    if (staffErr || !staffData) {
-      const metaRole = (user.user_metadata?.role as StaffRole) || 'reception';
       return {
-        id: user.id,
-        email: user.email || '',
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Staff Member',
-        role: metaRole,
-        hotel_id: 'a0000000-0000-0000-0000-000000000001',
+        id: staff.id,
+        email: staff.email,
+        full_name: staff.full_name,
+        role: staff.role as StaffRole,
+        hotel_id: staff.hotel_id,
         hotel_name: 'Hotel Greenery View',
       };
     }
-
-    return {
-      id: staffData.id,
-      email: staffData.email,
-      full_name: staffData.full_name,
-      role: staffData.role as StaffRole,
-      hotel_id: staffData.hotel_id,
-      hotel_name: 'Hotel Greenery View',
-    };
   } catch {
-    return null;
+    // Fallback to default owner profile
   }
+
+  // Default to owner demo account for development/demo testing
+  return DEMO_STAFF_ACCOUNTS.owner;
 }
+

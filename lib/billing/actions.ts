@@ -53,9 +53,12 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
 
   const settings = await getHotelSettings(booking.hotel_id);
 
-  // Get all payments for this booking
-  const payments = localPaymentsStore.filter((p) => p.booking_id === bookingId);
-  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  // Get all payments for this booking from the joined database record or local store
+  const payments = booking.payments || localPaymentsStore.filter((p) => p.booking_id === bookingId);
+  const totalPaid = payments.reduce((sum, p) => {
+    const amt = Number(p.amount) || 0;
+    return p.payment_type === 'refund' ? sum - amt : sum + amt;
+  }, 0);
 
   // Calculate nights
   const checkIn = new Date(booking.check_in_date);
@@ -63,14 +66,14 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
   const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
 
   // Build line items
-  const roomCharge = nights * booking.rate_per_night;
-  const extras = booking.total_amount - nights * booking.rate_per_night;
+  const roomCharge = nights * Number(booking.rate_per_night);
+  const extras = Math.max(0, Number(booking.total_amount) - roomCharge);
 
   const lineItems: BillLineItem[] = [
     {
       description: `Room ${booking.room.room_number} (${booking.room.category.name}) — ${nights} Night${nights > 1 ? 's' : ''}`,
       nights,
-      rate: booking.rate_per_night,
+      rate: Number(booking.rate_per_night),
       amount: roomCharge,
     },
   ];
@@ -84,9 +87,9 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
 
-  // GST from settings — rate might be 12, 18, etc.
-  const gstRate = settings.gst_rate; // e.g. 12
-  const gstAmount = includeGst ? Math.round(subtotal * gstRate) / 100 : 0;
+  // GST from settings — dynamic percentage (12, 18, etc.)
+  const gstRate = Number(settings.gst_percentage || settings.gst_rate || 12);
+  const gstAmount = includeGst ? Math.round(((subtotal * gstRate) / 100) * 100) / 100 : 0;
   const grandTotal = subtotal + gstAmount;
   const balanceDue = Math.max(0, grandTotal - totalPaid);
 
@@ -111,10 +114,11 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
     balance_due: balanceDue,
     payments,
     hotel_name: 'Hotel Greenery View',
-    hotel_address: `${settings.address}, ${settings.city}, ${settings.state} - ${settings.pin_code}`,
-    hotel_gst_number: settings.gst_number,
-    hotel_phone: settings.phone,
+    hotel_address: `${settings.address || 'Nature Valley Road'}, ${settings.city || 'Green Hills'}`,
+    hotel_gst_number: settings.gst_number || null,
+    hotel_phone: settings.phone || '+91 98765 43210',
     include_gst: includeGst,
     generated_at: new Date().toISOString(),
   };
 }
+

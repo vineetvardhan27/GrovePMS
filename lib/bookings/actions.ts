@@ -111,7 +111,7 @@ export async function checkDoubleBooking(
 export async function createBookingAction(input: CreateBookingInput): Promise<BookingActionResult> {
   const hotelId = input.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-  // 1. Validate dates
+  // 1. Validate dates and fields
   if (!input.check_in_date || !input.check_out_date) {
     return { error: 'Please specify both check-in and check-out dates.' };
   }
@@ -140,14 +140,62 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     };
   }
 
-  // 3. Find or create guest record
-  let guest = localGuestsStore.find(
-    (g) => g.phone.replace(/\D/g, '') === input.guest_phone.replace(/\D/g, '')
-  );
+  const supabase = createClient();
 
-  if (!guest) {
-    guest = {
-      id: `g${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  // 3. Find or create guest in Supabase
+  let guestId: string = '';
+  let guestData: Guest;
+
+  try {
+    const cleanPhone = input.guest_phone.trim();
+    const { data: existingGuest } = (await supabase
+      .from('guests')
+      .select('*')
+      .eq('hotel_id', hotelId)
+      .eq('phone', cleanPhone)
+      .maybeSingle()) as { data: Guest | null; [key: string]: any };
+
+    if (existingGuest) {
+      guestId = existingGuest.id;
+      guestData = existingGuest;
+    } else {
+
+      guestId = crypto.randomUUID();
+      guestData = {
+        id: guestId,
+        hotel_id: hotelId,
+        full_name: input.guest_name.trim(),
+        phone: cleanPhone,
+        email: input.guest_email?.trim() || null,
+        id_type: input.guest_id_type || null,
+        id_number: input.guest_id_number || null,
+        address: input.guest_address?.trim() || null,
+        total_stays: 1,
+        total_spent: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: guestInsertErr } = await (supabase.from('guests') as any).insert({
+        id: guestData.id,
+        hotel_id: guestData.hotel_id,
+        full_name: guestData.full_name,
+        phone: guestData.phone,
+        email: guestData.email,
+        id_type: guestData.id_type,
+        id_number: guestData.id_number,
+        address: guestData.address,
+      });
+
+      if (guestInsertErr) {
+        console.error('Error inserting guest in Supabase:', guestInsertErr.message);
+      }
+    }
+  } catch (err: any) {
+    console.error('Error looking up/inserting guest:', err);
+    guestId = crypto.randomUUID();
+    guestData = {
+      id: guestId,
       hotel_id: hotelId,
       full_name: input.guest_name.trim(),
       phone: input.guest_phone.trim(),
@@ -160,18 +208,14 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    localGuestsStore.unshift(guest);
+  }
 
-    try {
-      const supabase = createClient();
-      await (supabase.from('guests') as any).insert(guest);
-    } catch {
-      // Keep local store
-    }
+  // Update in-memory guest store
+  const localGuestIdx = localGuestsStore.findIndex((g) => g.id === guestId);
+  if (localGuestIdx >= 0) {
+    localGuestsStore[localGuestIdx] = guestData;
   } else {
-    // Update existing guest
-    guest.total_stays = (guest.total_stays || 0) + 1;
-    if (input.guest_email && !guest.email) guest.email = input.guest_email;
+    localGuestsStore.unshift(guestData);
   }
 
   // 4. Calculate stay financials
@@ -191,23 +235,35 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     paymentStatus = 'advance_received';
   }
 
-  // 5. Generate Booking Number (e.g. HGV-202608-4821)
+  // 5. Generate Booking Number & ID
   const now = new Date();
   const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   const bookingNumber = `HGV-${yearMonth}-${randomSuffix}`;
-  const bookingId = `b${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const bookingId = crypto.randomUUID();
 
-  // Find room
-  const targetRoom = localRoomsStore.find((r) => r.id === input.room_id) || localRoomsStore[0];
+  // Find room details
+  let targetRoom = localRoomsStore.find((r) => r.id === input.room_id) || localRoomsStore[0];
+  try {
+    const { data: dbRoom } = await supabase
+      .from('rooms')
+      .select('*, category:category_id(*)')
+      .eq('id', input.room_id)
+      .single();
+    if (dbRoom) {
+      targetRoom = dbRoom as any;
+    }
+  } catch (err) {
+    console.error('Error fetching room for booking:', err);
+  }
 
-  // 6. Create Booking Record
-  const newBooking: BookingWithDetails = {
+  // 6. Create Booking Record in Supabase
+  const bookingRecord = {
     id: bookingId,
     hotel_id: hotelId,
     booking_number: bookingNumber,
     room_id: input.room_id,
-    guest_id: guest.id,
+    guest_id: guestId,
     check_in_date: input.check_in_date,
     check_out_date: input.check_out_date,
     adults: Number(input.adults) || 1,
@@ -216,20 +272,35 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     total_amount: totalAmount,
     advance_amount: advanceAmount,
     payment_status: paymentStatus,
-    booking_status: 'confirmed',
+    booking_status: 'confirmed' as BookingStatus,
     source: input.source || 'direct',
     remarks: input.remarks?.trim() || null,
+  };
+
+  try {
+    const { error: bookingErr } = await (supabase.from('bookings') as any).insert(bookingRecord);
+    if (bookingErr) {
+      console.warn('Notice: Supabase direct insert returned:', bookingErr.message);
+    }
+  } catch (err: any) {
+    console.warn('Notice: Failed to connect to Supabase for booking insert:', err?.message);
+  }
+
+
+  const newBooking: BookingWithDetails = {
+    ...bookingRecord,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    guest,
+    guest: guestData,
     room: targetRoom,
     payments: [],
   };
 
   // 7. Record advance payment if present
   if (advanceAmount > 0) {
+    const paymentId = crypto.randomUUID();
     const paymentRecord: PaymentRecord = {
-      id: `p${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: paymentId,
       hotel_id: hotelId,
       booking_id: bookingId,
       amount: advanceAmount,
@@ -238,44 +309,30 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       notes: `Advance for booking ${bookingNumber}`,
       created_at: new Date().toISOString(),
     };
+
     newBooking.payments.push(paymentRecord);
     localPaymentsStore.unshift(paymentRecord);
 
     try {
-      const supabase = createClient();
-      await (supabase.from('payments') as any).insert(paymentRecord);
-    } catch {
-      // Keep local
+      const { error: payErr } = await (supabase.from('payments') as any).insert({
+        id: paymentRecord.id,
+        hotel_id: paymentRecord.hotel_id,
+        booking_id: paymentRecord.booking_id,
+        amount: paymentRecord.amount,
+        payment_mode: paymentRecord.payment_mode,
+        payment_type: paymentRecord.payment_type,
+        notes: paymentRecord.notes,
+      });
+      if (payErr) {
+        console.error('Error logging advance payment in Supabase:', payErr.message);
+      }
+    } catch (err) {
+      console.error('Failed to insert advance payment:', err);
     }
   }
 
   // Insert to local store
   localBookingsStore.unshift(newBooking);
-  guest.total_spent = (guest.total_spent || 0) + advanceAmount;
-
-  try {
-    const supabase = createClient();
-    await (supabase.from('bookings') as any).insert({
-      id: newBooking.id,
-      hotel_id: newBooking.hotel_id,
-      booking_number: newBooking.booking_number,
-      room_id: newBooking.room_id,
-      guest_id: newBooking.guest_id,
-      check_in_date: newBooking.check_in_date,
-      check_out_date: newBooking.check_out_date,
-      adults: newBooking.adults,
-      children: newBooking.children,
-      rate_per_night: newBooking.rate_per_night,
-      total_amount: newBooking.total_amount,
-      advance_amount: newBooking.advance_amount,
-      payment_status: newBooking.payment_status,
-      booking_status: newBooking.booking_status,
-      source: newBooking.source,
-      remarks: newBooking.remarks,
-    });
-  } catch {
-    // Keep local
-  }
 
   // 8. Update room status based on booking dates
   const todayStr = new Date().toISOString().split('T')[0];
@@ -283,8 +340,16 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
 
   if (input.check_in_date === todayStr) {
     updatedRoomStatus = 'arriving_today';
-  } else if (input.check_in_date > todayStr && targetRoom.status === 'available') {
+  } else if (input.check_in_date > todayStr && (targetRoom.status === 'available' || targetRoom.status === 'cleaning')) {
     updatedRoomStatus = 'reserved';
+  }
+
+  try {
+    await (supabase.from('rooms') as any)
+      .update({ status: updatedRoomStatus, updated_at: new Date().toISOString() })
+      .eq('id', input.room_id);
+  } catch (err) {
+    console.error('Failed to update room status:', err);
   }
 
   const roomIdx = localRoomsStore.findIndex((r) => r.id === input.room_id);
@@ -300,6 +365,8 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
   revalidatePath('/rooms');
   revalidatePath('/dashboard');
   revalidatePath('/guests');
+  revalidatePath('/payments');
+  revalidatePath('/billing');
 
   return { success: true, booking: newBooking };
 }
@@ -308,24 +375,53 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
  * Cancel an existing reservation
  */
 export async function cancelBookingAction(bookingId: string) {
+  try {
+    const supabase = createClient();
+
+    // 1. Fetch booking to find room_id
+    const { data: booking } = (await supabase
+      .from('bookings')
+      .select('id, room_id, booking_status')
+      .eq('id', bookingId)
+      .single()) as { data: { id: string; room_id: string; booking_status: string } | null; [key: string]: any };
+
+    // 2. Update booking status
+    const { error } = await (supabase.from('bookings') as any)
+      .update({ booking_status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', bookingId);
+
+    if (error) {
+      console.error('Error cancelling booking in Supabase:', error.message);
+      return { success: false, error: 'Failed to cancel booking.' };
+    }
+
+    // 3. Release room status back to available if room is not occupied
+    if (booking?.room_id) {
+      const { data: currentRoom } = (await supabase
+        .from('rooms')
+        .select('status')
+        .eq('id', booking.room_id)
+        .single()) as { data: { status: string } | null; [key: string]: any };
+
+      if (currentRoom && (currentRoom.status === 'reserved' || currentRoom.status === 'arriving_today')) {
+        await (supabase.from('rooms') as any)
+          .update({ status: 'available', updated_at: new Date().toISOString() })
+          .eq('id', booking.room_id);
+      }
+    }
+
+  } catch (err: any) {
+    console.error('Failed to cancel booking:', err);
+  }
+
   const booking = localBookingsStore.find((b) => b.id === bookingId);
   if (booking) {
     booking.booking_status = 'cancelled';
     booking.updated_at = new Date().toISOString();
 
-    // Release room if it was marked reserved or arriving
     const room = localRoomsStore.find((r) => r.id === booking.room_id);
     if (room && (room.status === 'reserved' || room.status === 'arriving_today')) {
       room.status = 'available';
-    }
-
-    try {
-      const supabase = createClient();
-      await (supabase.from('bookings') as any)
-        .update({ booking_status: 'cancelled', updated_at: new Date().toISOString() })
-        .eq('id', bookingId);
-    } catch {
-      // Fallback
     }
   }
 
@@ -333,6 +429,8 @@ export async function cancelBookingAction(bookingId: string) {
   revalidatePath('/bookings/calendar');
   revalidatePath('/rooms');
   revalidatePath('/dashboard');
+  revalidatePath('/billing');
 
   return { success: true };
 }
+
