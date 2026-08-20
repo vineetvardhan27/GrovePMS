@@ -25,7 +25,7 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 print:hidden">
         <Link
           href="/billing"
           className="p-2 rounded-lg bg-white border border-border-subtle text-ink-muted hover:text-ink hover:bg-brand-sand transition-colors"
@@ -33,9 +33,9 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-display text-brand-forest">Guest Bill</h1>
+          <h1 className="text-display text-brand-forest">Tax Invoice / Guest Folio</h1>
           <p className="text-body text-ink-muted">
-            {booking.booking_number} — {booking.guest.full_name}
+            Booking #{booking.booking_number} — {booking.guest.full_name}
           </p>
         </div>
       </div>

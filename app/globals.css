@@ -51,5 +51,70 @@
   background: #5C5B54;
 }
 
-/* Hotel Greenery View Design System Active */
+/* ----------------------------------------------------
+ * High-Precision A4 Print & PDF Stylesheet
+ * ---------------------------------------------------- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
 
+  /* Reset body and background for crisp printing */
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    min-height: auto !important;
+  }
+
+  /* Hide all dashboard chrome, navigation, headers, and UI-only interactive controls */
+  header,
+  nav,
+  aside,
+  footer,
+  .print-hidden,
+  .print\\:hidden,
+  button,
+  a[href]:not(.print-allow),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Invoice Print Area full-width container */
+  #invoice-print-area {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Prevent awkward table row and block breaks */
+  tr, .print-keep-together {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure colors and borders render with fidelity */
+  .bg-brand-forest {
+    background-color: #1F3D3A !important;
+    color: #ffffff !important;
+  }
+
+  .bg-brand-sand {
+    background-color: #f7f5f0 !important;
+  }
+
+  .text-brand-forest {
+    color: #1F3D3A !important;
+  }
+}

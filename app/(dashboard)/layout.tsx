@@ -92,8 +92,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-sand">
-      {/* Desktop Sidebar (hidden on mobile) */}
-      <aside className="hidden md:flex md:w-64 bg-brand-forest text-white flex-col shrink-0 border-r border-brand-forest-light">
+      {/* Desktop Sidebar (hidden on mobile and print) */}
+      <aside className="print:hidden hidden md:flex md:w-64 bg-brand-forest text-white flex-col shrink-0 border-r border-brand-forest-light">
         {/* Brand Header */}
         <div className="p-6 flex items-center gap-3 border-b border-brand-forest-light">
           <div className="p-2.5 bg-white/10 rounded-xl">
@@ -161,8 +161,8 @@ export default async function DashboardLayout({
 
       {/* Main content area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top bar (Responsive on mobile) */}
-        <header className="h-16 bg-white/85 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
+        {/* Top bar (Responsive on mobile, hidden in print) */}
+        <header className="print:hidden h-16 bg-white/85 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {/* Mobile Hamburger Drawer Toggle */}
             <MobileNavDrawer staff={staff} authorizedPaths={authorizedPaths} />
