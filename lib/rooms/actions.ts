@@ -95,3 +95,47 @@ export async function saveRoomCategoryAction(category: Partial<RoomCategory>) {
     return { success: false, error: err?.message || 'Database connection error.' };
   }
 }
+
+export async function saveRoomRateOverrideAction(
+  roomId: string,
+  baseRateOverride: number | null,
+  weekendRateOverride: number | null
+) {
+  const staff = await getCurrentStaff();
+  if (!staff) {
+    return { success: false, error: 'Please log in to continue.' };
+  }
+
+  if (staff.role !== 'owner' && staff.role !== 'manager') {
+    return { success: false, error: 'Only owners and managers can configure room-specific rate overrides.' };
+  }
+
+  try {
+    const supabase = createClient();
+    const { data: updatedRoom, error } = await (supabase.from('rooms') as any)
+      .update({
+        base_rate_override: baseRateOverride !== null && baseRateOverride > 0 ? baseRateOverride : null,
+        weekend_rate_override: weekendRateOverride !== null && weekendRateOverride > 0 ? weekendRateOverride : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', roomId)
+      .eq('hotel_id', staff.hotel_id)
+      .select('*, category:category_id(*)')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error updating room override in Supabase:', error.message);
+      return { success: false, error: `Failed to update room override: ${error.message}` };
+    }
+
+    revalidatePath('/settings/room-categories');
+    revalidatePath('/rooms');
+    revalidatePath('/dashboard');
+
+    return { success: true, room: updatedRoom };
+  } catch (err: any) {
+    console.error('Failed to save room rate override:', err);
+    return { success: false, error: err?.message || 'Database connection error.' };
+  }
+}
+

@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation';
 import {
   Menu,
   X,
-  Hotel,
   LogOut,
   LayoutDashboard,
   BedDouble,
@@ -21,192 +20,190 @@ import {
   ShieldCheck,
   UserCheck,
   Sparkles,
+  Package,
+  PartyPopper,
 } from 'lucide-react';
 import { StaffRole } from '../../lib/types/database.types';
 import { signOut } from '../../app/(auth)/login/actions';
 
+import { StaffProfile } from '../../lib/auth/session';
+import { AvailableStaffAccount } from '../../lib/auth/switchAccount';
+import AccountSwitcher from './AccountSwitcher';
+
 const ALL_NAV_ITEMS = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Rooms', href: '/rooms', icon: BedDouble },
-  { name: 'Bookings', href: '/bookings', icon: CalendarDays },
-  { name: 'Guests', href: '/guests', icon: Users },
-  { name: 'Billing', href: '/billing', icon: Receipt },
-  { name: 'Payments', href: '/payments', icon: CreditCard },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard',    href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Rooms',        href: '/rooms',     icon: BedDouble },
+  { name: 'Bookings',     href: '/bookings',  icon: CalendarDays },
+  { name: 'Guests',       href: '/guests',    icon: Users },
+  { name: 'Billing',      href: '/billing',   icon: Receipt },
+  { name: 'Payments',     href: '/payments',  icon: CreditCard },
+  { name: 'Inventory',    href: '/inventory', icon: Package },
+  { name: 'Banquet Hall', href: '/banquet',   icon: PartyPopper },
+  { name: 'Reports',      href: '/reports',   icon: BarChart3 },
+  { name: 'Settings',     href: '/settings',  icon: Settings },
 ];
 
-const ROLE_BADGES: Record<StaffRole, { title: string; icon: any; color: string }> = {
-  owner: { title: 'Owner', icon: Building2, color: 'bg-brand-sand-dark text-brand-forest border-brand-sand' },
-  manager: { title: 'Manager', icon: ShieldCheck, color: 'bg-status-blue/20 text-white border-status-blue/40' },
-  reception: { title: 'Receptionist', icon: UserCheck, color: 'bg-status-amber/20 text-white border-status-amber/40' },
-  housekeeping: { title: 'Housekeeping', icon: Sparkles, color: 'bg-status-orange/20 text-white border-status-orange/40' },
+const ROLE_META: Record<StaffRole, { title: string; icon: any; avatarBg: string }> = {
+  owner:        { title: 'Owner',        icon: Building2,   avatarBg: 'bg-brand-sand text-brand-forest' },
+  manager:      { title: 'Manager',      icon: ShieldCheck, avatarBg: 'bg-status-blue/30 text-white' },
+  reception:    { title: 'Reception',    icon: UserCheck,   avatarBg: 'bg-status-amber/30 text-white' },
+  housekeeping: { title: 'Housekeeping', icon: Sparkles,    avatarBg: 'bg-status-orange/30 text-white' },
 };
 
-interface MobileNavDrawerProps {
-  staff: {
-    full_name: string;
-    role: StaffRole;
-    hotel_name: string;
-  };
-  authorizedPaths: string[];
+function initials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
 
-export default function MobileNavDrawer({ staff, authorizedPaths }: MobileNavDrawerProps) {
+interface MobileNavDrawerProps {
+  staff: StaffProfile | { full_name: string; role: StaffRole; hotel_name: string };
+  authorizedPaths: string[];
+  availableAccounts?: AvailableStaffAccount[];
+}
+
+export default function MobileNavDrawer({
+  staff,
+  authorizedPaths,
+  availableAccounts = [],
+}: MobileNavDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Close drawer callback
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
+  const handleClose = useCallback(() => { setIsOpen(false); }, []);
 
-  // Close drawer automatically on route change
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+  // Close on route change
+  useEffect(() => { setIsOpen(false); }, [pathname]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll
   useEffect(() => {
-    if (isOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
+    if (!isOpen) return;
+    const original = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = original; };
   }, [isOpen]);
 
-  // Handle escape key to close drawer
+  // Escape key
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        handleClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && isOpen) handleClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [isOpen, handleClose]);
 
-  const visibleNavItems = ALL_NAV_ITEMS.filter((item) => authorizedPaths.includes(item.href));
-  const roleBadgeInfo = ROLE_BADGES[staff.role] || ROLE_BADGES.reception;
-  const RoleIcon = roleBadgeInfo.icon;
+  const visibleNavItems = ALL_NAV_ITEMS.filter(item => authorizedPaths.includes(item.href));
+  const roleMeta = ROLE_META[staff.role] || ROLE_META.reception;
+  const RoleIcon = roleMeta.icon;
+
+  const fullStaffProfile: StaffProfile = {
+    id: (staff as any).id || '',
+    email: (staff as any).email || '',
+    full_name: staff.full_name,
+    role: staff.role,
+    hotel_id: (staff as any).hotel_id || '',
+    hotel_name: staff.hotel_name,
+    is_active: true,
+  };
 
   const drawerContent = (
-    <div className="fixed inset-0 z-[9999] md:hidden" aria-modal="true" role="dialog">
-      {/* Dimmed backdrop scrim (click-to-close) */}
+    <div className="fixed inset-0 z-[9999] md:hidden">
+      {/* Backdrop */}
       <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200"
         onClick={handleClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-pointer z-[9999]"
         aria-hidden="true"
       />
 
-      {/* Slide-out Navigation Panel (100% Solid opaque background, full viewport height) */}
+      {/* Drawer Panel */}
       <div
-        className="fixed inset-y-0 left-0 w-4/5 max-w-xs h-full bg-[#1F3D3A] text-white flex flex-col justify-between shadow-2xl z-[10000] overflow-hidden transform transition-transform duration-200 ease-out motion-reduce:transition-none"
-        style={{ backgroundColor: '#1F3D3A', height: '100dvh' }}
+        className="fixed inset-y-0 left-0 w-[280px] h-full bg-brand-forest text-white flex flex-col shadow-modal z-[10000] overflow-hidden"
+        style={{ height: '100dvh' }}
         role="dialog"
-        aria-label="Global Navigation Menu"
+        aria-label="Navigation Menu"
       >
-        {/* Header row: Logo, Name, Close (X) button with >= 44x44px target */}
-        <div
-          className="p-4 border-b border-brand-forest-light bg-[#1F3D3A] flex items-center justify-between shrink-0"
-          style={{ backgroundColor: '#1F3D3A' }}
-        >
+        {/* Header */}
+        <div className="px-4 py-4 border-b border-white/8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 bg-white/10 rounded-lg text-brand-sand shrink-0">
-              <Hotel className="w-5 h-5" />
+            <div className="h-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
+              <img src="/logo.png" alt="Hotel Greenery View Logo" className="h-8 w-auto object-contain" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-serif text-base font-bold tracking-tight truncate text-white">
+              <h2 className="font-serif text-[14px] font-bold truncate text-white leading-tight">
                 {staff.hotel_name}
               </h2>
-              <p className="text-xs text-brand-sand/70 truncate">Control Centre</p>
+              <p className="text-[10px] text-brand-sand/60">Control Centre</p>
             </div>
           </div>
-
           <button
             type="button"
             onClick={handleClose}
-            className="flex items-center justify-center w-11 h-11 rounded-lg text-brand-sand hover:bg-white/10 hover:text-white transition-colors cursor-pointer shrink-0"
-            aria-label="Close Navigation Menu"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-brand-sand/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer shrink-0"
+            aria-label="Close menu"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation route list (scoped to role, min 44x44px per row, icon + label) */}
-        <nav
-          className="flex-1 p-3 space-y-1.5 overflow-y-auto bg-[#1F3D3A]"
-          style={{ backgroundColor: '#1F3D3A' }}
-        >
-          <div className="px-3.5 py-1 text-tiny font-semibold uppercase tracking-wider text-brand-sand/60">
-            Menu ({staff.role})
-          </div>
-
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
-
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={handleClose}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-lg text-base font-medium transition-colors min-h-touch ${
-                  isActive
-                    ? 'bg-brand-forest-light text-white font-semibold shadow-xs'
-                    : 'text-brand-sand/90 hover:bg-brand-forest-light/60 hover:text-white'
-                }`}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 min-h-touch relative group
+                  ${isActive
+                    ? 'bg-white/12 text-white font-medium'
+                    : 'text-brand-sand/75 hover:bg-white/8 hover:text-brand-sand font-normal'
+                  }
+                `}
               >
-                <Icon className="w-5 h-5 text-brand-sand/80 shrink-0" />
-                <span>{item.name}</span>
+                {/* Active left indicator */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-brand-sand rounded-r-full" />
+                )}
+                <Icon
+                  className={`w-[18px] h-[18px] shrink-0 transition-colors duration-150 ${
+                    isActive ? 'text-white' : 'text-brand-sand/60 group-hover:text-brand-sand/90'
+                  }`}
+                />
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Account section at bottom: Profile, Switch Role, Sign Out (visually separated) */}
-        <div
-          className="p-4 border-t border-brand-forest-light bg-black/25 shrink-0 space-y-3"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.25)' }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-sand text-brand-forest flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
-              {staff.full_name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase()}
+        {/* Footer: staff profile + switch account + sign-out */}
+        <div className="px-3 py-4 border-t border-white/8 space-y-3 shrink-0">
+          <div className="flex items-center gap-3 px-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${roleMeta.avatarBg}`}>
+              {initials(staff.full_name)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate text-white">{staff.full_name}</p>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-tiny font-medium border ${roleBadgeInfo.color}`}>
-                <RoleIcon className="w-3 h-3" />
-                <span>{roleBadgeInfo.title}</span>
-              </span>
+              <p className="text-[13px] font-medium text-white truncate">{staff.full_name}</p>
+              <div className="flex items-center gap-1">
+                <RoleIcon className="w-3 h-3 text-brand-sand/50" />
+                <span className="text-[11px] text-brand-sand/50">{roleMeta.title}</span>
+              </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Link
-              href="/login"
-              onClick={handleClose}
-              className="flex-1 flex items-center justify-center py-2.5 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-brand-sand text-xs font-medium transition-colors min-h-touch text-center"
-            >
-              Switch Role
-            </Link>
-
-            <form action={signOut} className="flex-1">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <AccountSwitcher
+                currentStaff={fullStaffProfile}
+                availableAccounts={availableAccounts}
+              />
+            </div>
+            <form action={signOut} className="shrink-0">
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-action-danger/25 hover:bg-action-danger/35 text-white text-xs font-medium transition-colors min-h-touch cursor-pointer"
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-action-danger/20 hover:bg-action-danger/30 text-white text-xs font-medium transition-colors min-h-[32px] cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
@@ -220,18 +217,16 @@ export default function MobileNavDrawer({ staff, authorizedPaths }: MobileNavDra
 
   return (
     <>
-      {/* Mobile Menu Hamburger Button (Min 44x44px hit area per Design.md §3) */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-brand-forest hover:bg-brand-sand transition-colors cursor-pointer shrink-0"
-        aria-label="Open Navigation Menu"
+        className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-brand-forest hover:bg-brand-sand-dark transition-colors cursor-pointer shrink-0"
+        aria-label="Open navigation menu"
         aria-expanded={isOpen}
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-5 h-5" />
       </button>
 
-      {/* Render drawer into document.body to escape header container constraints */}
       {isOpen && mounted && createPortal(drawerContent, document.body)}
     </>
   );

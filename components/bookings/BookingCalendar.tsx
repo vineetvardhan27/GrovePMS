@@ -14,8 +14,8 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react';
-import { RoomWithCategory } from '../../lib/rooms/queries';
-import { BookingWithDetails } from '../../lib/bookings/queries';
+import { RoomWithCategory } from '../../lib/rooms/types';
+import type { BookingWithDetails } from '../../lib/bookings/queries';
 import { format, addDays, subDays, isSameDay, parseISO, isWithinInterval, startOfDay } from 'date-fns';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';

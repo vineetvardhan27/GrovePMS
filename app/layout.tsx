@@ -17,7 +17,20 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Hotel Greenery View — Control Centre',
-  description: 'Hotel Management System for Hotel Greenery View',
+  description: 'Hotel Management System for Hotel Greenery View, Gangtok, Sikkim',
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: [
+      { url: '/logo.png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [
+      { url: '/logo.png', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({

@@ -12,7 +12,7 @@ import {
   Calendar,
   Wrench,
 } from 'lucide-react';
-import { RoomWithCategory, RoomCategory } from '../../lib/rooms/queries';
+import { RoomWithCategory, RoomCategory } from '../../lib/rooms/types';
 import { updateRoomStatusAction } from '../../lib/rooms/actions';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
 import RoomCard, { STATUS_CONFIG } from '../rooms/RoomCard';

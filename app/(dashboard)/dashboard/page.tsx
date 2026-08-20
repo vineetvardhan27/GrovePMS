@@ -26,6 +26,8 @@ import { getRooms, getRoomCategories } from '../../../lib/rooms/queries';
 import { formatCurrency } from '../../../lib/utils/currency';
 import DashboardRoomGrid from '../../../components/dashboard/DashboardRoomGrid';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage({
   searchParams,
 }: {

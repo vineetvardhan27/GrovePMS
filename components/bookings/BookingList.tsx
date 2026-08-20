@@ -13,7 +13,7 @@ import {
   Phone,
   FileText,
 } from 'lucide-react';
-import { BookingWithDetails } from '../../lib/bookings/queries';
+import type { BookingWithDetails } from '../../lib/bookings/queries';
 import { cancelBookingAction } from '../../lib/bookings/actions';
 import { BookingStatus, PaymentStatus } from '../../lib/types/database.types';
 import { formatCurrency } from '../../lib/utils/currency';

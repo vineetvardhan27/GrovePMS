@@ -1,14 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
-  LayoutDashboard,
-  BedDouble,
-  CalendarDays,
-  Users,
-  Receipt,
-  CreditCard,
-  BarChart3,
-  Settings,
   Hotel,
   LogOut,
   ShieldCheck,
@@ -18,139 +10,110 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { getCurrentStaff, ROLE_NAV_ITEMS } from '../../lib/auth/session';
+import { getAvailableStaffAccounts } from '../../lib/auth/switchAccount';
 import { signOut } from '../(auth)/login/actions';
 import { StaffRole } from '../../lib/types/database.types';
 import MobileNavDrawer from '../../components/shared/MobileNavDrawer';
+import SidebarNav from '../../components/shared/SidebarNav';
+import AccountSwitcher from '../../components/shared/AccountSwitcher';
 import { createClient } from '../../lib/supabase/server';
 
-const ALL_NAV_ITEMS = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Rooms', href: '/rooms', icon: BedDouble },
-  { name: 'Bookings', href: '/bookings', icon: CalendarDays },
-  { name: 'Guests', href: '/guests', icon: Users },
-  { name: 'Billing', href: '/billing', icon: Receipt },
-  { name: 'Payments', href: '/payments', icon: CreditCard },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
-];
-
-const ROLE_BADGES: Record<StaffRole, { title: string; icon: any; color: string }> = {
-  owner: { title: 'Owner', icon: Building2, color: 'bg-brand-sand-dark text-brand-forest border-brand-sand' },
-  manager: { title: 'Manager', icon: ShieldCheck, color: 'bg-status-blue/20 text-white border-status-blue/40' },
-  reception: { title: 'Receptionist', icon: UserCheck, color: 'bg-status-amber/20 text-white border-status-amber/40' },
-  housekeeping: { title: 'Housekeeping', icon: Sparkles, color: 'bg-status-orange/20 text-white border-status-orange/40' },
+const ROLE_META: Record<StaffRole, { title: string; icon: any; avatarBg: string }> = {
+  owner:        { title: 'Owner',        icon: Building2,  avatarBg: 'bg-brand-sand text-brand-forest' },
+  manager:      { title: 'Manager',      icon: ShieldCheck, avatarBg: 'bg-status-blue/30 text-white' },
+  reception:    { title: 'Reception',    icon: UserCheck,   avatarBg: 'bg-status-amber/30 text-white' },
+  housekeeping: { title: 'Housekeeping', icon: Sparkles,    avatarBg: 'bg-status-orange/30 text-white' },
 };
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function initials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+}
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const staff = await getCurrentStaff();
 
-  // If no staff profile found, check if user is authenticated in Supabase Auth
+  // No staff profile — check if user is authenticated
   if (!staff) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      redirect('/login');
-    }
+    if (!user) redirect('/login');
 
-    // User is authenticated in Supabase Auth, but has not been assigned to a hotel in public.staff
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-brand-sand">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-border-subtle p-8 shadow-sm text-center space-y-6">
-          <div className="w-14 h-14 bg-status-amber/15 text-status-amber rounded-2xl flex items-center justify-center mx-auto">
-            <AlertTriangle className="w-8 h-8" />
+        <div className="max-w-md w-full bg-white rounded-xl border border-border-subtle p-8 shadow-card text-center space-y-6">
+          <div className="w-12 h-12 bg-status-amber/12 text-status-amber rounded-xl flex items-center justify-center mx-auto border border-status-amber/20">
+            <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-ink">Account Not Assigned</h1>
-            <p className="text-sm text-ink-muted mt-2">
-              Your account ({user.email}) is authenticated, but has not been assigned to a hotel or is currently inactive. Please contact your hotel administrator to activate your staff permissions.
+            <h1 className="text-lg font-semibold text-ink">Account Not Assigned</h1>
+            <p className="text-sm text-ink-muted mt-2 leading-relaxed">
+              Your account ({user.email}) is authenticated, but has not been assigned to a hotel. Please contact your administrator.
             </p>
           </div>
-          <div className="pt-2 flex flex-col gap-3">
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="w-full py-2.5 px-4 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
+          <form action={signOut}>
+            <button type="submit" className="pms-btn-primary w-full justify-center">
+              Sign Out
+            </button>
+          </form>
         </div>
       </div>
     );
   }
 
   const authorizedPaths = ROLE_NAV_ITEMS[staff.role] || ['/dashboard', '/rooms'];
-  const visibleNavItems = ALL_NAV_ITEMS.filter((item) => authorizedPaths.includes(item.href));
-  const roleBadgeInfo = ROLE_BADGES[staff.role] || ROLE_BADGES.reception;
-  const RoleIcon = roleBadgeInfo.icon;
+  const roleMeta = ROLE_META[staff.role] || ROLE_META.reception;
+  const RoleIcon = roleMeta.icon;
+  const availableAccounts = await getAvailableStaffAccounts();
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-sand">
-      {/* Desktop Sidebar (hidden on mobile and print) */}
-      <aside className="print:hidden hidden md:flex md:w-64 bg-brand-forest text-white flex-col shrink-0 border-r border-brand-forest-light">
-        {/* Brand Header */}
-        <div className="p-6 flex items-center gap-3 border-b border-brand-forest-light">
-          <div className="p-2.5 bg-white/10 rounded-xl">
-            <Hotel className="w-6 h-6 text-brand-sand" />
+
+      {/* ================================================================
+          DESKTOP SIDEBAR — hidden on mobile & print
+          ================================================================ */}
+      <aside className="print:hidden hidden md:flex md:w-60 bg-brand-forest text-white flex-col shrink-0">
+
+        {/* Brand header */}
+        <div className="px-4 py-4 flex items-center gap-3 border-b border-white/8">
+          <div className="h-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
+            <img src="/logo.png" alt="Hotel Greenery View Logo" className="h-8 w-auto object-contain" />
           </div>
           <div className="min-w-0">
-            <h2 className="font-serif text-lg font-bold tracking-tight truncate">Greenery View</h2>
-            <p className="text-xs text-brand-sand/70 truncate">Hotel Control Centre</p>
+            <h2 className="font-serif text-[14px] font-bold tracking-tight truncate leading-tight text-white">
+              Greenery View
+            </h2>
+            <p className="text-[10px] text-brand-sand/60 truncate">Control Centre</p>
           </div>
         </div>
 
-        {/* Navigation links (Filtered dynamically by staff role) */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <div className="px-3 py-1.5 text-tiny font-medium uppercase tracking-wider text-brand-sand/60">
-            Navigation ({staff.role})
-          </div>
-          {visibleNavItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-brand-sand/90 hover:bg-brand-forest-light hover:text-white transition-colors min-h-touch"
-              >
-                <Icon className="w-5 h-5 text-brand-sand/80 shrink-0" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Navigation (role-scoped, active via client component) */}
+        <SidebarNav authorizedPaths={authorizedPaths} />
 
-        {/* Active Staff profile & Logout footer */}
-        <div className="p-4 border-t border-brand-forest-light bg-brand-forest-light/40 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-brand-sand text-brand-forest flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-              {staff.full_name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase()}
+        {/* Staff profile & sign-out footer */}
+        <div className="px-3 py-4 border-t border-white/8 space-y-3">
+          {/* Avatar + name + role */}
+          <div className="flex items-center gap-3 px-2">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${roleMeta.avatarBg}`}
+              aria-label={`${staff.full_name} avatar`}
+            >
+              {initials(staff.full_name)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate text-white">{staff.full_name}</p>
+              <p className="text-[13px] font-medium text-white truncate leading-tight">{staff.full_name}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${roleBadgeInfo.color}`}>
-                  <RoleIcon className="w-3 h-3" />
-                  <span>{roleBadgeInfo.title}</span>
-                </span>
+                <RoleIcon className="w-3 h-3 text-brand-sand/50 shrink-0" />
+                <span className="text-[11px] text-brand-sand/50">{roleMeta.title}</span>
               </div>
             </div>
           </div>
 
+          {/* Sign out */}
           <form action={signOut}>
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-brand-sand text-xs font-medium py-2 px-3 rounded-lg transition-colors cursor-pointer min-h-[36px]"
+              className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/14 text-brand-sand/80 hover:text-brand-sand text-xs font-medium py-2 px-3 rounded-lg transition-colors duration-150 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
@@ -159,34 +122,50 @@ export default async function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main content area */}
+      {/* ================================================================
+          MAIN CONTENT AREA
+          ================================================================ */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top bar (Responsive on mobile, hidden in print) */}
-        <header className="print:hidden h-16 bg-white/85 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* Mobile Hamburger Drawer Toggle */}
-            <MobileNavDrawer staff={staff} authorizedPaths={authorizedPaths} />
+
+        {/* Top header bar */}
+        <header className="print:hidden h-14 bg-white/90 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
+          {/* Left: mobile hamburger + breadcrumb */}
+          <div className="flex items-center gap-3 min-w-0">
+            <MobileNavDrawer
+              staff={staff}
+              authorizedPaths={authorizedPaths}
+              availableAccounts={availableAccounts}
+            />
 
             <div className="flex items-center gap-1.5 min-w-0 truncate">
-              <span className="text-sm font-medium text-ink truncate">
+              <span className="text-sm font-medium text-ink truncate hidden sm:block">
                 {staff.hotel_name}
               </span>
-              <span className="text-xs text-ink-muted">/</span>
-              <span className="text-xs text-ink-muted capitalize truncate">{staff.role} View</span>
+              <span className="text-xs text-border-subtle hidden sm:block">/</span>
+              <span className="text-xs text-ink-muted capitalize truncate">
+                {staff.role} View
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/login"
-              className="text-xs text-ink-muted hover:text-brand-forest font-medium px-2.5 py-1.5 rounded-lg border border-border-subtle bg-brand-sand/60 hover:bg-brand-sand transition-colors min-h-[36px] flex items-center"
-            >
-              Switch Account
-            </Link>
+          {/* Right: date + status + switch account */}
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="hidden md:block text-xs text-ink-muted tabular-nums">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-status-green/10 border border-status-green/20 text-status-green text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
+              Open
+            </span>
+            <AccountSwitcher
+              currentStaff={staff}
+              availableAccounts={availableAccounts}
+            />
           </div>
         </header>
 
-        <div className="p-4 sm:p-6 md:p-8 flex-1">
+        {/* Page content */}
+        <div className="p-5 sm:p-6 md:p-8 flex-1">
           {children}
         </div>
       </main>

@@ -17,13 +17,20 @@ import {
   FileText,
   MapPin,
   Sparkles,
+  Bed,
+  Layers,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
-import { RoomWithCategory } from '../../lib/rooms/queries';
-import { Guest } from '../../lib/guests/queries';
+import {
+  RoomWithCategory,
+  getEffectiveRoomRates,
+} from '../../lib/rooms/types';
+import type { Guest } from '../../lib/guests/queries';
 import { createBookingAction, checkDoubleBooking } from '../../lib/bookings/actions';
 import { BookingSource, PaymentMode } from '../../lib/types/database.types';
 import { formatCurrency } from '../../lib/utils/currency';
-import { calculateNights } from '../../lib/utils/dates';
+import { calculateStayRates } from '../../lib/utils/dates';
 import { useAuth } from '../providers/AuthProvider';
 
 interface BookingFormProps {
@@ -65,12 +72,14 @@ export default function BookingForm({
   // Stay & Financials
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
+  const [extraBeds, setExtraBeds] = useState<number>(0);
   const [customRate, setCustomRate] = useState<number | null>(null);
-  const [extraCharges, setExtraCharges] = useState<number>(0);
+  const [otherExtraCharges, setOtherExtraCharges] = useState<number>(0);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('upi');
   const [source, setSource] = useState<BookingSource>('direct');
   const [remarks, setRemarks] = useState<string>('');
+  const [showBreakdown, setShowBreakdown] = useState<boolean>(true);
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -83,18 +92,34 @@ export default function BookingForm({
     return rooms.find((r) => r.id === selectedRoomId) || rooms[0];
   }, [rooms, selectedRoomId]);
 
-  // Rate per night
-  const effectiveRate = customRate !== null ? customRate : (selectedRoom?.category.base_rate || 2500);
+  // Selected Room Base and Weekend rates (considering optional room override)
+  const roomRates = useMemo(() => {
+    if (!selectedRoom) return { base_rate: 2500, weekend_rate: 3000, hasOverride: false };
+    return getEffectiveRoomRates(selectedRoom);
+  }, [selectedRoom]);
 
-  // Night count
-  const nights = useMemo(() => {
-    return calculateNights(checkInDate, checkOutDate);
-  }, [checkInDate, checkOutDate]);
+  // Stay calculations (respects weekday vs weekend pricing per stay night)
+  const stayCalculation = useMemo(() => {
+    const base = customRate !== null ? customRate : roomRates.base_rate;
+    const weekend = customRate !== null ? customRate : roomRates.weekend_rate;
+    return calculateStayRates(checkInDate, checkOutDate, base, weekend);
+  }, [checkInDate, checkOutDate, customRate, roomRates]);
 
-  // Net total
+  // Extra Bed Charge Calculation (Rate from category * beds * nights)
+  const extraBedRate = selectedRoom?.category?.extra_bed_rate || 0;
+  const extraBedTotal = useMemo(() => {
+    return extraBeds * extraBedRate * stayCalculation.nights;
+  }, [extraBeds, extraBedRate, stayCalculation.nights]);
+
+  // Total Extra charges (extra beds + other custom charges)
+  const totalExtraCharges = useMemo(() => {
+    return extraBedTotal + Number(otherExtraCharges || 0);
+  }, [extraBedTotal, otherExtraCharges]);
+
+  // Total reservation amount
   const totalAmount = useMemo(() => {
-    return nights * effectiveRate + Number(extraCharges || 0);
-  }, [nights, effectiveRate, extraCharges]);
+    return stayCalculation.totalRoomAmount + totalExtraCharges;
+  }, [stayCalculation.totalRoomAmount, totalExtraCharges]);
 
   // Live Double-Booking Check
   useEffect(() => {
@@ -131,7 +156,7 @@ export default function BookingForm({
     return () => {
       active = false;
     };
-  }, [selectedRoomId, checkInDate, checkOutDate, selectedRoom]);
+  }, [selectedRoomId, checkInDate, checkOutDate, selectedRoom, hotelId]);
 
   // Auto-fill repeat guest profile
   const handlePhoneChange = (phoneVal: string) => {
@@ -181,12 +206,16 @@ export default function BookingForm({
         check_out_date: checkOutDate,
         adults,
         children,
-        rate_per_night: effectiveRate,
-        extra_charges: extraCharges,
+        rate_per_night: stayCalculation.averageRatePerNight,
+        extra_charges: totalExtraCharges,
         advance_amount: advanceAmount,
         payment_mode: paymentMode,
         source,
-        remarks,
+        remarks: remarks.trim()
+          ? `${remarks.trim()}${extraBeds > 0 ? ` (Extra beds: ${extraBeds})` : ''}`
+          : extraBeds > 0
+          ? `Extra beds: ${extraBeds}`
+          : undefined,
       });
 
       if (result.error) {
@@ -360,8 +389,8 @@ export default function BookingForm({
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-serif font-bold text-ink text-base">Stay & Room Selection</h3>
-            <p className="text-xs text-ink-muted">Choose stay duration and assign room</p>
+            <h3 className="font-serif font-bold text-ink text-base">Stay &amp; Room Selection</h3>
+            <p className="text-xs text-ink-muted">Choose stay duration and assign from 19 accommodation units</p>
           </div>
         </div>
 
@@ -397,15 +426,21 @@ export default function BookingForm({
           <div className="flex flex-col justify-end">
             <div className="p-3 bg-brand-sand rounded-lg border border-border-subtle flex items-center justify-between text-xs">
               <span className="text-ink-muted font-medium">Duration:</span>
-              <span className="font-bold text-brand-forest text-sm">{nights} Night{nights > 1 ? 's' : ''}</span>
+              <span className="font-bold text-brand-forest text-sm">
+                {stayCalculation.nights} Night{stayCalculation.nights > 1 ? 's' : ''}{' '}
+                <span className="text-[11px] font-normal text-ink-muted">
+                  ({stayCalculation.weekdayNights} Wkday{stayCalculation.weekendNights > 0 ? ` + ${stayCalculation.weekendNights} Wknd` : ''})
+                </span>
+              </span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+          {/* Room Selector with all 19 units */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="room_select">
-              Assign Room *
+              Assign Unit (19 Available) *
             </label>
             <select
               id="room_select"
@@ -416,44 +451,52 @@ export default function BookingForm({
               }}
               className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch font-medium"
             >
-              {rooms.map((r) => (
-                <option key={r.id} value={r.id}>
-                  Room {r.room_number} — {r.category.name} ({formatCurrency(r.category.base_rate)}/nt)
-                </option>
-              ))}
+              {rooms.map((r) => {
+                const isFamily = r.room_number === 'FAMILY-APT';
+                const effective = getEffectiveRoomRates(r);
+                return (
+                  <option key={r.id} value={r.id}>
+                    {isFamily ? 'Family Apartment' : `Room ${r.room_number}`} — {r.category.name} ({formatCurrency(effective.base_rate)}/nt)
+                  </option>
+                );
+              })}
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="rate_per_night">
-              Rate per Night (₹) *
+              Tariff / Rate Override (₹)
             </label>
             <input
               id="rate_per_night"
               type="number"
               min="0"
-              required
-              value={effectiveRate}
-              onChange={(e) => setCustomRate(Number(e.target.value))}
+              placeholder={`Auto: ₹${roomRates.base_rate}/nt`}
+              value={customRate !== null ? customRate : ''}
+              onChange={(e) => setCustomRate(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch font-bold"
             />
+            <span className="text-[10px] text-ink-muted">
+              Auto: {formatCurrency(roomRates.base_rate)} (Wkday) {roomRates.weekend_rate ? `/ ${formatCurrency(roomRates.weekend_rate)} (Wknd)` : ''}
+            </span>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="extra_charges">
-              Extra Bed / Extras (₹)
+            <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="extra_charges_other">
+              Other Extra Charges (₹)
             </label>
             <input
-              id="extra_charges"
+              id="extra_charges_other"
               type="number"
               min="0"
-              value={extraCharges}
-              onChange={(e) => setExtraCharges(Number(e.target.value))}
+              value={otherExtraCharges}
+              onChange={(e) => setOtherExtraCharges(Number(e.target.value))}
               className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
             />
           </div>
         </div>
 
+        {/* Occupancy & Extra Bed Details */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           <div>
             <label className="block text-xs font-medium text-ink mb-1" htmlFor="adults_count">
@@ -486,6 +529,21 @@ export default function BookingForm({
           </div>
 
           <div>
+            <label className="block text-xs font-medium text-ink mb-1" htmlFor="extra_beds_count">
+              Extra Beds ({formatCurrency(extraBedRate)}/nt)
+            </label>
+            <input
+              id="extra_beds_count"
+              type="number"
+              min="0"
+              max="4"
+              value={extraBeds}
+              onChange={(e) => setExtraBeds(Number(e.target.value))}
+              className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+            />
+          </div>
+
+          <div>
             <label className="block text-xs font-medium text-ink mb-1" htmlFor="source_select">
               Booking Source
             </label>
@@ -503,23 +561,62 @@ export default function BookingForm({
               <option value="other">Other</option>
             </select>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-xs font-medium text-ink mb-1" htmlFor="payment_mode_select">
-              Payment Mode
-            </label>
-            <select
-              id="payment_mode_select"
-              value={paymentMode}
-              onChange={(e) => setPaymentMode(e.target.value as PaymentMode)}
-              className="w-full px-2.5 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+        {/* Dynamic Stay Date Nightly Rate Breakdown Box */}
+        <div className="mt-4 p-4 rounded-xl bg-brand-sand/40 border border-border-subtle space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-brand-forest" />
+              <span>Nightly Stay Rate Breakdown</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowBreakdown(!showBreakdown)}
+              className="text-xs text-brand-forest font-semibold hover:underline flex items-center gap-1"
             >
-              <option value="upi">UPI (GPay/PhonePe)</option>
-              <option value="cash">Cash</option>
-              <option value="card">Credit/Debit Card</option>
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="other">Other</option>
-            </select>
+              <span>{showBreakdown ? 'Hide Breakdown' : 'Show Breakdown'}</span>
+              {showBreakdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {showBreakdown && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+              {stayCalculation.breakdown.map((night, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                    night.isWeekend
+                      ? 'bg-status-amber/10 border-status-amber/30 text-ink'
+                      : 'bg-white border-border-subtle text-ink'
+                  }`}
+                >
+                  <div>
+                    <span className="font-medium">{night.formattedDate} ({night.dayName.slice(0, 3)})</span>
+                    {night.isWeekend && (
+                      <span className="ml-1.5 text-[10px] font-bold text-status-amber bg-status-amber/15 px-1.5 py-0.2 rounded">
+                        Weekend
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-bold tabular-nums">{formatCurrency(night.rate)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-border-subtle/80 flex flex-wrap items-center justify-between text-xs text-ink-muted">
+            <span>
+              Room Total: <strong className="text-ink">{formatCurrency(stayCalculation.totalRoomAmount)}</strong> ({stayCalculation.nights} nights)
+            </span>
+            {extraBeds > 0 && (
+              <span>
+                Extra Beds: <strong className="text-ink">{formatCurrency(extraBedTotal)}</strong> ({extraBeds} bed × {stayCalculation.nights} nt)
+              </span>
+            )}
+            <span>
+              Avg Rate/Night: <strong className="text-brand-forest">{formatCurrency(stayCalculation.averageRatePerNight)}</strong>
+            </span>
           </div>
         </div>
       </div>
@@ -532,20 +629,38 @@ export default function BookingForm({
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-ink text-base">Payment & Billing Summary</h3>
+              <h3 className="font-serif font-bold text-ink text-base">Payment &amp; Billing Summary</h3>
               <p className="text-xs text-ink-muted">Enter advance received to auto-derive payment status</p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-xs text-ink-muted block">Estimated Total:</span>
+            <span className="text-xs text-ink-muted block">Estimated Net Total:</span>
             <span className="text-2xl font-bold font-serif text-brand-forest tabular-nums">
               {formatCurrency(totalAmount)}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="payment_mode_select">
+              Payment Mode
+            </label>
+            <select
+              id="payment_mode_select"
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value as PaymentMode)}
+              className="w-full px-3.5 py-2.5 bg-white border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+            >
+              <option value="upi">UPI (GPay/PhonePe)</option>
+              <option value="cash">Cash</option>
+              <option value="card">Credit/Debit Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="advance_amount">
               Advance Payment Received (₹)
@@ -574,7 +689,7 @@ export default function BookingForm({
               type="text"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder="e.g. Early check-in, honeymoon setup"
+              placeholder="e.g. Early check-in, anniversary"
               className="w-full px-3.5 py-2.5 bg-white border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
             />
           </div>
@@ -600,7 +715,7 @@ export default function BookingForm({
             <span>Creating Reservation...</span>
           ) : (
             <>
-              <span>Confirm & Book Room</span>
+              <span>Confirm Reservation ({formatCurrency(totalAmount)})</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

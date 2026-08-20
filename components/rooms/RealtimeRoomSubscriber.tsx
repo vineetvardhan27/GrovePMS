@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '../../lib/supabase/client';
-import { RoomWithCategory } from '../../lib/rooms/queries';
+import { RoomWithCategory } from '../../lib/rooms/types';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
 import { Wifi, WifiOff } from 'lucide-react';
 

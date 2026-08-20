@@ -42,6 +42,67 @@ export type PaymentMode = 'cash' | 'upi' | 'bank_transfer' | 'card' | 'other';
 
 export type PaymentType = 'advance' | 'partial' | 'running' | 'settlement' | 'refund';
 
+export type FoodServiceType =
+  | 'Breakfast'
+  | 'Lunch'
+  | 'Dinner'
+  | 'Snacks'
+  | 'Beverages'
+  | 'Other';
+
+export type TaxTreatment = 'gst' | 'non_gst';
+
+export type InventoryUnit =
+  | 'kg'
+  | 'gram'
+  | 'litre'
+  | 'ml'
+  | 'piece'
+  | 'packet'
+  | 'box'
+  | 'dozen'
+  | 'can'
+  | 'bottle'
+  | 'pair'
+  | 'set';
+
+export type InventoryItemType = 'consumable' | 'reusable_asset';
+
+export type InventoryClassification =
+  | 'food_kitchen'
+  | 'housekeeping_supplies'
+  | 'room_supplies'
+  | 'linen'
+  | 'hotel_assets'
+  | 'other';
+
+export type InventoryTransactionType =
+  | 'purchase'
+  | 'usage'
+  | 'adjustment'
+  | 'waste'
+  | 'issued'
+  | 'returned'
+  | 'damaged'
+  | 'repaired'
+  | 'retired'
+  | 'lost'
+  | 'replaced';
+
+export type BanquetHallStatus = 'available' | 'reserved' | 'occupied' | 'maintenance';
+
+export type BanquetEventType =
+  | 'wedding'
+  | 'reception'
+  | 'conference'
+  | 'birthday'
+  | 'anniversary'
+  | 'corporate'
+  | 'social'
+  | 'other';
+
+export type BanquetBookingStatus = 'inquiry' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+
 export interface HotelSettings {
   gst_enabled: boolean;
   gst_percentage: number;
@@ -328,6 +389,433 @@ export interface Database {
           notes?: string | null;
           recorded_by?: string | null;
           created_at?: string;
+        };
+      };
+      property_resources: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          name: string;
+          resource_type: string;
+          capacity: number;
+          status: string;
+          description: string | null;
+          daily_rate: number | null;
+          hourly_rate: number | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          name: string;
+          resource_type?: string;
+          capacity?: number;
+          status?: string;
+          description?: string | null;
+          daily_rate?: number | null;
+          hourly_rate?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          name?: string;
+          resource_type?: string;
+          capacity?: number;
+          status?: string;
+          description?: string | null;
+          daily_rate?: number | null;
+          hourly_rate?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      menu_categories: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          name: string;
+          display_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          name: string;
+          display_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          name?: string;
+          display_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      menu_items: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          category_id: string;
+          name: string;
+          description: string | null;
+          selling_price: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          category_id: string;
+          name: string;
+          description?: string | null;
+          selling_price: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          category_id?: string;
+          name?: string;
+          description?: string | null;
+          selling_price?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      food_charges: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          booking_id: string;
+          room_id: string | null;
+          guest_id: string | null;
+          menu_item_id: string | null;
+          item_name_snapshot: string;
+          category_snapshot: string;
+          service_type: FoodServiceType;
+          quantity: number;
+          unit_price_snapshot: number;
+          tax_treatment: TaxTreatment;
+          taxable_amount: number;
+          gst_rate: number;
+          gst_amount: number;
+          total_amount: number;
+          remarks: string | null;
+          recorded_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          booking_id: string;
+          room_id?: string | null;
+          guest_id?: string | null;
+          menu_item_id?: string | null;
+          item_name_snapshot: string;
+          category_snapshot: string;
+          service_type: FoodServiceType;
+          quantity: number;
+          unit_price_snapshot: number;
+          tax_treatment?: TaxTreatment;
+          taxable_amount: number;
+          gst_rate?: number;
+          gst_amount?: number;
+          total_amount: number;
+          remarks?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          booking_id?: string;
+          room_id?: string | null;
+          guest_id?: string | null;
+          menu_item_id?: string | null;
+          item_name_snapshot?: string;
+          category_snapshot?: string;
+          service_type?: FoodServiceType;
+          quantity?: number;
+          unit_price_snapshot?: number;
+          tax_treatment?: TaxTreatment;
+          taxable_amount?: number;
+          gst_rate?: number;
+          gst_amount?: number;
+          total_amount?: number;
+          remarks?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      inventory_items: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          name: string;
+          category: string;
+          unit: InventoryUnit;
+          item_type: InventoryItemType;
+          inventory_type: InventoryClassification;
+          current_stock: number;
+          in_use_stock: number;
+          damaged_stock: number;
+          lost_stock: number;
+          repair_stock: number;
+          retired_stock: number;
+          minimum_stock: number;
+          target_stock: number;
+          cost_per_unit: number;
+          replacement_target_year: number | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          name: string;
+          category: string;
+          unit: InventoryUnit;
+          item_type?: InventoryItemType;
+          inventory_type?: InventoryClassification;
+          current_stock?: number;
+          in_use_stock?: number;
+          damaged_stock?: number;
+          lost_stock?: number;
+          repair_stock?: number;
+          retired_stock?: number;
+          minimum_stock?: number;
+          target_stock?: number;
+          cost_per_unit?: number;
+          replacement_target_year?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          name?: string;
+          category?: string;
+          unit?: InventoryUnit;
+          item_type?: InventoryItemType;
+          inventory_type?: InventoryClassification;
+          current_stock?: number;
+          in_use_stock?: number;
+          damaged_stock?: number;
+          lost_stock?: number;
+          repair_stock?: number;
+          retired_stock?: number;
+          minimum_stock?: number;
+          target_stock?: number;
+          cost_per_unit?: number;
+          replacement_target_year?: number | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      inventory_transactions: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          item_id: string;
+          transaction_type: InventoryTransactionType;
+          quantity: number;
+          unit: string;
+          unit_price: number;
+          total_cost: number;
+          supplier: string | null;
+          reason: string | null;
+          room_number: string | null;
+          condition_state: string | null;
+          notes: string | null;
+          recorded_by: string | null;
+          transaction_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          item_id: string;
+          transaction_type: InventoryTransactionType;
+          quantity: number;
+          unit: string;
+          unit_price?: number;
+          total_cost?: number;
+          supplier?: string | null;
+          reason?: string | null;
+          room_number?: string | null;
+          condition_state?: string | null;
+          notes?: string | null;
+          recorded_by?: string | null;
+          transaction_date?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          item_id?: string;
+          transaction_type?: InventoryTransactionType;
+          quantity?: number;
+          unit?: string;
+          unit_price?: number;
+          total_cost?: number;
+          supplier?: string | null;
+          reason?: string | null;
+          room_number?: string | null;
+          condition_state?: string | null;
+          notes?: string | null;
+          recorded_by?: string | null;
+          transaction_date?: string;
+          created_at?: string;
+        };
+      };
+      banquet_halls: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          name: string;
+          capacity: number | null;
+          current_status: BanquetHallStatus;
+          description: string | null;
+          half_day_rate: number;
+          full_day_rate: number;
+          amenities: string[] | null;
+          notes: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          name?: string;
+          capacity?: number | null;
+          current_status?: BanquetHallStatus;
+          description?: string | null;
+          half_day_rate?: number;
+          full_day_rate?: number;
+          amenities?: string[] | null;
+          notes?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          name?: string;
+          capacity?: number | null;
+          current_status?: BanquetHallStatus;
+          description?: string | null;
+          half_day_rate?: number;
+          full_day_rate?: number;
+          amenities?: string[] | null;
+          notes?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      banquet_bookings: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          banquet_hall_id: string;
+          booking_number: string;
+          event_name: string;
+          customer_name: string;
+          customer_phone: string;
+          customer_email: string | null;
+          event_date: string;
+          start_time: string;
+          end_time: string;
+          guest_count: number | null;
+          event_type: BanquetEventType;
+          booking_status: BanquetBookingStatus;
+          rental_amount: number;
+          catering_required: boolean;
+          catering_notes: string | null;
+          estimated_total: number;
+          advance_paid: number;
+          tax_treatment: TaxTreatment;
+          remarks: string | null;
+          recorded_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          banquet_hall_id: string;
+          booking_number: string;
+          event_name: string;
+          customer_name: string;
+          customer_phone: string;
+          customer_email?: string | null;
+          event_date: string;
+          start_time: string;
+          end_time: string;
+          guest_count?: number | null;
+          event_type?: BanquetEventType;
+          booking_status?: BanquetBookingStatus;
+          rental_amount?: number;
+          catering_required?: boolean;
+          catering_notes?: string | null;
+          estimated_total?: number;
+          advance_paid?: number;
+          tax_treatment?: TaxTreatment;
+          remarks?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          banquet_hall_id?: string;
+          booking_number?: string;
+          event_name?: string;
+          customer_name?: string;
+          customer_phone?: string;
+          customer_email?: string | null;
+          event_date?: string;
+          start_time?: string;
+          end_time?: string;
+          guest_count?: number | null;
+          event_type?: BanquetEventType;
+          booking_status?: BanquetBookingStatus;
+          rental_amount?: number;
+          catering_required?: boolean;
+          catering_notes?: string | null;
+          estimated_total?: number;
+          advance_paid?: number;
+          tax_treatment?: TaxTreatment;
+          remarks?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

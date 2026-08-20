@@ -1,5 +1,7 @@
 import { generateBill } from '../../../../lib/billing/actions';
 import { getBookingById } from '../../../../lib/bookings/queries';
+import { getMenuCategories, getMenuItems } from '../../../../lib/menu/queries';
+import { getCurrentStaff } from '../../../../lib/auth/session';
 import BillView from '../../../../components/billing/BillView';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -12,7 +14,6 @@ interface BillPageProps {
   searchParams?: { gst?: string };
 }
 
-
 export default async function BillPage({ params, searchParams }: BillPageProps) {
   const includeGst = searchParams?.gst !== 'false'; // GST on by default
 
@@ -21,7 +22,10 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
     notFound();
   }
 
+  const staff = await getCurrentStaff();
   const bill = await generateBill(params.bookingId, includeGst);
+  const categories = await getMenuCategories(booking.hotel_id);
+  const menuItems = await getMenuItems(booking.hotel_id);
 
   return (
     <div className="space-y-6">
@@ -43,6 +47,9 @@ export default async function BillPage({ params, searchParams }: BillPageProps) 
       <BillView
         initialBill={bill}
         bookingStatus={booking.booking_status}
+        categories={categories}
+        menuItems={menuItems}
+        userRole={staff?.role}
       />
     </div>
   );

@@ -1,14 +1,20 @@
 import { getHotelSettings } from '../hotels/queries';
 import { getBookingById, PaymentRecord } from '../bookings/queries';
+import { getFoodCharges, FoodChargeRecord } from './food-actions';
 import { numberToIndianWords } from '../utils/currency';
 import { formatDate } from '../utils/dates';
 
 export interface BillLineItem {
+  id?: string;
+  category_type?: 'accommodation' | 'food' | 'extra';
+  service_type?: string;
   description: string;
   sac_code?: string;
   nights?: number;
+  quantity?: number;
   rate?: number;
   taxable_amount: number;
+  tax_treatment?: 'gst' | 'non_gst';
   gst_rate: number;
   gst_amount: number;
   total_amount: number;
@@ -44,6 +50,9 @@ export interface GeneratedBill {
 
   // Financial breakdown
   line_items: BillLineItem[];
+  accommodation_subtotal: number;
+  food_subtotal: number;
+  food_charges: FoodChargeRecord[];
   taxable_subtotal: number;
   subtotal: number;
   gst_rate: number;
@@ -164,47 +173,79 @@ export async function generateBill(bookingId: string, includeGst: boolean = true
   const effectiveGstRate = Number(settings.gst_percentage ?? settings.gst_rate ?? 12);
   const applicableGstRate = includeGst ? effectiveGstRate : 0;
 
-  // Build itemized charges table
+  // 1. Accommodation Charges
   const roomCharge = nights * Number(booking.rate_per_night);
   const roomTax = includeGst ? Math.round(((roomCharge * applicableGstRate) / 100) * 100) / 100 : 0;
   const roomTotal = roomCharge + roomTax;
 
   const lineItems: BillLineItem[] = [
     {
+      category_type: 'accommodation',
+      service_type: 'Accommodation',
       description: `Room ${booking.room?.room_number || '—'} (${booking.room?.category?.name || 'Room Charge'}) — ${nights} Night${nights > 1 ? 's' : ''}`,
       sac_code: '996311', // SAC for Hotel Accommodation Services
       nights,
       rate: Number(booking.rate_per_night),
       taxable_amount: roomCharge,
+      tax_treatment: 'gst',
       gst_rate: applicableGstRate,
       gst_amount: roomTax,
       total_amount: roomTotal,
     },
   ];
 
+  // 2. Extra charges (if any in booking)
   const extras = Math.max(0, Number(booking.total_amount) - roomCharge);
   if (extras > 0) {
     const extraTax = includeGst ? Math.round(((extras * applicableGstRate) / 100) * 100) / 100 : 0;
     lineItems.push({
+      category_type: 'extra',
+      service_type: 'Extra Charges',
       description: 'Extra Guest / Bed Charges & Room Services',
       sac_code: '996311',
       taxable_amount: extras,
+      tax_treatment: 'gst',
       gst_rate: applicableGstRate,
       gst_amount: extraTax,
       total_amount: extras + extraTax,
     });
   }
 
+  // 3. Food & Beverage Charges
+  const foodCharges = await getFoodCharges(booking.id);
+  for (const fc of foodCharges) {
+    const lineGstRate = includeGst && fc.tax_treatment === 'gst' ? (fc.gst_rate || effectiveGstRate) : 0;
+    const lineGstAmount = includeGst && fc.tax_treatment === 'gst' ? (fc.gst_amount || Math.round(((fc.taxable_amount * lineGstRate) / 100) * 100) / 100) : 0;
+    const lineTotal = fc.taxable_amount + lineGstAmount;
+
+    lineItems.push({
+      id: fc.id,
+      category_type: 'food',
+      service_type: fc.service_type,
+      description: `${fc.service_type}: ${fc.item_name_snapshot} (${fc.quantity} × ₹${fc.unit_price_snapshot})`,
+      sac_code: '996331', // SAC for Restaurant / F&B Services
+      quantity: fc.quantity,
+      rate: fc.unit_price_snapshot,
+      taxable_amount: fc.taxable_amount,
+      tax_treatment: fc.tax_treatment,
+      gst_rate: lineGstRate,
+      gst_amount: lineGstAmount,
+      total_amount: lineTotal,
+    });
+  }
+
+  const accommodationSubtotal = roomCharge + extras;
+  const foodSubtotal = foodCharges.reduce((sum, fc) => sum + fc.taxable_amount, 0);
   const taxableSubtotal = lineItems.reduce((sum, item) => sum + item.taxable_amount, 0);
   const totalGstAmount = lineItems.reduce((sum, item) => sum + item.gst_amount, 0);
-  const grandTotal = taxableSubtotal + totalGstAmount;
-  const balanceDue = Math.max(0, grandTotal - totalPaid);
+  const grandTotal = Math.round((taxableSubtotal + totalGstAmount) * 100) / 100;
+  const balanceDue = Math.max(0, Math.round((grandTotal - totalPaid) * 100) / 100);
 
   // CGST & SGST Split (50% each for Intra-State supply)
   const cgstRate = includeGst ? applicableGstRate / 2 : 0;
   const sgstRate = includeGst ? applicableGstRate / 2 : 0;
   const cgstAmount = Math.round((totalGstAmount / 2) * 100) / 100;
-  const sgstAmount = totalGstAmount - cgstAmount; // avoid rounding discrepancy
+  const sgstAmount = Math.round((totalGstAmount - cgstAmount) * 100) / 100; // avoid rounding discrepancy
 
   const guestName = booking.guest?.full_name || 'Guest';
   const pdf_filename = generateInvoiceFilename(invoice_number, guestName);
@@ -237,6 +278,9 @@ export async function generateBill(bookingId: string, includeGst: boolean = true
     children: booking.children,
 
     line_items: lineItems,
+    accommodation_subtotal: accommodationSubtotal,
+    food_subtotal: foodSubtotal,
+    food_charges: foodCharges,
     taxable_subtotal: taxableSubtotal,
     subtotal: taxableSubtotal,
     gst_rate: applicableGstRate,

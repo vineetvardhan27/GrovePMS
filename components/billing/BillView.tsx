@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Printer,
@@ -14,16 +14,26 @@ import {
   Copy,
   Check,
   CreditCard,
+  Utensils,
+  Plus,
+  Trash2,
+  Coffee,
 } from 'lucide-react';
-import { GeneratedBill } from '../../lib/billing/actions';
-import { PaymentStatus } from '../../lib/types/database.types';
+import { GeneratedBill, BillLineItem } from '../../lib/billing/actions';
+import { PaymentStatus, StaffRole } from '../../lib/types/database.types';
+import { MenuItem, MenuCategory } from '../../lib/menu/types';
 import { formatCurrency, numberToIndianWords } from '../../lib/utils/currency';
 import RecordPaymentForm from './RecordPaymentForm';
+import AddFoodModal from './AddFoodModal';
 import { checkOutAction } from '../../lib/checkinout/actions';
+import { deleteFoodChargeAction, FoodChargeRecord } from '../../lib/billing/food-actions';
 
 interface BillViewProps {
   initialBill: GeneratedBill;
   bookingStatus: string;
+  categories?: MenuCategory[];
+  menuItems?: MenuItem[];
+  userRole?: StaffRole;
 }
 
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string; stampClass: string }> = {
@@ -49,28 +59,69 @@ const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string
   },
 };
 
-export default function BillView({ initialBill, bookingStatus }: BillViewProps) {
+export default function BillView({
+  initialBill,
+  bookingStatus,
+  categories = [],
+  menuItems = [],
+  userRole,
+}: BillViewProps) {
   const router = useRouter();
   const [includeGst, setIncludeGst] = useState(initialBill.include_gst);
   const [totalPaid, setTotalPaid] = useState(initialBill.total_paid);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
-    initialBill.balance_due <= 0 ? 'fully_paid' : initialBill.total_paid > 0 ? 'advance_received' : 'no_payment'
-  );
+  const [foodCharges, setFoodCharges] = useState<FoodChargeRecord[]>(initialBill.food_charges || []);
+  const [lineItems, setLineItems] = useState<BillLineItem[]>(initialBill.line_items || []);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
+  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+  const [deletingChargeId, setDeletingChargeId] = useState<string | null>(null);
 
-  // Recalculate totals if GST toggle changes
+  const canManageBilling = userRole !== 'housekeeping';
+  const isFinalized = bookingStatus === 'checked_out' || bookingStatus === 'cancelled';
+
+  // Dynamic calculations based on current line items and GST toggle
   const effectiveGstRate = includeGst ? initialBill.gst_rate : 0;
-  const taxableSubtotal = initialBill.taxable_subtotal;
-  const gstAmount = includeGst ? Math.round(((taxableSubtotal * effectiveGstRate) / 100) * 100) / 100 : 0;
+  
+  // Calculate dynamic line items reflecting GST toggle
+  const computedLineItems = lineItems.map((item) => {
+    const isLineGst = includeGst && item.tax_treatment !== 'non_gst';
+    const itemGstRate = isLineGst ? (item.gst_rate || effectiveGstRate) : 0;
+    const itemGstAmount = isLineGst ? Math.round(((item.taxable_amount * itemGstRate) / 100) * 100) / 100 : 0;
+    const itemTotal = item.taxable_amount + itemGstAmount;
+    return {
+      ...item,
+      gst_rate: itemGstRate,
+      gst_amount: itemGstAmount,
+      total_amount: itemTotal,
+    };
+  });
+
+  const taxableSubtotal = computedLineItems.reduce((sum, item) => sum + item.taxable_amount, 0);
+  const totalGstAmount = computedLineItems.reduce((sum, item) => sum + item.gst_amount, 0);
+  const grandTotal = Math.round((taxableSubtotal + totalGstAmount) * 100) / 100;
+  const balanceDue = Math.max(0, Math.round((grandTotal - totalPaid) * 100) / 100);
+
   const cgstRate = includeGst ? effectiveGstRate / 2 : 0;
   const sgstRate = includeGst ? effectiveGstRate / 2 : 0;
-  const cgstAmount = Math.round((gstAmount / 2) * 100) / 100;
-  const sgstAmount = gstAmount - cgstAmount;
-  const grandTotal = taxableSubtotal + gstAmount;
-  const balanceDue = Math.max(0, grandTotal - totalPaid);
+  const cgstAmount = Math.round((totalGstAmount / 2) * 100) / 100;
+  const sgstAmount = Math.round((totalGstAmount - cgstAmount) * 100) / 100;
+
+  const paymentStatus: PaymentStatus =
+    balanceDue <= 0 ? 'fully_paid' : totalPaid > 0 ? 'advance_received' : 'no_payment';
+  const badge = PAYMENT_STATUS_BADGE[paymentStatus];
   const amountInWords = numberToIndianWords(grandTotal);
+
+  // Group food charges by service type
+  const foodChargesByService = React.useMemo(() => {
+    const groups: Record<string, FoodChargeRecord[]> = {};
+    for (const fc of foodCharges) {
+      const srv = fc.service_type || 'Other';
+      if (!groups[srv]) groups[srv] = [];
+      groups[srv].push(fc);
+    }
+    return groups;
+  }, [foodCharges]);
 
   // Handle setting document title for default browser PDF save filename
   const handlePrint = () => {
@@ -110,10 +161,54 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
 
   const handlePaymentRecorded = (newStatus: PaymentStatus, paidAmount: number) => {
     setTotalPaid((prev) => prev + paidAmount);
-    setPaymentStatus(newStatus);
+    router.refresh();
   };
 
-  const badge = PAYMENT_STATUS_BADGE[paymentStatus];
+  const handleFoodChargeAdded = (newCharge: FoodChargeRecord) => {
+    setFoodCharges((prev) => [...prev, newCharge]);
+    
+    // Add to line items
+    const isLineGst = includeGst && newCharge.tax_treatment === 'gst';
+    const lineGstRate = isLineGst ? (newCharge.gst_rate || effectiveGstRate) : 0;
+    const lineGstAmount = isLineGst ? Math.round(((newCharge.taxable_amount * lineGstRate) / 100) * 100) / 100 : 0;
+
+    const newLineItem: BillLineItem = {
+      id: newCharge.id,
+      category_type: 'food',
+      service_type: newCharge.service_type,
+      description: `${newCharge.service_type}: ${newCharge.item_name_snapshot} (${newCharge.quantity} × ₹${newCharge.unit_price_snapshot})`,
+      sac_code: '996331',
+      quantity: newCharge.quantity,
+      rate: newCharge.unit_price_snapshot,
+      taxable_amount: newCharge.taxable_amount,
+      tax_treatment: newCharge.tax_treatment,
+      gst_rate: lineGstRate,
+      gst_amount: lineGstAmount,
+      total_amount: newCharge.taxable_amount + lineGstAmount,
+    };
+
+    setLineItems((prev) => [...prev, newLineItem]);
+    router.refresh();
+  };
+
+  const handleDeleteFoodCharge = async (chargeId: string) => {
+    if (!confirm('Remove this food charge from the guest bill?')) return;
+    setDeletingChargeId(chargeId);
+    try {
+      const res = await deleteFoodChargeAction(chargeId, initialBill.booking_id);
+      if (res.success) {
+        setFoodCharges((prev) => prev.filter((c) => c.id !== chargeId));
+        setLineItems((prev) => prev.filter((item) => item.id !== chargeId));
+        router.refresh();
+      } else if (res.error) {
+        alert(res.error);
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Failed to remove charge');
+    } finally {
+      setDeletingChargeId(null);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -147,9 +242,20 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
             </span>
           </div>
 
-          {/* Right: Actions (Check Out & Print) */}
-          <div className="flex items-center gap-2.5">
-            {bookingStatus === 'checked_in' && (
+          {/* Right: Actions (Add Food, Check Out & Print) */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {!isFinalized && canManageBilling && (
+              <button
+                type="button"
+                onClick={() => setIsAddFoodOpen(true)}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-brand-sand hover:bg-brand-sand-dark text-brand-forest font-bold text-xs border border-border-subtle transition-all cursor-pointer shadow-2xs min-h-touch"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Food &amp; Beverage</span>
+              </button>
+            )}
+
+            {bookingStatus === 'checked_in' && canManageBilling && (
               <button
                 type="button"
                 disabled={isCheckingOut}
@@ -205,6 +311,135 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
       )}
 
       {/* ----------------------------------------------------
+       * Interactive Food & Beverage Room Folio Section (Screen Only)
+       * ---------------------------------------------------- */}
+      <div className="print:hidden bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+        <div className="px-6 py-4.5 bg-brand-sand/50 border-b border-border-subtle flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-brand-forest text-white rounded-xl">
+              <Utensils className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="font-serif font-bold text-base text-brand-forest">
+                Food &amp; Beverage Charges
+              </h2>
+              <p className="text-[11px] text-ink-muted">
+                Billed directly to Room {initialBill.room_number} • {initialBill.guest_name}
+              </p>
+            </div>
+          </div>
+
+          {!isFinalized && canManageBilling && (
+            <button
+              type="button"
+              onClick={() => setIsAddFoodOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-forest hover:bg-brand-forest-light text-white font-bold text-xs shadow-xs transition-all cursor-pointer min-h-touch"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Food &amp; Beverage</span>
+            </button>
+          )}
+        </div>
+
+        <div className="p-6">
+          {foodCharges.length === 0 ? (
+            <div className="py-8 px-4 text-center border-2 border-dashed border-border-subtle rounded-xl bg-brand-sand/20 space-y-3">
+              <div className="w-12 h-12 rounded-full bg-brand-sand flex items-center justify-center mx-auto text-brand-forest">
+                <Coffee className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-bold text-ink text-sm">No Food &amp; Beverage Charges Yet</p>
+                <p className="text-xs text-ink-muted max-w-sm mx-auto">
+                  Add restaurant orders, breakfast, dinner, or room service directly to this guest room folio.
+                </p>
+              </div>
+              {!isFinalized && canManageBilling && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddFoodOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-forest hover:bg-brand-forest-light text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Add First Food Order</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(foodChargesByService).map(([serviceName, charges]) => (
+                <div key={serviceName} className="rounded-xl border border-border-subtle overflow-hidden">
+                  <div className="px-4 py-2.5 bg-brand-sand/60 border-b border-border-subtle flex items-center justify-between">
+                    <span className="font-bold text-brand-forest text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🍽️</span>
+                      <span>{serviceName}</span>
+                    </span>
+                    <span className="text-[11px] font-mono font-medium text-ink-muted">
+                      {charges.length} {charges.length === 1 ? 'item' : 'items'}
+                    </span>
+                  </div>
+
+                  <div className="divide-y divide-border-subtle">
+                    {charges.map((charge) => (
+                      <div key={charge.id} className="p-4 flex items-center justify-between gap-4 hover:bg-brand-sand/20 transition-colors">
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-ink text-sm">{charge.item_name_snapshot}</span>
+                            <span className="font-mono text-xs bg-brand-sand px-2 py-0.5 rounded text-ink font-semibold border border-border-subtle">
+                              {charge.quantity} × {formatCurrency(charge.unit_price_snapshot)}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                              charge.tax_treatment === 'gst'
+                                ? 'bg-status-green/10 text-status-green border-status-green/30'
+                                : 'bg-status-blue/10 text-status-blue border-status-blue/30'
+                            }`}>
+                              {charge.tax_treatment === 'gst' ? `GST (${charge.gst_rate || effectiveGstRate}%)` : 'Non-GST'}
+                            </span>
+                          </div>
+                          {charge.remarks && (
+                            <p className="text-[11px] text-ink-muted italic">Note: {charge.remarks}</p>
+                          )}
+                          <p className="text-[10px] text-ink-muted font-mono">
+                            Recorded at: {new Date(charge.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-bold font-mono text-sm text-brand-forest">
+                              {formatCurrency(charge.taxable_amount + (includeGst && charge.tax_treatment === 'gst' ? charge.gst_amount : 0))}
+                            </p>
+                            <p className="text-[10px] text-ink-muted">
+                              Subtotal: {formatCurrency(charge.taxable_amount)}
+                            </p>
+                          </div>
+
+                          {!isFinalized && canManageBilling && (
+                            <button
+                              type="button"
+                              disabled={deletingChargeId === charge.id}
+                              onClick={() => handleDeleteFoodCharge(charge.id)}
+                              className="p-2 text-ink-muted hover:text-action-danger hover:bg-action-danger/10 rounded-lg transition-colors cursor-pointer"
+                              title="Remove food charge"
+                            >
+                              {deletingChargeId === charge.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-action-danger" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ----------------------------------------------------
        * Professional Tax Invoice Document (A4 Print Layout)
        * ---------------------------------------------------- */}
       <div
@@ -225,7 +460,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
                     {initialBill.hotel_name}
                   </h1>
                   <p className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">
-                    Boutique Hospitality & Luxury Stay
+                    Boutique Hospitality &amp; Luxury Stay
                   </p>
                 </div>
               </div>
@@ -309,7 +544,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
           {/* Stay Details */}
           <div className="space-y-2 p-3.5 rounded-lg bg-brand-sand/30 border border-border-subtle/80">
             <h2 className="text-[11px] font-bold uppercase tracking-wider text-brand-forest flex items-center gap-1.5">
-              <span>Stay & Room Details</span>
+              <span>Stay &amp; Room Details</span>
             </h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               <div>
@@ -318,7 +553,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
                 <p className="text-[11px] text-ink-muted font-medium">{initialBill.category_name}</p>
               </div>
               <div>
-                <p className="text-[11px] text-ink-muted">Duration & Guests</p>
+                <p className="text-[11px] text-ink-muted">Duration &amp; Guests</p>
                 <p className="font-bold text-ink text-sm">{initialBill.nights} Night{initialBill.nights > 1 ? 's' : ''}</p>
                 <p className="text-[11px] text-ink-muted">
                   {initialBill.adults} Adult{initialBill.adults > 1 ? 's' : ''}
@@ -339,33 +574,40 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
           </div>
         </div>
 
-        {/* Itemized Charges Table */}
+        {/* Itemized Charges Table (Consolidated Room + Food) */}
         <div className="p-6">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b-2 border-brand-forest text-ink font-bold uppercase tracking-wider text-[11px]">
                 <th className="pb-2.5 text-left w-8">#</th>
-                <th className="pb-2.5 text-left">Description & Service Period</th>
-                <th className="pb-2.5 text-center w-20">SAC</th>
-                <th className="pb-2.5 text-center w-16">Nights</th>
-                <th className="pb-2.5 text-right w-24">Rate/Night</th>
+                <th className="pb-2.5 text-left">Description &amp; Service Particulars</th>
+                <th className="pb-2.5 text-center w-20">HSN/SAC</th>
+                <th className="pb-2.5 text-center w-16">Qty/Nights</th>
+                <th className="pb-2.5 text-right w-24">Unit Rate</th>
                 <th className="pb-2.5 text-right w-28">Taxable Amt</th>
-                {includeGst && <th className="pb-2.5 text-right w-24">GST ({initialBill.gst_rate}%)</th>}
-                <th className="pb-2.5 text-right w-28">Total</th>
+                {includeGst && <th className="pb-2.5 text-right w-24">GST</th>}
+                <th className="pb-2.5 text-right w-28">Total Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {initialBill.line_items.map((item, idx) => (
+              {computedLineItems.map((item, idx) => (
                 <tr key={idx} className="hover:bg-brand-sand/20 transition-colors">
                   <td className="py-3 text-ink-muted font-mono">{idx + 1}</td>
                   <td className="py-3 text-ink font-medium">
                     <p className="text-ink font-semibold">{item.description}</p>
-                    <p className="text-[11px] text-ink-muted font-mono">
-                      Service Period: {initialBill.check_in_date} to {initialBill.check_out_date}
-                    </p>
+                    {item.category_type === 'accommodation' && (
+                      <p className="text-[11px] text-ink-muted font-mono">
+                        Service Period: {initialBill.check_in_date} to {initialBill.check_out_date}
+                      </p>
+                    )}
+                    {item.category_type === 'food' && (
+                      <p className="text-[11px] text-ink-muted">
+                        Service: {item.service_type || 'Food & Beverage'} {item.tax_treatment === 'non_gst' ? '(Non-GST Line)' : ''}
+                      </p>
+                    )}
                   </td>
                   <td className="py-3 text-center text-ink-muted font-mono text-[11px]">{item.sac_code || '996311'}</td>
-                  <td className="py-3 text-center text-ink font-medium">{item.nights || '—'}</td>
+                  <td className="py-3 text-center text-ink font-medium">{item.nights || item.quantity || '1'}</td>
                   <td className="py-3 text-right tabular-nums text-ink-muted">
                     {item.rate ? formatCurrency(item.rate) : '—'}
                   </td>
@@ -374,7 +616,14 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
                   </td>
                   {includeGst && (
                     <td className="py-3 text-right tabular-nums text-ink-muted">
-                      {formatCurrency(item.gst_amount)}
+                      {item.gst_amount > 0 ? (
+                        <>
+                          <span>{formatCurrency(item.gst_amount)}</span>
+                          <span className="block text-[10px] text-ink-muted">({item.gst_rate}%)</span>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-ink-muted">₹0.00</span>
+                      )}
                     </td>
                   )}
                   <td className="py-3 text-right tabular-nums font-bold text-brand-forest">
@@ -396,7 +645,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
                   </p>
                   <div className="space-y-1.5 text-ink-muted">
                     <div className="flex justify-between">
-                      <span>Taxable Room & Service Value</span>
+                      <span>Taxable Room &amp; Food Value</span>
                       <span className="tabular-nums font-medium text-ink">{formatCurrency(taxableSubtotal)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -408,8 +657,8 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
                       <span className="tabular-nums font-medium text-ink">{formatCurrency(sgstAmount)}</span>
                     </div>
                     <div className="flex justify-between pt-1 border-t border-border-subtle/80 font-bold text-ink">
-                      <span>Total GST Calculated ({effectiveGstRate}%)</span>
-                      <span className="tabular-nums">{formatCurrency(gstAmount)}</span>
+                      <span>Total GST Calculated</span>
+                      <span className="tabular-nums">{formatCurrency(totalGstAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -435,14 +684,30 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
             <div className="md:col-span-5 space-y-2 text-xs">
               <div className="p-4 rounded-lg bg-brand-sand/30 border border-border-subtle space-y-2">
                 <div className="flex justify-between text-ink-muted">
-                  <span>Subtotal (Room + Extras)</span>
+                  <span>Accommodation Subtotal</span>
+                  <span className="tabular-nums font-medium text-ink">
+                    {formatCurrency(initialBill.accommodation_subtotal || 0)}
+                  </span>
+                </div>
+
+                {foodCharges.length > 0 && (
+                  <div className="flex justify-between text-ink-muted">
+                    <span>Food &amp; Beverage Subtotal</span>
+                    <span className="tabular-nums font-medium text-ink">
+                      {formatCurrency(foodCharges.reduce((s, f) => s + f.taxable_amount, 0))}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-ink-muted pt-1 border-t border-border-subtle/60 font-semibold">
+                  <span>Taxable Subtotal</span>
                   <span className="tabular-nums font-medium text-ink">{formatCurrency(taxableSubtotal)}</span>
                 </div>
 
                 {includeGst && (
                   <div className="flex justify-between text-ink-muted">
-                    <span>GST ({effectiveGstRate}%)</span>
-                    <span className="tabular-nums font-medium text-ink">{formatCurrency(gstAmount)}</span>
+                    <span>Total GST</span>
+                    <span className="tabular-nums font-medium text-ink">{formatCurrency(totalGstAmount)}</span>
                   </div>
                 )}
 
@@ -475,7 +740,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
             <div className="mt-6 pt-4 border-t border-border-subtle print-keep-together">
               <h3 className="text-xs font-bold text-brand-forest uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                 <CreditCard className="w-3.5 h-3.5" />
-                <span>Payment Summary & Receipts</span>
+                <span>Payment Summary &amp; Receipts</span>
               </h3>
               <table className="w-full text-xs">
                 <thead>
@@ -541,7 +806,7 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
       {/* ----------------------------------------------------
        * Record Payment Form (Hidden in Print)
        * ---------------------------------------------------- */}
-      {balanceDue > 0 && bookingStatus !== 'checked_out' && bookingStatus !== 'cancelled' && (
+      {balanceDue > 0 && bookingStatus !== 'checked_out' && bookingStatus !== 'cancelled' && canManageBilling && (
         <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs print:hidden">
           <RecordPaymentForm
             bookingId={initialBill.booking_id}
@@ -551,6 +816,21 @@ export default function BillView({ initialBill, bookingStatus }: BillViewProps) 
           />
         </div>
       )}
+
+      {/* ----------------------------------------------------
+       * Add Food & Beverage Modal Dialog
+       * ---------------------------------------------------- */}
+      <AddFoodModal
+        isOpen={isAddFoodOpen}
+        onClose={() => setIsAddFoodOpen(false)}
+        bookingId={initialBill.booking_id}
+        roomNumber={initialBill.room_number}
+        guestName={initialBill.guest_name}
+        categories={categories}
+        menuItems={menuItems}
+        gstPercentage={initialBill.gst_rate}
+        onChargeAdded={handleFoodChargeAdded}
+      />
     </div>
   );
 }

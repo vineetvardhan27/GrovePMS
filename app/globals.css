@@ -4,8 +4,11 @@
 
 @layer base {
   :root {
-    --background: 40 33% 94%; /* #F6F2EC - brand-sand */
-    --foreground: 60 5% 13%; /* #22221F - ink */
+    --background: 40 33% 94%;  /* #F6F2EC - brand-sand */
+    --foreground: 60 5% 13%;   /* #22221F - ink */
+    --brand-forest: #1F3D3A;
+    --brand-sand: #F6F2EC;
+    --border-subtle: #DDD5C6;
   }
 
   body {
@@ -17,13 +20,14 @@
     min-height: 100vh;
   }
 
+  /* Serif only for branding & page-level titles */
   h1, h2, h3, .font-serif {
     font-family: var(--font-fraunces), Georgia, serif;
   }
 
-  /* Accessible touch targets */
-  button, a, input, select, textarea {
-    min-height: 44px;
+  /* Form control defaults */
+  input, select, textarea {
+    font-family: inherit;
   }
 
   /* Tabular numbers for financial accuracy */
@@ -32,10 +36,270 @@
   }
 }
 
-/* Custom scrollbar matching brand palette */
+/* ============================================================
+ * PMS Design System — Reusable Component Classes
+ * ============================================================ */
+@layer components {
+
+  /* ----------------------------------------------------------
+   * BUTTONS
+   * ---------------------------------------------------------- */
+
+  /* Primary: Forest green, one per section max */
+  .pms-btn-primary {
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
+           bg-brand-forest text-white text-sm font-medium
+           hover:bg-brand-forest-light
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-1
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary: White with border — supporting actions */
+  .pms-btn-secondary {
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
+           bg-white border border-border-subtle text-ink text-sm font-medium
+           hover:bg-brand-sand
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Danger outline: report damage, cancel — restrained red */
+  .pms-btn-danger-outline {
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
+           bg-status-red/10 border border-status-red/30 text-status-red text-sm font-medium
+           hover:bg-status-red/20
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30 focus-visible:ring-offset-1
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Danger filled: truly destructive operations only */
+  .pms-btn-danger {
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
+           bg-action-danger text-white text-sm font-medium
+           hover:bg-action-danger/90
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-danger/40 focus-visible:ring-offset-1
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost/Icon-only: compact table row actions */
+  .pms-btn-icon {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
+           text-ink-muted
+           hover:bg-brand-sand hover:text-ink
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Icon button — danger tint */
+  .pms-btn-icon-danger {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
+           text-status-red bg-status-red/10
+           hover:bg-status-red/20
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Icon button — green tint */
+  .pms-btn-icon-success {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
+           text-status-green bg-status-green/10
+           hover:bg-status-green/20
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-green/30
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Icon button — amber tint */
+  .pms-btn-icon-amber {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
+           text-status-amber bg-status-amber/10
+           hover:bg-status-amber/20
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-amber/30
+           transition-colors duration-150 cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* ----------------------------------------------------------
+   * CARDS
+   * ---------------------------------------------------------- */
+
+  .pms-card {
+    @apply bg-white rounded-xl border border-border-subtle shadow-xs;
+  }
+
+  .pms-card-tight {
+    @apply bg-white rounded-lg border border-border-subtle shadow-2xs;
+  }
+
+  /* ----------------------------------------------------------
+   * STATUS BADGES
+   * ---------------------------------------------------------- */
+
+  .pms-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium leading-tight;
+  }
+
+  .pms-badge-healthy {
+    @apply pms-badge bg-status-green/10 text-status-green border border-status-green/25;
+  }
+
+  .pms-badge-low {
+    @apply pms-badge bg-status-amber/10 text-status-amber border border-status-amber/25;
+  }
+
+  .pms-badge-critical {
+    @apply pms-badge bg-status-red/10 text-status-red border border-status-red/25;
+  }
+
+  .pms-badge-neutral {
+    @apply pms-badge bg-brand-sand text-ink-muted border border-border-subtle;
+  }
+
+  .pms-badge-info {
+    @apply pms-badge bg-status-blue/10 text-status-blue border border-status-blue/25;
+  }
+
+  /* ----------------------------------------------------------
+   * TABLE SYSTEM
+   * ---------------------------------------------------------- */
+
+  .pms-table {
+    @apply w-full text-left text-[13px];
+  }
+
+  .pms-table-header {
+    @apply bg-brand-sand/70 border-b border-border-subtle;
+  }
+
+  .pms-table-th {
+    @apply px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-ink-muted whitespace-nowrap;
+  }
+
+  .pms-table-th-right {
+    @apply px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-ink-muted text-right whitespace-nowrap;
+  }
+
+  .pms-table-row {
+    @apply border-b border-border-subtle/60 hover:bg-brand-sand/40 transition-colors duration-150;
+  }
+
+  .pms-table-row:last-child {
+    @apply border-b-0;
+  }
+
+  .pms-table-td {
+    @apply px-4 py-3.5 align-middle;
+  }
+
+  /* ----------------------------------------------------------
+   * TAB SYSTEM
+   * ---------------------------------------------------------- */
+
+  .pms-tab-nav {
+    @apply flex items-center gap-0 border-b border-border-subtle;
+  }
+
+  .pms-tab-item {
+    @apply relative pb-3 px-4 text-sm font-medium text-ink-muted
+           hover:text-ink
+           transition-colors duration-150 cursor-pointer
+           focus-visible:outline-none;
+  }
+
+  .pms-tab-item::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-brand-forest
+           scale-x-0 transition-transform duration-150;
+  }
+
+  .pms-tab-item-active {
+    @apply text-brand-forest font-semibold;
+  }
+
+  .pms-tab-item-active::after {
+    @apply scale-x-100;
+  }
+
+  /* ----------------------------------------------------------
+   * PILL FILTER TABS (Classification bar)
+   * ---------------------------------------------------------- */
+
+  .pms-pill-tab {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md
+           text-xs font-medium text-ink-muted
+           hover:bg-brand-sand hover:text-ink
+           transition-colors duration-150 cursor-pointer whitespace-nowrap;
+  }
+
+  .pms-pill-tab-active {
+    @apply bg-brand-forest text-white shadow-2xs;
+  }
+
+  .pms-pill-tab-count {
+    @apply px-1.5 py-0.5 rounded text-[10px] font-mono
+           bg-white/20 text-white;
+  }
+
+  .pms-pill-tab-count-inactive {
+    @apply px-1.5 py-0.5 rounded text-[10px] font-mono
+           bg-brand-sand-dark text-ink-muted;
+  }
+
+  /* ----------------------------------------------------------
+   * FORM CONTROLS
+   * ---------------------------------------------------------- */
+
+  .pms-input {
+    @apply w-full h-9 px-3 rounded-lg border border-border-subtle bg-white
+           text-ink text-sm placeholder:text-ink-muted/60
+           focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60
+           transition-all duration-150;
+  }
+
+  .pms-select {
+    @apply h-9 px-3 pr-8 rounded-lg border border-border-subtle bg-white
+           text-ink text-sm appearance-none
+           focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60
+           transition-all duration-150 cursor-pointer;
+  }
+
+  .pms-label {
+    @apply block text-xs font-medium text-ink-muted mb-1.5;
+  }
+
+  /* ----------------------------------------------------------
+   * SKELETON LOADERS
+   * ---------------------------------------------------------- */
+
+  .pms-skeleton {
+    @apply bg-brand-sand-dark rounded animate-pulse;
+  }
+
+  /* ----------------------------------------------------------
+   * SEARCH BAR
+   * ---------------------------------------------------------- */
+
+  .pms-search {
+    @apply relative;
+  }
+
+  .pms-search input {
+    @apply pms-input pl-9;
+  }
+}
+
+/* ============================================================
+ * Custom scrollbar matching brand palette
+ * ============================================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -43,24 +307,23 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DDD5C6;
-  border-radius: 4px;
+  background: #C8C0B4;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #5C5B54;
 }
 
-/* ----------------------------------------------------
+/* ============================================================
  * High-Precision A4 Print & PDF Stylesheet
- * ---------------------------------------------------- */
+ * ============================================================ */
 @media print {
   @page {
     size: A4 portrait;
     margin: 8mm 10mm 8mm 10mm;
   }
 
-  /* Reset body and background for crisp printing */
   html, body {
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -73,7 +336,6 @@
     min-height: auto !important;
   }
 
-  /* Hide all dashboard chrome, navigation, headers, and UI-only interactive controls */
   header,
   nav,
   aside,
@@ -86,7 +348,6 @@
     display: none !important;
   }
 
-  /* Invoice Print Area full-width container */
   #invoice-print-area {
     box-shadow: none !important;
     border: 1px solid #e5e7eb !important;
@@ -99,12 +360,10 @@
     page-break-after: avoid !important;
   }
 
-  /* Prevent awkward table row and block breaks */
   tr, .print-keep-together {
     page-break-inside: avoid !important;
   }
 
-  /* Ensure colors and borders render with fidelity */
   .bg-brand-forest {
     background-color: #1F3D3A !important;
     color: #ffffff !important;

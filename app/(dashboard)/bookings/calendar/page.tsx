@@ -2,6 +2,8 @@ import { getRooms } from '../../../../lib/rooms/queries';
 import { getBookings } from '../../../../lib/bookings/queries';
 import BookingCalendar from '../../../../components/bookings/BookingCalendar';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CalendarPage() {
   const [rooms, bookings] = await Promise.all([
     getRooms(),

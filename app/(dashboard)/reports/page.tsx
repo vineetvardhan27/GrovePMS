@@ -3,6 +3,8 @@ import DailyReportView from '../../../components/reports/DailyReport';
 import MonthlyReportView from '../../../components/reports/MonthlyReport';
 import ReportsTabs from '../../../components/reports/ReportsTabs';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ReportsPage({
   searchParams,
 }: {

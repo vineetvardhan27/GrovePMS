@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { TrendingUp, CalendarDays, Percent, IndianRupee, BedDouble, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { MonthlyReport } from '../../lib/reports/queries';
+import type { MonthlyReport } from '../../lib/reports/queries';
 import { fetchMonthlyReport } from '../../lib/reports/server-actions';
 import { formatCurrency } from '../../lib/utils/currency';
 

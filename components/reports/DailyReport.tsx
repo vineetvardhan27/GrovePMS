@@ -15,7 +15,7 @@ import {
   LogOut,
   Clock,
 } from 'lucide-react';
-import { DailyReport } from '../../lib/reports/queries';
+import type { DailyReport } from '../../lib/reports/queries';
 import { fetchDailyReport } from '../../lib/reports/server-actions';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';

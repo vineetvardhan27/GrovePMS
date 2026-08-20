@@ -1,4 +1,4 @@
-import { Settings, Percent, BedDouble, ArrowRight } from 'lucide-react';
+import { Settings, Percent, BedDouble, ArrowRight, UtensilsCrossed } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -52,6 +52,27 @@ export default function SettingsPage() {
             </div>
           </div>
           <span className="text-xs text-brand-forest font-medium">Configure GST →</span>
+        </Link>
+        {/* Food Menu Management */}
+        <Link
+          href="/settings/food-menu"
+          className="bg-white rounded-xl border border-border-subtle p-6 space-y-3 hover:border-brand-forest/50 transition-colors shadow-2xs group flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="p-2.5 bg-brand-sand rounded-lg text-brand-forest group-hover:bg-brand-forest group-hover:text-white transition-colors">
+                <UtensilsCrossed className="w-5 h-5" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-ink-muted group-hover:text-brand-forest transition-colors" />
+            </div>
+            <div className="mt-3">
+              <h3 className="font-serif font-bold text-ink text-base">Food Menu</h3>
+              <p className="text-caption text-ink-muted mt-1">
+                Manage restaurant & room-service food items, categories, selling prices, and active availability
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-brand-forest font-medium">Manage Food Menu →</span>
         </Link>
       </div>
     </div>

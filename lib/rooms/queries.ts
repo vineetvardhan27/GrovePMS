@@ -1,30 +1,17 @@
 import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { RoomStatus, HousekeepingStatus } from '../types/database.types';
+import {
+  RoomCategory,
+  RoomWithCategory,
+  PropertyResource,
+  getEffectiveRoomRates,
+} from './types';
 
-export interface RoomCategory {
-  id: string;
-  hotel_id: string;
-  name: string;
-  description: string | null;
-  base_rate: number;
-  weekend_rate: number | null;
-  max_occupancy: number;
-  extra_bed_rate: number | null;
-}
+export type { RoomCategory, RoomWithCategory, PropertyResource };
+export { getEffectiveRoomRates };
 
-export interface RoomWithCategory {
-  id: string;
-  hotel_id: string;
-  category_id: string;
-  room_number: string;
-  floor: number;
-  status: RoomStatus;
-  housekeeping_status: HousekeepingStatus;
-  category: RoomCategory;
-  created_at?: string;
-  updated_at?: string;
-}
+
 
 // Actual hotel room categories for Hotel Greenery View
 export const DEFAULT_ROOM_CATEGORIES: RoomCategory[] = [
@@ -80,26 +67,27 @@ export const DEFAULT_ROOM_CATEGORIES: RoomCategory[] = [
   },
 ];
 
-// Actual hotel rooms for Hotel Greenery View — 19 accommodation units across 5 floors
-// Floor mapping: Basement=0, Ground=1, First=2, Second=3, Upper=4
+// Actual hotel inventory for Hotel Greenery View:
+// Exactly 19 Accommodation Units (18 Numbered Rooms + 1 Basement Family Apartment)
+// Ground Floor = 4, First Floor = 7, Second Floor = 3, Upper Floor = 4, Basement = 1
 export const DEFAULT_ROOMS: RoomWithCategory[] = [
   // Basement (floor=0): 1 Family Apartment
   {
     id: 'd0000000-0000-0000-0000-000000000001',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000005',
-    room_number: 'FA-01',
+    room_number: 'FAMILY-APT',
     floor: 0,
     status: 'available',
     housekeeping_status: 'clean',
     category: DEFAULT_ROOM_CATEGORIES[4],
   },
-  // Ground Floor (floor=1): 4 Premium Rooms
+  // Ground Floor / Road Level (floor=1): 4 Premium Rooms (801-804)
   {
     id: 'd0000000-0000-0000-0000-000000000101',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '001',
+    room_number: '801',
     floor: 1,
     status: 'available',
     housekeeping_status: 'clean',
@@ -109,7 +97,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000102',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '002',
+    room_number: '802',
     floor: 1,
     status: 'available',
     housekeeping_status: 'clean',
@@ -119,7 +107,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000103',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '003',
+    room_number: '803',
     floor: 1,
     status: 'available',
     housekeeping_status: 'clean',
@@ -129,18 +117,18 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000104',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '004',
+    room_number: '804',
     floor: 1,
     status: 'available',
     housekeeping_status: 'clean',
     category: DEFAULT_ROOM_CATEGORIES[0],
   },
-  // First Floor (floor=2): 2 Deluxe + 5 Premium = 7 rooms
+  // First Floor (floor=2): 7 rooms (2 Deluxe + 5 Premium)
   {
     id: 'd0000000-0000-0000-0000-000000000201',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000002',
-    room_number: '101',
+    room_number: '805',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -150,7 +138,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000202',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000002',
-    room_number: '102',
+    room_number: '806',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -160,7 +148,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000203',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '103',
+    room_number: '807',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -170,7 +158,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000204',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '104',
+    room_number: '808',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -180,7 +168,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000205',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '105',
+    room_number: '809',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -190,7 +178,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000206',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '106',
+    room_number: '810',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
@@ -200,19 +188,18 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000207',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000001',
-    room_number: '107',
+    room_number: '811',
     floor: 2,
     status: 'available',
     housekeeping_status: 'clean',
     category: DEFAULT_ROOM_CATEGORIES[0],
   },
-  // Second Floor (floor=3): 2 Luxury + 1 Deluxe = 3 rooms
-  // Restaurant area also on this floor — physical reference only, no room record
+  // Second Floor (floor=3): 3 rooms (2 Luxury + 1 Deluxe) + Restaurant (Facility)
   {
     id: 'd0000000-0000-0000-0000-000000000301',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000003',
-    room_number: '201',
+    room_number: '812',
     floor: 3,
     status: 'available',
     housekeeping_status: 'clean',
@@ -222,7 +209,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000302',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000003',
-    room_number: '202',
+    room_number: '813',
     floor: 3,
     status: 'available',
     housekeeping_status: 'clean',
@@ -232,18 +219,18 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000303',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000002',
-    room_number: '203',
+    room_number: '814',
     floor: 3,
     status: 'available',
     housekeeping_status: 'clean',
     category: DEFAULT_ROOM_CATEGORIES[1],
   },
-  // Upper Floor (floor=4): 4 Mountain View Rooms
+  // Upper Floor (floor=4): 4 Mountain View Rooms (815-818)
   {
     id: 'd0000000-0000-0000-0000-000000000401',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000004',
-    room_number: '301',
+    room_number: '815',
     floor: 4,
     status: 'available',
     housekeeping_status: 'clean',
@@ -253,7 +240,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000402',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000004',
-    room_number: '302',
+    room_number: '816',
     floor: 4,
     status: 'available',
     housekeeping_status: 'clean',
@@ -263,7 +250,7 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000403',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000004',
-    room_number: '303',
+    room_number: '817',
     floor: 4,
     status: 'available',
     housekeeping_status: 'clean',
@@ -273,13 +260,27 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
     id: 'd0000000-0000-0000-0000-000000000404',
     hotel_id: 'a0000000-0000-0000-0000-000000000001',
     category_id: 'c0000000-0000-0000-0000-000000000004',
-    room_number: '304',
+    room_number: '818',
     floor: 4,
     status: 'available',
     housekeeping_status: 'clean',
     category: DEFAULT_ROOM_CATEGORIES[3],
   },
 ];
+
+// Default Banquet Hall resource (separate non-bedroom resource)
+export const DEFAULT_BANQUET_HALL: PropertyResource = {
+  id: 'res-banquet-0001',
+  hotel_id: 'a0000000-0000-0000-0000-000000000001',
+  name: 'Banquet Hall',
+  resource_type: 'banquet_hall',
+  capacity: 200,
+  status: 'available',
+  description: 'Spacious Grand Banquet & Event Hall with modern AV setup and catering space',
+  daily_rate: 35000,
+  hourly_rate: 5000,
+  is_active: true,
+};
 
 export async function getRoomCategories(hotelId?: string): Promise<RoomCategory[]> {
   try {
@@ -311,7 +312,7 @@ export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
     const activeHotelId = hotelId || staff?.hotel_id;
 
     const supabase = createClient();
-    // Sort by floor first (Basement=0 comes first), then room_number within each floor
+    // Sort by floor (Basement=0 first, then Floor 8) and room_number
     let query = supabase
       .from('rooms')
       .select(`
@@ -340,4 +341,25 @@ export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
   }
 
   return DEFAULT_ROOMS;
+}
+
+export async function getPropertyResources(hotelId?: string): Promise<PropertyResource[]> {
+  try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
+    const supabase = createClient();
+    let query = supabase.from('property_resources').select('*').order('created_at', { ascending: true });
+    if (activeHotelId) {
+      query = query.eq('hotel_id', activeHotelId);
+    }
+    const { data, error } = await query;
+    if (!error && data && data.length > 0) {
+      return data as PropertyResource[];
+    }
+  } catch (err) {
+    // Return fallback
+  }
+
+  return [DEFAULT_BANQUET_HALL];
 }

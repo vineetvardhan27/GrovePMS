@@ -32,6 +32,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/billing') ||
     pathname.startsWith('/guests') ||
     pathname.startsWith('/payments') ||
+    pathname.startsWith('/inventory') ||
+    pathname.startsWith('/banquet') ||
     pathname.startsWith('/reports') ||
     pathname.startsWith('/settings');
 

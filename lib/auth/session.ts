@@ -16,10 +16,10 @@ export interface StaffProfile {
  * Route access permissions per role according to PRD §5 & Architecture.md §4
  */
 export const ROLE_NAV_ITEMS: Record<StaffRole, string[]> = {
-  owner: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments', '/reports', '/settings'],
-  manager: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments', '/reports'],
-  reception: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments'],
-  housekeeping: ['/dashboard', '/rooms'],
+  owner: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments', '/inventory', '/banquet', '/reports', '/settings'],
+  manager: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments', '/inventory', '/banquet', '/reports', '/settings'],
+  reception: ['/dashboard', '/rooms', '/bookings', '/guests', '/billing', '/payments', '/banquet'],
+  housekeeping: ['/dashboard', '/rooms', '/inventory', '/banquet'],
 };
 
 /**

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { BarChart3, CalendarDays } from 'lucide-react';
 import DailyReportView from './DailyReport';
 import MonthlyReportView from './MonthlyReport';
-import { DailyReport, MonthlyReport } from '../../lib/reports/queries';
+import type { DailyReport, MonthlyReport } from '../../lib/reports/queries';
 
 interface ReportsTabsProps {
   activeTab: 'daily' | 'monthly';

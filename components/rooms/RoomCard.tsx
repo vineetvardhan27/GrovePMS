@@ -8,8 +8,9 @@ import {
   Sparkles,
   Wrench,
   BedDouble,
+  Home,
 } from 'lucide-react';
-import { RoomWithCategory } from '../../lib/rooms/queries';
+import { RoomWithCategory } from '../../lib/rooms/types';
 import { RoomStatus } from '../../lib/types/database.types';
 import { formatCurrency } from '../../lib/utils/currency';
 
@@ -19,8 +20,7 @@ interface RoomCardProps {
   isSelected?: boolean;
 }
 
-// Human-readable floor names — kept in sync with RoomGrid.tsx
-// Floor integer mapping: Basement=0, Ground=1, First=2, Second=3, Upper=4
+// Human-readable floor names
 const FLOOR_NAMES: Record<number, string> = {
   0: 'Basement',
   1: 'Ground Floor',
@@ -29,7 +29,8 @@ const FLOOR_NAMES: Record<number, string> = {
   4: 'Upper Floor',
 };
 
-function getFloorLabel(floor: number): string {
+function getFloorLabel(floor: number, roomNumber: string): string {
+  if (roomNumber === 'FAMILY-APT' || floor === 0) return 'Basement Suite';
   return FLOOR_NAMES[floor] ?? `Floor ${floor}`;
 }
 
@@ -97,12 +98,13 @@ export const STATUS_CONFIG: Record<
 export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
   const config = STATUS_CONFIG[room.status] || STATUS_CONFIG.available;
   const StatusIcon = config.icon;
+  const isFamilyApartment = room.room_number === 'FAMILY-APT' || room.category?.name === 'Family Apartment';
 
   return (
     <button
       type="button"
       onClick={() => onClick(room)}
-      className={`relative w-full text-left p-3.5 sm:p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[115px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-forest ${
+      className={`relative w-full text-left p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[120px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-forest ${
         config.bgClass
       } ${config.borderClass} ${
         isSelected ? 'ring-2 ring-brand-forest ring-offset-2 scale-[1.02]' : ''
@@ -112,32 +114,45 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
       {/* Top row: Room Number & Status Icon */}
       <div className="flex items-start justify-between w-full">
         <div>
-          <span className="text-2xl md:text-3xl font-bold font-serif text-ink tracking-tight">
-            {room.room_number}
-          </span>
-          <span className="block text-[11px] text-ink-muted font-medium">
-            {getFloorLabel(room.floor)}
-          </span>
+          {isFamilyApartment ? (
+            <div>
+              <span className="text-base sm:text-lg font-bold font-serif text-ink tracking-tight block">
+                Family Apartment
+              </span>
+              <span className="text-[10px] font-mono text-ink-muted bg-white/60 px-1.5 py-0.5 rounded border border-border-subtle inline-block mt-0.5">
+                Basement Suite
+              </span>
+            </div>
+          ) : (
+            <div>
+              <span className="text-2xl sm:text-3xl font-bold font-serif text-ink tracking-tight">
+                {room.room_number}
+              </span>
+              <span className="block text-[11px] text-ink-muted font-medium">
+                {getFloorLabel(room.floor, room.room_number)}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Distinct Accessible Icon paired with color per Design.md §1.2 */}
+        {/* Status Icon */}
         <div className={`p-1.5 rounded-lg border ${config.badgeBg}`}>
           <StatusIcon className="w-4 h-4" />
         </div>
       </div>
 
       {/* Bottom row: Category & Rate + Status label */}
-      <div className="mt-2.5 pt-2 border-t border-black/5 w-full flex items-end justify-between gap-1.5">
+      <div className="mt-3 pt-2 border-t border-black/5 w-full flex items-end justify-between gap-1.5">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-ink truncate">
             {room.category.name}
           </p>
-          <p className="text-[11px] text-ink-muted tabular-nums truncate">
-            {formatCurrency(room.category.base_rate)}/night
+          <p className="text-[11px] text-ink-muted tabular-nums truncate font-semibold">
+            {formatCurrency(room.base_rate_override || room.category.base_rate)}/night
           </p>
         </div>
 
-        {/* Text Label always visible */}
+        {/* Text Label */}
         <span
           className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${config.badgeBg}`}
         >

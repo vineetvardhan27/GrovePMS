@@ -27,9 +27,9 @@ const config: Config = {
         // Status Colors (Functional - PRD & Design System)
         status: {
           green: "#2E7D4F", // Available, Fully Paid, Clean
-          red: "#C4392B", // Occupied, No Payment
+          red: "#C4392B",   // Occupied, No Payment
           amber: "#D68A2C", // Arriving Today, Advance Received
-          blue: "#2B5C8A", // Reserved, Credit-Pay Later
+          blue: "#2B5C8A",  // Reserved, Credit-Pay Later
           orange: "#D9662B", // Cleaning Required
           slate: "#4A4A47", // Maintenance, Blocked
         },
@@ -49,23 +49,33 @@ const config: Config = {
         sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       fontSize: {
-        display: ["2rem", { lineHeight: "2.5rem", fontWeight: "600" }], // 32px
-        h1: ["1.5rem", { lineHeight: "2rem", fontWeight: "600" }], // 24px
-        h2: ["1.125rem", { lineHeight: "1.75rem", fontWeight: "600" }], // 18px
-        body: ["1rem", { lineHeight: "1.5rem", fontWeight: "400" }], // 16px
+        display: ["2rem", { lineHeight: "2.5rem", fontWeight: "600" }],     // 32px
+        h1:      ["1.5rem", { lineHeight: "2rem",   fontWeight: "600" }],   // 24px
+        h2:      ["1.125rem", { lineHeight: "1.75rem", fontWeight: "600" }], // 18px
+        body:    ["1rem",   { lineHeight: "1.5rem",  fontWeight: "400" }],  // 16px
         "body-lg": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "400" }], // 18px
         caption: ["0.875rem", { lineHeight: "1.25rem", fontWeight: "400" }], // 14px
-        tiny: ["0.75rem", { lineHeight: "1rem", fontWeight: "500" }], // 12px
+        tiny:    ["0.75rem", { lineHeight: "1rem",   fontWeight: "500" }],  // 12px
       },
       boxShadow: {
-        '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
-        'xs': '0 1px 3px 0 rgba(0, 0, 0, 0.08)',
+        "2xs": "0 1px 2px 0 rgba(0, 0, 0, 0.04)",
+        xs:    "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
+        card:  "0 1px 4px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px #DDD5C6",
+        modal: "0 8px 32px 0 rgba(0, 0, 0, 0.12), 0 2px 8px 0 rgba(0, 0, 0, 0.06)",
       },
       minHeight: {
         touch: "44px",
       },
       minWidth: {
         touch: "44px",
+      },
+      transitionDuration: {
+        150: "150ms",
+        200: "200ms",
+        250: "250ms",
+      },
+      animation: {
+        "pulse-subtle": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

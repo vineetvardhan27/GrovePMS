@@ -15,8 +15,8 @@ import {
   X,
   History,
 } from 'lucide-react';
-import { Guest } from '../../lib/guests/queries';
-import { BookingWithDetails } from '../../lib/bookings/queries';
+import type { Guest } from '../../lib/guests/queries';
+import type { BookingWithDetails } from '../../lib/bookings/queries';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';
 

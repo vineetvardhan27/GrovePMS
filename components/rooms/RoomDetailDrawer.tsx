@@ -18,7 +18,7 @@ import {
   Phone,
   Loader2,
 } from 'lucide-react';
-import { RoomWithCategory } from '../../lib/rooms/queries';
+import { RoomWithCategory } from '../../lib/rooms/types';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
 import { STATUS_CONFIG } from './RoomCard';
 import { formatCurrency } from '../../lib/utils/currency';

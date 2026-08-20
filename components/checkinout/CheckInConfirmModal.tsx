@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { BookingWithDetails } from '../../lib/bookings/queries';
+import type { BookingWithDetails } from '../../lib/bookings/queries';
 import { checkInAction } from '../../lib/checkinout/actions';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';

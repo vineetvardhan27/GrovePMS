@@ -1,6 +1,8 @@
 import { getPayments } from '../../../lib/payments/queries';
 import PaymentsList from '../../../components/payments/PaymentsList';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PaymentsPage() {
   const payments = await getPayments();
 

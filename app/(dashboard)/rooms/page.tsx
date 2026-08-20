@@ -1,10 +1,13 @@
-import { getRooms, getRoomCategories } from '../../../lib/rooms/queries';
+import { getRooms, getRoomCategories, getPropertyResources } from '../../../lib/rooms/queries';
 import RoomGrid from '../../../components/rooms/RoomGrid';
 
+export const dynamic = 'force-dynamic';
+
 export default async function RoomsPage() {
-  const [rooms, categories] = await Promise.all([
+  const [rooms, categories, propertyResources] = await Promise.all([
     getRooms(),
     getRoomCategories(),
+    getPropertyResources(),
   ]);
 
   return (
@@ -12,11 +15,15 @@ export default async function RoomsPage() {
       <div>
         <h1 className="text-display text-brand-forest">Room Chart</h1>
         <p className="text-body text-ink-muted">
-          Live room availability, housekeeping, and occupancy grid
+          Live room availability, housekeeping, and property inventory
         </p>
       </div>
 
-      <RoomGrid initialRooms={rooms} categories={categories} />
+      <RoomGrid
+        initialRooms={rooms}
+        categories={categories}
+        propertyResources={propertyResources}
+      />
     </div>
   );
 }

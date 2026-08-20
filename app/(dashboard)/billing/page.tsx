@@ -1,13 +1,27 @@
 import { getBookings } from '../../../lib/bookings/queries';
+import { getAllFoodCharges } from '../../../lib/billing/food-actions';
+import { getHotelSettings } from '../../../lib/hotels/queries';
 import Link from 'next/link';
-import { FileText, CheckCircle2, Clock, CreditCard, Building } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, CreditCard, Building, Utensils } from 'lucide-react';
 import { formatCurrency } from '../../../lib/utils/currency';
 import { formatDate } from '../../../lib/utils/dates';
 
-export default async function BillingPage() {
-  const bookings = await getBookings();
+export const dynamic = 'force-dynamic';
 
-  // Show checked_in and checked_out bookings with outstanding or recent payments
+export default async function BillingPage() {
+  const [bookings, allFoodCharges] = await Promise.all([
+    getBookings(),
+    getAllFoodCharges(),
+  ]);
+
+  // Index food charges by booking_id
+  const foodByBooking = new Map<string, number>();
+  for (const fc of allFoodCharges) {
+    const prev = foodByBooking.get(fc.booking_id) || 0;
+    foodByBooking.set(fc.booking_id, prev + (fc.taxable_amount || 0));
+  }
+
+  // Show checked_in, checked_out, and confirmed bookings
   const relevantBookings = bookings.filter((b) =>
     b.booking_status === 'checked_in' ||
     b.booking_status === 'checked_out' ||
@@ -19,7 +33,7 @@ export default async function BillingPage() {
       <div>
         <h1 className="text-display text-brand-forest">Billing</h1>
         <p className="text-body text-ink-muted">
-          Generate guest invoices, record payments, and process checkouts
+          Generate guest invoices, manage food charges, record payments, and process checkouts
         </p>
       </div>
 
@@ -32,6 +46,7 @@ export default async function BillingPage() {
                 <th className="p-4">Guest</th>
                 <th className="p-4">Room</th>
                 <th className="p-4">Stay</th>
+                <th className="p-4">Charges</th>
                 <th className="p-4">Total</th>
                 <th className="p-4">Balance Due</th>
                 <th className="p-4 text-right">Action</th>
@@ -40,13 +55,29 @@ export default async function BillingPage() {
             <tbody className="divide-y divide-border-subtle">
               {relevantBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-ink-muted">
+                  <td colSpan={8} className="p-8 text-center text-ink-muted">
                     No active bookings to bill.
                   </td>
                 </tr>
               ) : (
                 relevantBookings.map((b) => {
-                  const balanceDue = Math.max(0, b.total_amount - b.advance_amount);
+                  const foodTotal = foodByBooking.get(b.id) || 0;
+                  const totalPaid = (b.payments || []).reduce((sum, p) => {
+                    const amt = Number(p.amount) || 0;
+                    return p.payment_type === 'refund' ? sum - amt : sum + amt;
+                  }, 0);
+
+                  const checkIn = new Date(b.check_in_date);
+                  const checkOut = new Date(b.check_out_date);
+                  const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
+                  const roomCharge = nights * Number(b.rate_per_night);
+                  const extras = Math.max(0, Number(b.total_amount) - roomCharge);
+
+                  const combinedTaxable = roomCharge + extras + foodTotal;
+                  // Default standard bill preview
+                  const estimatedGst = Math.round(((combinedTaxable * 12) / 100) * 100) / 100;
+                  const estimatedGrandTotal = combinedTaxable + estimatedGst;
+                  const balanceDue = Math.max(0, Math.round((estimatedGrandTotal - totalPaid) * 100) / 100);
                   const isCheckedIn = b.booking_status === 'checked_in';
 
                   return (
@@ -78,8 +109,18 @@ export default async function BillingPage() {
                         {formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}
                       </td>
 
+                      <td className="p-4 space-y-0.5 text-[11px]">
+                        <p className="text-ink font-medium">Room: {formatCurrency(roomCharge)}</p>
+                        {foodTotal > 0 && (
+                          <p className="text-brand-forest font-bold flex items-center gap-1">
+                            <Utensils className="w-3 h-3" />
+                            <span>F&amp;B: {formatCurrency(foodTotal)}</span>
+                          </p>
+                        )}
+                      </td>
+
                       <td className="p-4 font-bold text-ink tabular-nums">
-                        {formatCurrency(b.total_amount)}
+                        {formatCurrency(estimatedGrandTotal)}
                       </td>
 
                       <td className="p-4">
