@@ -2,8 +2,10 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -42,9 +44,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["var(--font-fraunces)", "serif"],
-        display: ["var(--font-fraunces)", "serif"],
-        sans: ["var(--font-inter)", "sans-serif"],
+        serif: ["var(--font-fraunces)", "Georgia", "serif"],
+        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       fontSize: {
         display: ["2rem", { lineHeight: "2.5rem", fontWeight: "600" }], // 32px
@@ -54,6 +56,10 @@ const config: Config = {
         "body-lg": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "400" }], // 18px
         caption: ["0.875rem", { lineHeight: "1.25rem", fontWeight: "400" }], // 14px
         tiny: ["0.75rem", { lineHeight: "1rem", fontWeight: "500" }], // 12px
+      },
+      boxShadow: {
+        '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        'xs': '0 1px 3px 0 rgba(0, 0, 0, 0.08)',
       },
       minHeight: {
         touch: "44px",

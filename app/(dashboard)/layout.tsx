@@ -15,11 +15,13 @@ import {
   Sparkles,
   UserCheck,
   Building2,
+  AlertTriangle,
 } from 'lucide-react';
 import { getCurrentStaff, ROLE_NAV_ITEMS } from '../../lib/auth/session';
 import { signOut } from '../(auth)/login/actions';
 import { StaffRole } from '../../lib/types/database.types';
 import MobileNavDrawer from '../../components/shared/MobileNavDrawer';
+import { createClient } from '../../lib/supabase/server';
 
 const ALL_NAV_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -46,9 +48,41 @@ export default async function DashboardLayout({
 }) {
   const staff = await getCurrentStaff();
 
-  // If unauthenticated, redirect to login
+  // If no staff profile found, check if user is authenticated in Supabase Auth
   if (!staff) {
-    redirect('/login');
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect('/login');
+    }
+
+    // User is authenticated in Supabase Auth, but has not been assigned to a hotel in public.staff
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-sand">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-border-subtle p-8 shadow-sm text-center space-y-6">
+          <div className="w-14 h-14 bg-status-amber/15 text-status-amber rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-ink">Account Not Assigned</h1>
+            <p className="text-sm text-ink-muted mt-2">
+              Your account ({user.email}) is authenticated, but has not been assigned to a hotel or is currently inactive. Please contact your hotel administrator to activate your staff permissions.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-3">
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="w-full py-2.5 px-4 rounded-lg bg-brand-forest hover:bg-brand-forest-light text-white text-sm font-medium transition-colors cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const authorizedPaths = ROLE_NAV_ITEMS[staff.role] || ['/dashboard', '/rooms'];
@@ -147,7 +181,7 @@ export default async function DashboardLayout({
               href="/login"
               className="text-xs text-ink-muted hover:text-brand-forest font-medium px-2.5 py-1.5 rounded-lg border border-border-subtle bg-brand-sand/60 hover:bg-brand-sand transition-colors min-h-[36px] flex items-center"
             >
-              Switch Role
+              Switch Account
             </Link>
           </div>
         </header>

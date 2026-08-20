@@ -1,4 +1,5 @@
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 import {
   BookingStatus,
   PaymentStatus,
@@ -6,8 +7,8 @@ import {
   PaymentMode,
   PaymentType,
 } from '../types/database.types';
-import { Guest, DEFAULT_GUESTS } from '../guests/queries';
-import { RoomWithCategory, DEFAULT_ROOMS } from '../rooms/queries';
+import { Guest } from '../guests/queries';
+import { RoomWithCategory } from '../rooms/queries';
 
 export interface PaymentRecord {
   id: string;
@@ -45,18 +46,15 @@ export interface BookingWithDetails {
   payments: PaymentRecord[];
 }
 
-export const DEFAULT_BOOKINGS: BookingWithDetails[] = [];
-
-export let localBookingsStore: BookingWithDetails[] = [];
-export let localPaymentsStore: PaymentRecord[] = [];
-
-
 export async function getBookings(
   hotelId?: string,
   statusFilter?: string,
   searchQuery?: string
 ): Promise<BookingWithDetails[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
     const supabase = createClient();
     let q = supabase
       .from('bookings')
@@ -71,7 +69,9 @@ export async function getBookings(
       `)
       .order('check_in_date', { ascending: false });
 
-    if (hotelId) q = q.eq('hotel_id', hotelId);
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
+    }
     if (statusFilter && statusFilter !== 'all') {
       q = q.eq('booking_status', statusFilter);
     }
@@ -79,9 +79,10 @@ export async function getBookings(
     const { data, error } = await q;
     if (error) {
       console.error('Error fetching bookings from Supabase:', error.message);
-      return localBookingsStore;
+      return [];
     }
-    if (data && data.length > 0) {
+
+    if (data) {
       let result = data as BookingWithDetails[];
       if (searchQuery && searchQuery.trim()) {
         const s = searchQuery.trim().toLowerCase();
@@ -95,32 +96,18 @@ export async function getBookings(
       }
       return result;
     }
-
   } catch (err) {
     console.error('Failed to connect to Supabase for bookings:', err);
   }
 
-  let result = [...localBookingsStore];
-  if (statusFilter && statusFilter !== 'all') {
-    result = result.filter((b) => b.booking_status === statusFilter);
-  }
-  if (searchQuery && searchQuery.trim()) {
-    const s = searchQuery.trim().toLowerCase();
-    result = result.filter(
-      (b) =>
-        b.booking_number.toLowerCase().includes(s) ||
-        b.guest.full_name.toLowerCase().includes(s) ||
-        b.guest.phone.toLowerCase().includes(s) ||
-        b.room.room_number.toLowerCase().includes(s)
-    );
-  }
-  return result;
+  return [];
 }
 
 export async function getBookingById(bookingId: string): Promise<BookingWithDetails | null> {
   try {
+    const staff = await getCurrentStaff();
     const supabase = createClient();
-    const { data, error } = await supabase
+    let q = supabase
       .from('bookings')
       .select(`
         *,
@@ -131,12 +118,17 @@ export async function getBookingById(bookingId: string): Promise<BookingWithDeta
         ),
         payments:payments (*)
       `)
-      .eq('id', bookingId)
-      .single();
+      .eq('id', bookingId);
+
+    if (staff?.hotel_id) {
+      q = q.eq('hotel_id', staff.hotel_id);
+    }
+
+    const { data, error } = await q.maybeSingle();
 
     if (error) {
       console.error(`Error fetching booking ${bookingId} from Supabase:`, error.message);
-      return localBookingsStore.find((b) => b.id === bookingId) || null;
+      return null;
     }
     if (data) {
       return data as BookingWithDetails;
@@ -145,6 +137,5 @@ export async function getBookingById(bookingId: string): Promise<BookingWithDeta
     console.error(`Failed to connect to Supabase for booking ${bookingId}:`, err);
   }
 
-  return localBookingsStore.find((b) => b.id === bookingId) || null;
+  return null;
 }
-

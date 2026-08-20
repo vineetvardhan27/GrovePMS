@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 import {
   BookingStatus,
   PaymentStatus,
@@ -11,15 +12,12 @@ import {
 import {
   BookingWithDetails,
   PaymentRecord,
-  localBookingsStore,
-  localPaymentsStore,
 } from './queries';
-import { Guest, localGuestsStore } from '../guests/queries';
-import { localRoomsStore, DEFAULT_ROOM_CATEGORIES } from '../rooms/queries';
+import { Guest } from '../guests/queries';
+import { RoomWithCategory } from '../rooms/queries';
 import { revalidatePath } from 'next/cache';
 
 export interface CreateBookingInput {
-  hotel_id?: string;
   room_id: string;
   guest_name: string;
   guest_phone: string;
@@ -49,18 +47,25 @@ export interface BookingActionResult {
  * Server-Side Double-Booking Prevention (Rules.md §2)
  */
 export async function checkDoubleBooking(
-  hotelId: string,
+  hotelId: string | undefined,
   roomId: string,
   checkInDate: string,
   checkOutDate: string,
   excludeBookingId?: string
 ): Promise<{ is_available: boolean; conflict?: { booking_number: string; check_in_date: string; check_out_date: string } }> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
+    if (!activeHotelId) {
+      return { is_available: true };
+    }
+
     const supabase = createClient();
     let q = supabase
       .from('bookings')
       .select('id, booking_number, check_in_date, check_out_date, booking_status')
-      .eq('hotel_id', hotelId)
+      .eq('hotel_id', activeHotelId)
       .eq('room_id', roomId)
       .neq('booking_status', 'cancelled')
       .lt('check_in_date', checkOutDate)
@@ -71,35 +76,17 @@ export async function checkDoubleBooking(
     }
 
     const { data: conflicts, error } = await q;
-    if (!error && conflicts && conflicts.length > 0) {
+    if (error) {
+      console.error('Error checking double booking in Supabase:', error.message);
+    }
+    if (conflicts && conflicts.length > 0) {
       return {
         is_available: false,
         conflict: conflicts[0] as any,
       };
     }
-  } catch {
-    // Check local store
-  }
-
-  // Check in-memory store
-  const conflict = localBookingsStore.find(
-    (b) =>
-      b.room_id === roomId &&
-      b.booking_status !== 'cancelled' &&
-      b.id !== excludeBookingId &&
-      b.check_in_date < checkOutDate &&
-      b.check_out_date > checkInDate
-  );
-
-  if (conflict) {
-    return {
-      is_available: false,
-      conflict: {
-        booking_number: conflict.booking_number,
-        check_in_date: conflict.check_in_date,
-        check_out_date: conflict.check_out_date,
-      },
-    };
+  } catch (err) {
+    console.error('checkDoubleBooking exception:', err);
   }
 
   return { is_available: true };
@@ -109,9 +96,23 @@ export async function checkDoubleBooking(
  * Create a new booking with automatic guest linkage, conflict check, and advance payment logging
  */
 export async function createBookingAction(input: CreateBookingInput): Promise<BookingActionResult> {
-  const hotelId = input.hotel_id || 'a0000000-0000-0000-0000-000000000001';
+  // 1. Authenticate Staff Identity & Hotel Context
+  const staff = await getCurrentStaff();
+  if (!staff) {
+    return { error: 'Please log in to continue.' };
+  }
 
-  // 1. Validate dates and fields
+  if (!staff.is_active) {
+    return { error: 'Your staff account is inactive. Please contact the administrator.' };
+  }
+
+  if (staff.role === 'housekeeping') {
+    return { error: 'You do not have permission to create reservations.' };
+  }
+
+  const hotelId = staff.hotel_id;
+
+  // 2. Validate input fields
   if (!input.check_in_date || !input.check_out_date) {
     return { error: 'Please specify both check-in and check-out dates.' };
   }
@@ -125,7 +126,21 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     return { error: 'Guest name and contact phone number are required.' };
   }
 
-  // 2. Server-side double-booking check
+  const supabase = createClient();
+
+  // 3. Verify target room belongs to staff hotel
+  const { data: targetRoom, error: roomFetchErr } = (await supabase
+    .from('rooms')
+    .select('*, category:category_id(*)')
+    .eq('id', input.room_id)
+    .eq('hotel_id', hotelId)
+    .maybeSingle()) as { data: any; error: any };
+
+  if (roomFetchErr || !targetRoom) {
+    return { error: 'The selected room does not exist in your hotel property.' };
+  }
+
+  // 4. Server-side double-booking check
   const availability = await checkDoubleBooking(
     hotelId,
     input.room_id,
@@ -140,94 +155,140 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     };
   }
 
-  const supabase = createClient();
+  // Attempt Transactional RPC Booking Creation
+  try {
+    const { data: rpcResult, error: rpcErr } = await (supabase.rpc as any)('create_booking_transaction', {
+      p_room_id: input.room_id,
+      p_guest_name: input.guest_name.trim(),
+      p_guest_phone: input.guest_phone.trim(),
+      p_guest_email: input.guest_email?.trim() || null,
+      p_guest_id_type: input.guest_id_type || null,
+      p_guest_id_number: input.guest_id_number || null,
+      p_guest_address: input.guest_address?.trim() || null,
+      p_check_in_date: input.check_in_date,
+      p_check_out_date: input.check_out_date,
+      p_adults: Number(input.adults) || 1,
+      p_children: Number(input.children) || 0,
+      p_rate_per_night: Number(input.rate_per_night),
+      p_extra_charges: Number(input.extra_charges || 0),
+      p_advance_amount: Number(input.advance_amount || 0),
+      p_payment_mode: input.payment_mode || 'cash',
+      p_source: input.source || 'direct',
+      p_remarks: input.remarks?.trim() || null,
+    });
 
-  // 3. Find or create guest in Supabase
+    if (!rpcErr && rpcResult?.success && rpcResult?.booking_id) {
+      // Revalidate dashboard & module paths
+      revalidatePath('/bookings');
+      revalidatePath('/bookings/calendar');
+      revalidatePath('/rooms');
+      revalidatePath('/dashboard');
+      revalidatePath('/guests');
+      revalidatePath('/payments');
+      revalidatePath('/billing');
+
+      // Fetch the full rich booking entity for UI
+      const { data: createdBooking } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          guest:guest_id (*),
+          room:room_id (
+            *,
+            category:category_id (*)
+          ),
+          payments (*)
+        `)
+        .eq('id', rpcResult.booking_id)
+        .maybeSingle();
+
+      if (createdBooking) {
+        return { success: true, booking: createdBooking as any };
+      }
+      return { success: true };
+    }
+
+    if (rpcErr && !rpcErr.message.includes('Could not find the function')) {
+      console.error('RPC create_booking_transaction error:', rpcErr.message);
+      return { error: rpcErr.message };
+    }
+  } catch (err: any) {
+    console.warn('RPC invocation error, attempting direct transaction fallback:', err?.message || err);
+  }
+
+  // 5. Fallback: Find or create guest in Supabase
   let guestId: string = '';
   let guestData: Guest;
 
+  const cleanPhone = input.guest_phone.trim();
+  const cleanName = input.guest_name.trim();
+
   try {
-    const cleanPhone = input.guest_phone.trim();
-    const { data: existingGuest } = (await supabase
+    const { data: existingGuest, error: guestFindErr } = (await supabase
       .from('guests')
       .select('*')
       .eq('hotel_id', hotelId)
       .eq('phone', cleanPhone)
-      .maybeSingle()) as { data: Guest | null; [key: string]: any };
+      .maybeSingle()) as { data: Guest | null; error: any };
+
+    if (guestFindErr) {
+      console.error('Error looking up existing guest:', guestFindErr.message);
+    }
 
     if (existingGuest) {
       guestId = existingGuest.id;
       guestData = existingGuest;
-    } else {
 
+      // Update guest details if new info provided
+      const updateFields: any = { updated_at: new Date().toISOString() };
+      if (input.guest_email?.trim() && !existingGuest.email) updateFields.email = input.guest_email.trim();
+      if (input.guest_id_type && !existingGuest.id_type) updateFields.id_type = input.guest_id_type;
+      if (input.guest_id_number && !existingGuest.id_number) updateFields.id_number = input.guest_id_number;
+      if (input.guest_address?.trim() && !existingGuest.address) updateFields.address = input.guest_address.trim();
+
+      if (Object.keys(updateFields).length > 1) {
+        await (supabase.from('guests') as any).update(updateFields).eq('id', guestId);
+      }
+    } else {
       guestId = crypto.randomUUID();
-      guestData = {
+      const newGuestPayload = {
         id: guestId,
         hotel_id: hotelId,
-        full_name: input.guest_name.trim(),
+        full_name: cleanName,
         phone: cleanPhone,
         email: input.guest_email?.trim() || null,
         id_type: input.guest_id_type || null,
         id_number: input.guest_id_number || null,
         address: input.guest_address?.trim() || null,
-        total_stays: 1,
-        total_spent: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
-      const { error: guestInsertErr } = await (supabase.from('guests') as any).insert({
-        id: guestData.id,
-        hotel_id: guestData.hotel_id,
-        full_name: guestData.full_name,
-        phone: guestData.phone,
-        email: guestData.email,
-        id_type: guestData.id_type,
-        id_number: guestData.id_number,
-        address: guestData.address,
-      });
+      const { data: guestInserted, error: guestInsertErr } = await (supabase.from('guests') as any)
+        .insert(newGuestPayload)
+        .select()
+        .maybeSingle();
 
       if (guestInsertErr) {
-        console.error('Error inserting guest in Supabase:', guestInsertErr.message);
+        console.error('Error creating guest in Supabase:', guestInsertErr.message);
+        return { error: `Failed to create guest: ${guestInsertErr.message}` };
       }
+
+      guestData = guestInserted as Guest;
+      guestId = guestInserted.id;
     }
   } catch (err: any) {
-    console.error('Error looking up/inserting guest:', err);
-    guestId = crypto.randomUUID();
-    guestData = {
-      id: guestId,
-      hotel_id: hotelId,
-      full_name: input.guest_name.trim(),
-      phone: input.guest_phone.trim(),
-      email: input.guest_email?.trim() || null,
-      id_type: input.guest_id_type || null,
-      id_number: input.guest_id_number || null,
-      address: input.guest_address?.trim() || null,
-      total_stays: 1,
-      total_spent: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    console.error('Guest lookup/create exception:', err);
+    return { error: `Failed to lookup/create guest: ${err?.message || String(err)}` };
   }
 
-  // Update in-memory guest store
-  const localGuestIdx = localGuestsStore.findIndex((g) => g.id === guestId);
-  if (localGuestIdx >= 0) {
-    localGuestsStore[localGuestIdx] = guestData;
-  } else {
-    localGuestsStore.unshift(guestData);
-  }
-
-  // 4. Calculate stay financials
+  // 6. Calculate stay financials
   const checkIn = new Date(input.check_in_date);
   const checkOut = new Date(input.check_out_date);
   const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
   const baseRoomCharges = nights * Number(input.rate_per_night);
   const extraCharges = Number(input.extra_charges || 0);
   const totalAmount = baseRoomCharges + extraCharges;
-  const advanceAmount = Number(input.advance_amount || 0);
+  const advanceAmount = Math.max(0, Number(input.advance_amount || 0));
 
-  // Derive payment status
   let paymentStatus: PaymentStatus = 'no_payment';
   if (advanceAmount >= totalAmount && totalAmount > 0) {
     paymentStatus = 'fully_paid';
@@ -235,29 +296,13 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     paymentStatus = 'advance_received';
   }
 
-  // 5. Generate Booking Number & ID
+  // 7. Generate Booking Number & Insert Booking Record
   const now = new Date();
   const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   const bookingNumber = `HGV-${yearMonth}-${randomSuffix}`;
   const bookingId = crypto.randomUUID();
 
-  // Find room details
-  let targetRoom = localRoomsStore.find((r) => r.id === input.room_id) || localRoomsStore[0];
-  try {
-    const { data: dbRoom } = await supabase
-      .from('rooms')
-      .select('*, category:category_id(*)')
-      .eq('id', input.room_id)
-      .single();
-    if (dbRoom) {
-      targetRoom = dbRoom as any;
-    }
-  } catch (err) {
-    console.error('Error fetching room for booking:', err);
-  }
-
-  // 6. Create Booking Record in Supabase
   const bookingRecord = {
     id: bookingId,
     hotel_id: hotelId,
@@ -277,29 +322,32 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     remarks: input.remarks?.trim() || null,
   };
 
+  let bookingInserted: any = null;
   try {
-    const { error: bookingErr } = await (supabase.from('bookings') as any).insert(bookingRecord);
-    if (bookingErr) {
-      console.warn('Notice: Supabase direct insert returned:', bookingErr.message);
+    const { data, error } = await (supabase.from('bookings') as any)
+      .insert(bookingRecord)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error creating booking in Supabase:', error.message);
+      return { error: `Failed to create booking: ${error.message}` };
+    }
+
+    bookingInserted = data;
+    if (!bookingInserted?.id) {
+      return { error: 'Database did not confirm booking creation.' };
     }
   } catch (err: any) {
-    console.warn('Notice: Failed to connect to Supabase for booking insert:', err?.message);
+    console.error('Booking insertion exception:', err);
+    return { error: `Failed to create booking: ${err?.message || String(err)}` };
   }
 
-
-  const newBooking: BookingWithDetails = {
-    ...bookingRecord,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    guest: guestData,
-    room: targetRoom,
-    payments: [],
-  };
-
-  // 7. Record advance payment if present
+  // 8. Record advance payment if present
+  const recordedPayments: PaymentRecord[] = [];
   if (advanceAmount > 0) {
     const paymentId = crypto.randomUUID();
-    const paymentRecord: PaymentRecord = {
+    const paymentRecord = {
       id: paymentId,
       hotel_id: hotelId,
       booking_id: bookingId,
@@ -307,34 +355,33 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       payment_mode: input.payment_mode || 'cash',
       payment_type: 'advance',
       notes: `Advance for booking ${bookingNumber}`,
-      created_at: new Date().toISOString(),
+      recorded_by: staff.id,
     };
 
-    newBooking.payments.push(paymentRecord);
-    localPaymentsStore.unshift(paymentRecord);
-
     try {
-      const { error: payErr } = await (supabase.from('payments') as any).insert({
-        id: paymentRecord.id,
-        hotel_id: paymentRecord.hotel_id,
-        booking_id: paymentRecord.booking_id,
-        amount: paymentRecord.amount,
-        payment_mode: paymentRecord.payment_mode,
-        payment_type: paymentRecord.payment_type,
-        notes: paymentRecord.notes,
-      });
+      const { data: paymentInserted, error: payErr } = await (supabase.from('payments') as any)
+        .insert(paymentRecord)
+        .select()
+        .maybeSingle();
+
       if (payErr) {
-        console.error('Error logging advance payment in Supabase:', payErr.message);
+        console.error('Error inserting advance payment in Supabase:', payErr.message);
+        // Rollback booking
+        await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
+        return { error: `Failed to record advance payment: ${payErr.message}` };
       }
-    } catch (err) {
-      console.error('Failed to insert advance payment:', err);
+
+      if (paymentInserted) {
+        recordedPayments.push(paymentInserted as PaymentRecord);
+      }
+    } catch (err: any) {
+      console.error('Payment exception during booking creation:', err);
+      await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
+      return { error: `Failed to record advance payment: ${err?.message || String(err)}` };
     }
   }
 
-  // Insert to local store
-  localBookingsStore.unshift(newBooking);
-
-  // 8. Update room status based on booking dates
+  // 9. Update room status in Supabase
   const todayStr = new Date().toISOString().split('T')[0];
   let updatedRoomStatus: RoomStatus = targetRoom.status;
 
@@ -344,22 +391,29 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     updatedRoomStatus = 'reserved';
   }
 
-  try {
-    await (supabase.from('rooms') as any)
-      .update({ status: updatedRoomStatus, updated_at: new Date().toISOString() })
-      .eq('id', input.room_id);
-  } catch (err) {
-    console.error('Failed to update room status:', err);
+  if (updatedRoomStatus !== targetRoom.status) {
+    try {
+      const { error: roomErr } = await (supabase.from('rooms') as any)
+        .update({ status: updatedRoomStatus, updated_at: new Date().toISOString() })
+        .eq('id', input.room_id)
+        .eq('hotel_id', hotelId);
+
+      if (roomErr) {
+        console.error('Error updating room status in Supabase:', roomErr.message);
+        // Rollback booking & payment
+        await (supabase.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
+        await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
+        return { error: 'Failed to update room status in database.' };
+      }
+    } catch (err) {
+      console.error('Room update exception:', err);
+      await (supabase.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
+      await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
+      return { error: 'Failed to update room status in database.' };
+    }
   }
 
-  const roomIdx = localRoomsStore.findIndex((r) => r.id === input.room_id);
-  if (roomIdx >= 0) {
-    localRoomsStore[roomIdx] = {
-      ...localRoomsStore[roomIdx],
-      status: updatedRoomStatus,
-    };
-  }
-
+  // 10. Revalidate dashboard & module paths
   revalidatePath('/bookings');
   revalidatePath('/bookings/calendar');
   revalidatePath('/rooms');
@@ -368,69 +422,88 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
   revalidatePath('/payments');
   revalidatePath('/billing');
 
-  return { success: true, booking: newBooking };
+  const finalBookingDetails: BookingWithDetails = {
+    ...bookingInserted,
+    guest: guestData,
+    room: {
+      ...targetRoom,
+      status: updatedRoomStatus,
+    } as RoomWithCategory,
+    payments: recordedPayments,
+  };
+
+  return { success: true, booking: finalBookingDetails };
 }
 
 /**
  * Cancel an existing reservation
  */
 export async function cancelBookingAction(bookingId: string) {
+  const staff = await getCurrentStaff();
+  if (!staff) {
+    return { success: false, error: 'Please log in to continue.' };
+  }
+
+  if (staff.role === 'housekeeping') {
+    return { success: false, error: 'Housekeeping cannot cancel bookings.' };
+  }
+
   try {
     const supabase = createClient();
 
-    // 1. Fetch booking to find room_id
-    const { data: booking } = (await supabase
+    // 1. Fetch booking to find room_id and verify hotel isolation
+    const { data: booking, error: fetchErr } = (await supabase
       .from('bookings')
-      .select('id, room_id, booking_status')
+      .select('id, room_id, hotel_id, booking_status')
       .eq('id', bookingId)
-      .single()) as { data: { id: string; room_id: string; booking_status: string } | null; [key: string]: any };
+      .eq('hotel_id', staff.hotel_id)
+      .maybeSingle()) as { data: any; error: any };
 
-    // 2. Update booking status
-    const { error } = await (supabase.from('bookings') as any)
-      .update({ booking_status: 'cancelled', updated_at: new Date().toISOString() })
-      .eq('id', bookingId);
-
-    if (error) {
-      console.error('Error cancelling booking in Supabase:', error.message);
-      return { success: false, error: 'Failed to cancel booking.' };
+    if (fetchErr || !booking) {
+      return { success: false, error: 'Booking not found.' };
     }
 
-    // 3. Release room status back to available if room is not occupied
-    if (booking?.room_id) {
+    if (booking.booking_status === 'cancelled') {
+      return { success: false, error: 'Booking is already cancelled.' };
+    }
+
+    // 2. Update booking status
+    const { error: updateErr } = await (supabase.from('bookings') as any)
+      .update({ booking_status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('id', bookingId)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (updateErr) {
+      console.error('Error cancelling booking in Supabase:', updateErr.message);
+      return { success: false, error: 'Failed to cancel booking in database.' };
+    }
+
+    // 3. Release room status back to available if room was reserved/arriving
+    if (booking.room_id) {
       const { data: currentRoom } = (await supabase
         .from('rooms')
         .select('status')
         .eq('id', booking.room_id)
-        .single()) as { data: { status: string } | null; [key: string]: any };
+        .eq('hotel_id', staff.hotel_id)
+        .maybeSingle()) as { data: any; error: any };
 
       if (currentRoom && (currentRoom.status === 'reserved' || currentRoom.status === 'arriving_today')) {
         await (supabase.from('rooms') as any)
           .update({ status: 'available', updated_at: new Date().toISOString() })
-          .eq('id', booking.room_id);
+          .eq('id', booking.room_id)
+          .eq('hotel_id', staff.hotel_id);
       }
     }
 
+    revalidatePath('/bookings');
+    revalidatePath('/bookings/calendar');
+    revalidatePath('/rooms');
+    revalidatePath('/dashboard');
+    revalidatePath('/billing');
+
+    return { success: true };
   } catch (err: any) {
     console.error('Failed to cancel booking:', err);
+    return { success: false, error: err?.message || 'Failed to cancel booking.' };
   }
-
-  const booking = localBookingsStore.find((b) => b.id === bookingId);
-  if (booking) {
-    booking.booking_status = 'cancelled';
-    booking.updated_at = new Date().toISOString();
-
-    const room = localRoomsStore.find((r) => r.id === booking.room_id);
-    if (room && (room.status === 'reserved' || room.status === 'arriving_today')) {
-      room.status = 'available';
-    }
-  }
-
-  revalidatePath('/bookings');
-  revalidatePath('/bookings/calendar');
-  revalidatePath('/rooms');
-  revalidatePath('/dashboard');
-  revalidatePath('/billing');
-
-  return { success: true };
 }
-

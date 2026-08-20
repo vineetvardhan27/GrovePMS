@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Fraunces, Inter } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '../components/providers/AuthProvider';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="bg-brand-sand text-ink antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 
 export interface Guest {
   id: string;
@@ -15,18 +16,16 @@ export interface Guest {
   updated_at: string;
 }
 
-export const DEFAULT_GUESTS: Guest[] = [];
-
-export let localGuestsStore: Guest[] = [];
-
-
 export async function getGuests(hotelId?: string, query?: string): Promise<Guest[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
     const supabase = createClient();
     let q = supabase.from('guests').select('*').order('full_name', { ascending: true });
 
-    if (hotelId) {
-      q = q.eq('hotel_id', hotelId);
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
     }
     if (query && query.trim()) {
       const s = `%${query.trim()}%`;
@@ -36,36 +35,32 @@ export async function getGuests(hotelId?: string, query?: string): Promise<Guest
     const { data, error } = await q;
     if (error) {
       console.error('Error fetching guests from Supabase:', error.message);
-      return localGuestsStore;
+      return [];
     }
-    if (data && data.length > 0) {
+    if (data) {
       return data as Guest[];
     }
-
   } catch (err) {
     console.error('Failed to connect to Supabase for guests:', err);
   }
 
-  let result = [...localGuestsStore];
-  if (query && query.trim()) {
-    const s = query.trim().toLowerCase();
-    result = result.filter(
-      (g) =>
-        g.full_name.toLowerCase().includes(s) ||
-        g.phone.toLowerCase().includes(s) ||
-        (g.email && g.email.toLowerCase().includes(s))
-    );
-  }
-  return result;
+  return [];
 }
 
 export async function getGuestById(guestId: string): Promise<Guest | null> {
   try {
+    const staff = await getCurrentStaff();
     const supabase = createClient();
-    const { data, error } = await supabase.from('guests').select('*').eq('id', guestId).single();
+    let q = supabase.from('guests').select('*').eq('id', guestId);
+
+    if (staff?.hotel_id) {
+      q = q.eq('hotel_id', staff.hotel_id);
+    }
+
+    const { data, error } = await q.maybeSingle();
     if (error) {
       console.error(`Error fetching guest ${guestId} from Supabase:`, error.message);
-      return localGuestsStore.find((g) => g.id === guestId) || null;
+      return null;
     }
     if (data) {
       return data as Guest;
@@ -74,6 +69,5 @@ export async function getGuestById(guestId: string): Promise<Guest | null> {
     console.error(`Failed to connect to Supabase for guest ${guestId}:`, err);
   }
 
-  return localGuestsStore.find((g) => g.id === guestId) || null;
+  return null;
 }
-

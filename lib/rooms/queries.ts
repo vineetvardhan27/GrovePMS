@@ -1,4 +1,5 @@
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 import { RoomStatus, HousekeepingStatus } from '../types/database.types';
 
 export interface RoomCategory {
@@ -280,21 +281,20 @@ export const DEFAULT_ROOMS: RoomWithCategory[] = [
   },
 ];
 
-// In-memory working stores
-export let localRoomsStore = [...DEFAULT_ROOMS];
-export let localCategoriesStore = [...DEFAULT_ROOM_CATEGORIES];
-
 export async function getRoomCategories(hotelId?: string): Promise<RoomCategory[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
     const supabase = createClient();
     let query = supabase.from('room_categories').select('*').order('base_rate', { ascending: true });
-    if (hotelId) {
-      query = query.eq('hotel_id', hotelId);
+    if (activeHotelId) {
+      query = query.eq('hotel_id', activeHotelId);
     }
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching room categories from Supabase:', error.message);
-      return localCategoriesStore;
+      return DEFAULT_ROOM_CATEGORIES;
     }
     if (data && data.length > 0) {
       return data as RoomCategory[];
@@ -302,11 +302,14 @@ export async function getRoomCategories(hotelId?: string): Promise<RoomCategory[
   } catch (err) {
     console.error('Failed to connect to Supabase for room categories:', err);
   }
-  return localCategoriesStore;
+  return DEFAULT_ROOM_CATEGORIES;
 }
 
 export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
     const supabase = createClient();
     // Sort by floor first (Basement=0 comes first), then room_number within each floor
     let query = supabase
@@ -318,13 +321,13 @@ export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
       .order('floor', { ascending: true })
       .order('room_number', { ascending: true });
 
-    if (hotelId) {
-      query = query.eq('hotel_id', hotelId);
+    if (activeHotelId) {
+      query = query.eq('hotel_id', activeHotelId);
     }
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching rooms from Supabase:', error.message);
-      return localRoomsStore;
+      return DEFAULT_ROOMS;
     }
     if (data && data.length > 0) {
       return data.map((r: any) => ({
@@ -336,15 +339,5 @@ export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
     console.error('Failed to connect to Supabase for rooms:', err);
   }
 
-  // Fallback to local store
-  return localRoomsStore.map((room) => {
-    const dynamicCategory =
-      localCategoriesStore.find((c) => c.id === room.category_id) || room.category;
-    return {
-      ...room,
-      category: dynamicCategory,
-    };
-  });
+  return DEFAULT_ROOMS;
 }
-
-

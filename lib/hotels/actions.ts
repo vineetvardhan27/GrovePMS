@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 import { HotelSettings } from './queries';
 import { revalidatePath } from 'next/cache';
 
@@ -8,9 +9,19 @@ export async function updateHotelSettingsAction(
   hotelId: string,
   settings: Partial<HotelSettings>
 ): Promise<{ success: boolean; error?: string; settings?: HotelSettings }> {
+  const staff = await getCurrentStaff();
+  if (!staff) {
+    return { success: false, error: 'Please log in to continue.' };
+  }
+
+  if (staff.role !== 'owner') {
+    return { success: false, error: 'Only hotel owners can modify hotel settings.' };
+  }
+
+  const targetHotelId = staff.hotel_id;
+
   try {
     const supabase = createClient();
-    const targetHotelId = hotelId || 'a0000000-0000-0000-0000-000000000001';
 
     // 1. Fetch current settings
     const { data: hotel, error: fetchErr } = (await supabase
@@ -46,7 +57,7 @@ export async function updateHotelSettingsAction(
 
     if (updateErr) {
       console.error('Error updating hotel settings in Supabase:', updateErr.message);
-      return { success: false, error: 'Failed to update hotel settings in database.' };
+      return { success: false, error: `Failed to update hotel settings: ${updateErr.message}` };
     }
 
     revalidatePath('/settings');

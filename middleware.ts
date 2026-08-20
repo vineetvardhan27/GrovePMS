@@ -18,10 +18,9 @@ export async function middleware(request: NextRequest) {
 
   // Update supabase session and check auth
   const { response, user } = await updateSession(request);
-  const demoRole = request.cookies.get('pms_demo_role')?.value as StaffRole | undefined;
 
-  const isAuthenticated = Boolean(user || demoRole);
-  const activeRole: StaffRole = demoRole || (user?.user_metadata?.role as StaffRole) || 'reception';
+  const isAuthenticated = Boolean(user);
+  const activeRole: StaffRole = (user?.user_metadata?.role as StaffRole) || 'reception';
 
   const isAuthRoute = pathname.startsWith('/login');
   const isDashboardRoute =

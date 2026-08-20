@@ -1,6 +1,6 @@
 import { createClient } from '../supabase/server';
+import { getCurrentStaff } from '../auth/session';
 import { PaymentMode, PaymentType } from '../types/database.types';
-import { localPaymentsStore, localBookingsStore } from '../bookings/queries';
 
 export interface EnrichedPayment {
   id: string;
@@ -20,6 +20,9 @@ export interface EnrichedPayment {
 
 export async function getPayments(hotelId?: string): Promise<EnrichedPayment[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id;
+
     const supabase = createClient();
     let q = supabase
       .from('payments')
@@ -39,15 +42,18 @@ export async function getPayments(hotelId?: string): Promise<EnrichedPayment[]> 
       `)
       .order('created_at', { ascending: false });
 
-    if (hotelId) {
-      q = q.eq('hotel_id', hotelId);
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
     }
 
     const { data, error } = await q;
 
     if (error) {
       console.error('Error fetching payments from Supabase:', error.message);
-    } else if (data && data.length > 0) {
+      return [];
+    }
+    
+    if (data) {
       return data.map((p: any) => ({
         id: p.id,
         hotel_id: p.hotel_id,
@@ -64,20 +70,9 @@ export async function getPayments(hotelId?: string): Promise<EnrichedPayment[]> 
         room_number: p.booking?.room?.room_number || '—',
       }));
     }
-
   } catch (err) {
     console.error('Failed to connect to Supabase for payments:', err);
   }
 
-  // Fallback to local store
-  return localPaymentsStore.map((p) => {
-    const booking = localBookingsStore.find((b) => b.id === p.booking_id);
-    return {
-      ...p,
-      booking_number: booking?.booking_number ?? '—',
-      guest_name: booking?.guest?.full_name ?? 'Guest',
-      guest_phone: booking?.guest?.phone ?? '',
-      room_number: booking?.room?.room_number ?? '—',
-    };
-  });
+  return [];
 }

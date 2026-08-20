@@ -1,105 +1,145 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '../../../lib/supabase/server';
-import { DEMO_STAFF_ACCOUNTS } from '../../../lib/auth/session';
 import { StaffRole } from '../../../lib/types/database.types';
 
 export interface AuthState {
   error?: string;
   success?: boolean;
+  message?: string;
 }
 
+/**
+ * Sign in existing user via Supabase Auth
+ */
 export async function signIn(prevState: AuthState | null, formData: FormData): Promise<AuthState> {
-  const email = formData.get('email') as string;
+  const email = (formData.get('email') as string)?.trim();
   const password = formData.get('password') as string;
 
   if (!email || !password) {
     return { error: 'Please provide both email and password.' };
   }
 
-  // Check if credentials match any of the seeded demo accounts
-  const demoRole = Object.keys(DEMO_STAFF_ACCOUNTS).find(
-    (role) => DEMO_STAFF_ACCOUNTS[role as StaffRole].email.toLowerCase() === email.toLowerCase().trim()
-  ) as StaffRole | undefined;
-
-  // Attempt live Supabase Auth
   try {
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
       password,
     });
 
-    if (error) {
-      // If live Supabase Auth has not yet seeded test accounts, allow demo role fallback
-      if (demoRole && (password === 'password123' || password === 'test1234' || password === 'admin123')) {
-        cookies().set('pms_demo_role', demoRole, {
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        });
-        redirect('/dashboard');
-      }
+    if (authError) {
+      console.error('Supabase signInWithPassword error:', authError.message);
 
-      // Plain language translation of errors per Rules.md §3
-      if (error.message.includes('Invalid login credentials')) {
-        return { error: 'Invalid email or password. Please verify your credentials and try again.' };
+      if (authError.message.includes('Invalid login credentials')) {
+        return { error: 'Invalid email or password. Please verify your credentials.' };
       }
-      if (error.message.includes('Email not confirmed')) {
-        return { error: 'Your email address is not yet confirmed. Please check your inbox or contact the manager.' };
+      if (authError.message.includes('Email not confirmed')) {
+        return { error: 'Your email address is not yet confirmed. Please verify your email before logging in.' };
       }
-      return { error: 'Unable to sign in. Please verify your details or try one of the test accounts below.' };
+      if (authError.message.includes('rate limit')) {
+        return { error: 'Too many login attempts. Please wait a few moments and try again.' };
+      }
+      return { error: authError.message || 'Unable to sign in. Please verify your credentials.' };
     }
 
-    // Clear demo role cookie if live login succeeded
-    cookies().delete('pms_demo_role');
+    if (!authData?.user) {
+      return { error: 'Sign-in failed to establish an authenticated session. Please try again.' };
+    }
+
+    // Verify staff account exists
+    const { data: staff, error: staffErr } = (await supabase
+      .from('staff')
+      .select('id, hotel_id, role, is_active')
+      .eq('id', authData.user.id)
+      .maybeSingle()) as { data: { id: string; hotel_id: string; role: string; is_active: boolean } | null; error: any };
+
+    if (staffErr) {
+      console.error('Staff lookup after login failed:', staffErr.message);
+    }
+
+    if (staff && !staff.is_active) {
+      await supabase.auth.signOut();
+      return { error: 'Your staff account is currently deactivated. Please contact the hotel owner.' };
+    }
+
   } catch (err: any) {
     if (err?.message === 'NEXT_REDIRECT') {
       throw err;
     }
-    
-    if (demoRole) {
-      cookies().set('pms_demo_role', demoRole, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-      redirect('/dashboard');
-    }
-
+    console.error('Unexpected signIn exception:', err);
     return { error: 'An unexpected connection issue occurred. Please check your internet connection.' };
   }
 
   redirect('/dashboard');
 }
 
-export async function switchDemoRole(role: StaffRole) {
-  if (!DEMO_STAFF_ACCOUNTS[role]) {
-    throw new Error('Invalid role specified');
+/**
+ * Sign up a new staff member or hotel admin via Supabase Auth
+ */
+export async function signUp(prevState: AuthState | null, formData: FormData): Promise<AuthState> {
+  const email = (formData.get('email') as string)?.trim();
+  const password = formData.get('password') as string;
+  const fullName = (formData.get('full_name') as string)?.trim();
+  const role = (formData.get('role') as StaffRole) || 'reception';
+
+  if (!email || !password || !fullName) {
+    return { error: 'Please provide email, password, and full name.' };
   }
 
-  cookies().set('pms_demo_role', role, {
-    path: '/',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
+  if (password.length < 6) {
+    return { error: 'Password must be at least 6 characters long.' };
+  }
 
-  redirect('/dashboard');
+  try {
+    const supabase = createClient();
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role,
+        },
+      },
+    });
+
+    if (signUpError) {
+      console.error('Supabase signUp error:', signUpError.message);
+      if (signUpError.message.includes('already registered')) {
+        return { error: 'An account with this email already exists. Please sign in instead.' };
+      }
+      return { error: signUpError.message };
+    }
+
+    if (signUpData?.user && signUpData?.session) {
+      // Auto-confirmed / session established
+      redirect('/dashboard');
+    }
+
+    return {
+      success: true,
+      message: 'Account created successfully! If email confirmation is enabled on your project, please check your inbox before logging in.',
+    };
+  } catch (err: any) {
+    if (err?.message === 'NEXT_REDIRECT') {
+      throw err;
+    }
+    console.error('Unexpected signUp exception:', err);
+    return { error: 'Failed to create account. Please try again.' };
+  }
 }
 
+/**
+ * Sign out and clear Supabase session
+ */
 export async function signOut() {
   try {
     const supabase = createClient();
     await supabase.auth.signOut();
-  } catch {
-    // Continue
+  } catch (err) {
+    console.error('Sign out error:', err);
   }
 
-  cookies().delete('pms_demo_role');
   redirect('/login');
 }

@@ -24,6 +24,7 @@ import { createBookingAction, checkDoubleBooking } from '../../lib/bookings/acti
 import { BookingSource, PaymentMode } from '../../lib/types/database.types';
 import { formatCurrency } from '../../lib/utils/currency';
 import { calculateNights } from '../../lib/utils/dates';
+import { useAuth } from '../providers/AuthProvider';
 
 interface BookingFormProps {
   rooms: RoomWithCategory[];
@@ -37,6 +38,7 @@ export default function BookingForm({
   knownGuests = [],
 }: BookingFormProps) {
   const router = useRouter();
+  const { hotelId } = useAuth();
 
   // Form state
   const [selectedRoomId, setSelectedRoomId] = useState<string>(
@@ -105,7 +107,7 @@ export default function BookingForm({
     setIsCheckingAvailability(true);
 
     checkDoubleBooking(
-      'a0000000-0000-0000-0000-000000000001',
+      hotelId || undefined,
       selectedRoomId,
       checkInDate,
       checkOutDate

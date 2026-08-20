@@ -1,6 +1,5 @@
 import { getHotelSettings } from '../hotels/queries';
-import { getBookingById } from '../bookings/queries';
-import { localBookingsStore, localPaymentsStore, PaymentRecord } from '../bookings/queries';
+import { getBookingById, PaymentRecord } from '../bookings/queries';
 
 export interface BillLineItem {
   description: string;
@@ -53,8 +52,8 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
 
   const settings = await getHotelSettings(booking.hotel_id);
 
-  // Get all payments for this booking from the joined database record or local store
-  const payments = booking.payments || localPaymentsStore.filter((p) => p.booking_id === bookingId);
+  // Get all payments for this booking from the joined database record
+  const payments = booking.payments || [];
   const totalPaid = payments.reduce((sum, p) => {
     const amt = Number(p.amount) || 0;
     return p.payment_type === 'refund' ? sum - amt : sum + amt;
@@ -71,7 +70,7 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
 
   const lineItems: BillLineItem[] = [
     {
-      description: `Room ${booking.room.room_number} (${booking.room.category.name}) — ${nights} Night${nights > 1 ? 's' : ''}`,
+      description: `Room ${booking.room?.room_number || '—'} (${booking.room?.category?.name || 'Standard'}) — ${nights} Night${nights > 1 ? 's' : ''}`,
       nights,
       rate: Number(booking.rate_per_night),
       amount: roomCharge,
@@ -96,10 +95,10 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
   return {
     booking_id: booking.id,
     booking_number: booking.booking_number,
-    guest_name: booking.guest.full_name,
-    guest_phone: booking.guest.phone,
-    room_number: booking.room.room_number,
-    category_name: booking.room.category.name,
+    guest_name: booking.guest?.full_name || 'Guest',
+    guest_phone: booking.guest?.phone || '',
+    room_number: booking.room?.room_number || '—',
+    category_name: booking.room?.category?.name || 'Standard',
     check_in_date: booking.check_in_date,
     check_out_date: booking.check_out_date,
     nights,
@@ -121,4 +120,3 @@ export async function generateBill(bookingId: string, includeGst: boolean): Prom
     generated_at: new Date().toISOString(),
   };
 }
-
