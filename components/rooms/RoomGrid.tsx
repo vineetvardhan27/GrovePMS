@@ -12,14 +12,10 @@ import {
   Clock,
   Calendar,
   Wrench,
-  PartyPopper,
-  Building,
-  Info,
 } from 'lucide-react';
 import { RoomWithCategory, RoomCategory, PropertyResource } from '../../lib/rooms/types';
 import { updateRoomStatusAction } from '../../lib/rooms/actions';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
-import { formatCurrency } from '../../lib/utils/currency';
 import RoomCard, { STATUS_CONFIG } from './RoomCard';
 import RoomDetailDrawer from './RoomDetailDrawer';
 import RealtimeRoomSubscriber, { broadcastRoomChange } from './RealtimeRoomSubscriber';
@@ -306,80 +302,6 @@ export default function RoomGrid({
           ))}
         </div>
       )}
-
-      {/* ----------------------------------------------------
-       * SEPARATE BANQUET HALL SECTION (NON-ACCOMMODATION)
-       * ---------------------------------------------------- */}
-      <div className="pt-8 border-t-2 border-border-subtle space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-brand-sand/60 p-4 sm:p-5 rounded-2xl border border-border-subtle">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="p-3 bg-brand-forest text-white rounded-xl shadow-xs shrink-0">
-              <PartyPopper className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-brand-forest bg-brand-forest/10 px-2 py-0.5 rounded">
-                  BANQUET & EVENTS
-                </span>
-                <span className="text-xs text-ink-muted">Non-Accommodation Property Resource</span>
-              </div>
-              <h3 className="text-lg font-serif font-bold text-brand-forest mt-0.5">
-                Hotel Greenery View Banquet Hall
-              </h3>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-status-green/10 text-status-green border border-status-green/20 rounded-full text-xs font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Available for Events</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Banquet Hall Feature Details Card */}
-        <div className="bg-white rounded-2xl border border-border-subtle p-5 sm:p-6 shadow-2xs">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-1.5 md:col-span-2">
-              <h4 className="text-sm font-bold text-ink flex items-center gap-2">
-                <Building className="w-4 h-4 text-brand-forest" />
-                <span>Grand Banquet & Conference Hall</span>
-              </h4>
-              <p className="text-xs text-ink-muted leading-relaxed">
-                Spacious indoor banquet facility suitable for weddings, corporate conferences, and private celebrations. Features high-definition projector setup, integrated sound system, catering prep kitchen, and direct garden view entrance.
-              </p>
-              <div className="pt-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="bg-brand-sand px-2.5 py-1 rounded-md border border-border-subtle text-ink font-medium">
-                  Capacity: Up to 200 Guests
-                </span>
-                <span className="bg-brand-sand px-2.5 py-1 rounded-md border border-border-subtle text-ink font-medium">
-                  Air Conditioned & Soundproofed
-                </span>
-                <span className="bg-brand-sand px-2.5 py-1 rounded-md border border-border-subtle text-ink font-medium">
-                  Dedicated Washrooms & AV Stage
-                </span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-brand-sand/40 border border-border-subtle flex flex-col justify-between space-y-3">
-              <div>
-                <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider">Tariff Rate</p>
-                <p className="text-xl font-serif font-bold text-brand-forest tabular-nums">
-                  {formatCurrency(35000)} <span className="text-xs font-sans font-normal text-ink-muted">/ Day</span>
-                </p>
-                <p className="text-[11px] text-ink-muted tabular-nums mt-0.5">
-                  Half-day / Hourly rate: {formatCurrency(5000)}/hr
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-border-subtle/80 flex items-center gap-1.5 text-[11px] text-brand-forest font-medium">
-                <Info className="w-3.5 h-3.5 shrink-0" />
-                <span>Event bookings & schedule management handled in Phase 2</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Room Detail Drawer on Click */}
       <RoomDetailDrawer
