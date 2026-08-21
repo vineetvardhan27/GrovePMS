@@ -47,6 +47,8 @@ export interface InventoryItem {
   target_stock: number;
   cost_per_unit: number;
   replacement_target_year?: number | null;
+  preferred_supplier?: string | null;
+  last_purchase_date?: string | null;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -101,6 +103,7 @@ export interface SaveInventoryItemInput {
   target_stock: number;
   cost_per_unit?: number;
   replacement_target_year?: number | null;
+  preferred_supplier?: string | null;
   is_active?: boolean;
 }
 
@@ -132,6 +135,14 @@ export interface ReportDamageInput {
   notes?: string | null;
 }
 
+export interface ReportWasteInput {
+  item_id: string;
+  quantity: number;
+  reason: string; // 'Spoiled' | 'Expired' | 'Burnt' | 'Overprepared' | 'Damaged' | 'Spilled' | 'Rejected' | 'Other'
+  waste_date?: string;
+  notes?: string | null;
+}
+
 export interface AnnualReplacementPlanItem {
   item_id: string;
   name: string;
@@ -153,6 +164,26 @@ export interface AnnualReplacementPlanItem {
   target_year: number;
 }
 
+export interface WastageSummary {
+  today_waste_value: number;
+  month_waste_value: number;
+  total_waste_count: number;
+  highest_wasted_items: Array<{
+    item_id: string;
+    item_name: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    total_cost: number;
+  }>;
+  reasons_breakdown: Array<{
+    reason: string;
+    count: number;
+    total_cost: number;
+    share_pct: number;
+  }>;
+}
+
 export interface InventorySummary {
   total_items: number;
   healthy_count: number;
@@ -164,4 +195,6 @@ export interface InventorySummary {
   total_damaged_assets?: number;
   replacement_needed_count?: number;
   estimated_replacement_cost?: number;
+  today_waste_value?: number;
+  month_waste_value?: number;
 }

@@ -1,36 +1,41 @@
-import { getDailyReport, getMonthlyReport } from '../../../lib/reports/queries';
-import DailyReportView from '../../../components/reports/DailyReport';
-import MonthlyReportView from '../../../components/reports/MonthlyReport';
+import {
+  getDailyReport,
+  getMonthlyReport,
+  getHotelOwnerIntelligence,
+} from '../../../lib/reports/queries';
+import { ReportPeriod } from '../../../lib/reports/types';
 import ReportsTabs from '../../../components/reports/ReportsTabs';
+import { getCurrentStaff } from '../../../lib/auth/session';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams?: { tab?: string };
+  searchParams?: { tab?: string; period?: string };
 }) {
-  const activeTab = searchParams?.tab === 'monthly' ? 'monthly' : 'daily';
+  const staff = await getCurrentStaff();
+  const activeTab = (searchParams?.tab === 'monthly'
+    ? 'monthly'
+    : searchParams?.tab === 'daily'
+    ? 'daily'
+    : 'intelligence') as 'intelligence' | 'daily' | 'monthly';
 
+  const period = (searchParams?.period || 'this_month') as ReportPeriod;
   const today = new Date().toISOString().split('T')[0];
   const now = new Date();
 
-  const [dailyReport, monthlyReport] = await Promise.all([
-    getDailyReport(today),
-    getMonthlyReport(now.getFullYear(), now.getMonth() + 1),
+  const [intelligenceData, dailyReport, monthlyReport] = await Promise.all([
+    getHotelOwnerIntelligence(period, staff?.hotel_id),
+    getDailyReport(today, staff?.hotel_id),
+    getMonthlyReport(now.getFullYear(), now.getMonth() + 1, staff?.hotel_id),
   ]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-display text-brand-forest">Reports & Analytics</h1>
-        <p className="text-body text-ink-muted">
-          Daily cash report, monthly occupancy, ADR, and RevPAR
-        </p>
-      </div>
-
       <ReportsTabs
         activeTab={activeTab}
+        intelligenceData={intelligenceData}
         dailyReport={dailyReport}
         monthlyReport={monthlyReport}
       />

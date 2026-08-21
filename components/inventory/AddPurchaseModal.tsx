@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InventoryItem } from '../../lib/inventory/types';
 import { recordPurchaseAction } from '../../lib/inventory/actions';
 import { formatCurrency } from '../../lib/utils/currency';
 import { X, PlusCircle, AlertCircle, Calendar, Truck, CreditCard, Package } from 'lucide-react';
+import SearchableInventorySelector from './SearchableInventorySelector';
 
 interface AddPurchaseModalProps {
   isOpen: boolean;
@@ -34,6 +35,18 @@ export default function AddPurchaseModal({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Sync preselectedItemId
+  useEffect(() => {
+    if (preselectedItemId) {
+      setSelectedItemId(preselectedItemId);
+      const item = items.find((i) => i.id === preselectedItemId);
+      if (item) setUnitPrice(String(item.cost_per_unit || 0));
+    } else if (items.length > 0 && !selectedItemId) {
+      setSelectedItemId(items[0].id);
+      setUnitPrice(String(items[0].cost_per_unit || 0));
+    }
+  }, [preselectedItemId, items]);
+
   if (!isOpen) return null;
 
   const currentItem = items.find((i) => i.id === selectedItemId) || items[0];
@@ -42,6 +55,11 @@ export default function AddPurchaseModal({
   const effectiveUnitPrice = unitPrice !== '' ? Number(unitPrice) : (currentItem?.cost_per_unit || 0);
   const parsedQty = parseFloat(quantity) || 0;
   const totalCost = Math.round(parsedQty * effectiveUnitPrice * 100) / 100;
+
+  const handleSelectItem = (item: InventoryItem) => {
+    setSelectedItemId(item.id);
+    setUnitPrice(String(item.cost_per_unit || 0));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +102,7 @@ export default function AddPurchaseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs animate-fadeIn">
       <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-border-subtle animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-border-subtle flex items-center justify-between bg-brand-sand/50">
@@ -93,8 +111,8 @@ export default function AddPurchaseModal({
               <PlusCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-lg text-brand-forest">Add Food Purchase</h3>
-              <p className="text-xs text-ink-muted">Increase inventory stock and log supplier invoice</p>
+              <h3 className="font-serif font-bold text-lg text-brand-forest">Add Inventory Purchase</h3>
+              <p className="text-xs text-ink-muted">Increase stock and log supplier invoice across food, linen &amp; supplies</p>
             </div>
           </div>
           <button
@@ -115,28 +133,15 @@ export default function AddPurchaseModal({
             </div>
           )}
 
-          {/* Item Selector */}
-          <div>
-            <label className="block text-xs font-semibold text-ink mb-1.5">
-              Select Raw Material / Ingredient *
-            </label>
-            <select
-              value={selectedItemId}
-              onChange={(e) => {
-                setSelectedItemId(e.target.value);
-                const item = items.find((i) => i.id === e.target.value);
-                if (item) setUnitPrice(String(item.cost_per_unit || 0));
-              }}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
-              required
-            >
-              {items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} ({item.category}) — Current: {item.current_stock} {item.unit}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Searchable Item Selector */}
+          <SearchableInventorySelector
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectItem={handleSelectItem}
+            label="Select Inventory Item / Raw Material"
+            required
+            placeholder="Search items by name, category, supplier (e.g. rice, blanket, oil)..."
+          />
 
           {/* Quantity & Unit */}
           <div className="grid grid-cols-2 gap-3">
@@ -155,7 +160,7 @@ export default function AddPurchaseModal({
                   className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all font-mono"
                   required
                 />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-muted uppercase">
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-muted uppercase pointer-events-none">
                   {currentItem?.unit || 'unit'}
                 </span>
               </div>

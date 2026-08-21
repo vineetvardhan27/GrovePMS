@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InventoryItem } from '../../lib/inventory/types';
 import { recordUsageAction } from '../../lib/inventory/actions';
 import { formatCurrency } from '../../lib/utils/currency';
 import { X, MinusCircle, AlertCircle, Calendar, Utensils, AlertTriangle, Package } from 'lucide-react';
+import SearchableInventorySelector from './SearchableInventorySelector';
 
 interface RecordUsageModalProps {
   isOpen: boolean;
@@ -44,6 +45,15 @@ export default function RecordUsageModal({
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Sync preselectedItemId
+  useEffect(() => {
+    if (preselectedItemId) {
+      setSelectedItemId(preselectedItemId);
+    } else if (items.length > 0 && !selectedItemId) {
+      setSelectedItemId(items[0].id);
+    }
+  }, [preselectedItemId, items]);
 
   if (!isOpen) return null;
 
@@ -107,16 +117,16 @@ export default function RecordUsageModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-xs animate-fadeIn">
       <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-border-subtle animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-border-subtle flex items-center justify-between bg-brand-sand/50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-status-orange/15 text-status-orange rounded-xl">
+            <div className="p-2 bg-status-amber/15 text-status-amber rounded-xl">
               <MinusCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-lg text-brand-forest">Record Food Usage</h3>
+              <h3 className="font-serif font-bold text-lg text-brand-forest">Record Stock Usage</h3>
               <p className="text-xs text-ink-muted">Deduct raw materials consumed in kitchen or operations</p>
             </div>
           </div>
@@ -138,24 +148,15 @@ export default function RecordUsageModal({
             </div>
           )}
 
-          {/* Item Selector */}
-          <div>
-            <label className="block text-xs font-semibold text-ink mb-1.5">
-              Select Raw Material / Ingredient *
-            </label>
-            <select
-              value={selectedItemId}
-              onChange={(e) => setSelectedItemId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
-              required
-            >
-              {items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} ({item.category}) — Available: {item.current_stock} {item.unit}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Searchable Item Selector */}
+          <SearchableInventorySelector
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectItem={(item) => setSelectedItemId(item.id)}
+            label="Select Inventory Item"
+            required
+            placeholder="Search items by name, category (e.g. rice, flour, milk, cleaner)..."
+          />
 
           {/* Available Stock Banner */}
           <div
@@ -170,22 +171,26 @@ export default function RecordUsageModal({
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               <span>
-                Currently Available in Pantry:{' '}
-                <strong className="font-mono text-sm">{availableStock} {currentItem?.unit}</strong>
+                Available Stock:{' '}
+                <strong>
+                  {availableStock} {currentItem?.unit}
+                </strong>
               </span>
             </div>
-            {availableStock <= (currentItem?.minimum_stock || 0) && (
-              <span className="font-semibold text-[11px] uppercase tracking-wider flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Low Stock</span>
-              </span>
-            )}
+            <div>
+              {availableStock <= (currentItem?.minimum_stock || 0) && (
+                <span className="font-semibold flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Low Stock
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Quantity to consume */}
+          {/* Quantity Input */}
           <div>
             <label className="block text-xs font-semibold text-ink mb-1.5">
-              Quantity Consumed / Used *
+              Quantity Used / Consumed *
             </label>
             <div className="relative">
               <input
@@ -196,51 +201,46 @@ export default function RecordUsageModal({
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 placeholder="e.g. 5"
-                className={`w-full px-3.5 py-2.5 rounded-xl border bg-white text-ink text-sm focus:outline-none focus:ring-2 font-mono transition-all ${
-                  isOverStock
-                    ? 'border-action-danger focus:ring-action-danger/20 text-action-danger'
-                    : 'border-border-subtle focus:ring-brand-forest/20 focus:border-brand-forest'
+                className={`w-full px-3.5 py-2.5 rounded-xl border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all font-mono ${
+                  isOverStock ? 'border-status-red text-status-red' : 'border-border-subtle'
                 }`}
                 required
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-muted uppercase">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-muted uppercase pointer-events-none">
                 {currentItem?.unit || 'unit'}
               </span>
             </div>
             {isOverStock ? (
-              <p className="text-action-danger text-tiny mt-1 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                <span>Cannot exceed available stock of {availableStock} {currentItem?.unit}</span>
+              <p className="mt-1 text-xs text-status-red font-medium">
+                Cannot consume more than available stock ({availableStock} {currentItem?.unit})
               </p>
             ) : (
-              <p className="text-ink-muted text-tiny mt-1">
-                Remaining stock after deduction: <strong>{remainingStock} {currentItem?.unit}</strong>
+              <p className="mt-1 text-[11px] text-ink-muted font-mono">
+                Remaining stock after usage: <strong className="text-brand-forest">{remainingStock} {currentItem?.unit}</strong>
               </p>
             )}
           </div>
 
-          {/* Reason Selector */}
+          {/* Reason */}
           <div>
             <label className="block text-xs font-semibold text-ink mb-1.5">
-              Reason / Usage Department *
+              Consumption Reason *
             </label>
-            <div className="relative">
-              <select
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
-                required
-              >
-                {COMMON_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-                <option value="Other">Other (Custom Reason)</option>
-              </select>
-            </div>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
+            >
+              {COMMON_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+              <option value="Other">Other Reason...</option>
+            </select>
           </div>
 
+          {/* Custom reason if "Other" */}
           {reason === 'Other' && (
             <div>
               <label className="block text-xs font-semibold text-ink mb-1.5">
@@ -250,8 +250,8 @@ export default function RecordUsageModal({
                 type="text"
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
-                placeholder="e.g. Banquet event catering"
-                className="w-full px-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
+                placeholder="e.g. Special banquet catering preparation"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
                 required
               />
             </div>
@@ -268,7 +268,7 @@ export default function RecordUsageModal({
                   type="date"
                   value={usageDate}
                   onChange={(e) => setUsageDate(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all font-mono"
                   required
                 />
                 <Calendar className="w-3.5 h-3.5 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
@@ -283,7 +283,7 @@ export default function RecordUsageModal({
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Shift 1 breakfast"
+                placeholder="e.g. Head Chef Approved"
                 className="w-full px-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
               />
             </div>
@@ -300,11 +300,11 @@ export default function RecordUsageModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || isOverStock || availableStock <= 0}
-              className="px-5 py-2.5 rounded-xl bg-status-orange hover:bg-status-orange/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+              disabled={isSubmitting || isOverStock}
+              className="px-5 py-2.5 rounded-xl bg-status-amber hover:bg-status-amber/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
             >
               <MinusCircle className="w-4 h-4" />
-              <span>{isSubmitting ? 'Recording...' : 'Record Consumption'}</span>
+              <span>{isSubmitting ? 'Deducting...' : 'Confirm Usage'}</span>
             </button>
           </div>
         </form>

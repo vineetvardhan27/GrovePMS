@@ -532,10 +532,19 @@ export async function getInventoryItems(
       .eq('id', targetHotelId)
       .maybeSingle();
 
-    const storedItems: InventoryItem[] =
-      (hotel?.settings?.inventory_items as InventoryItem[]) || DEFAULT_INVENTORY_ITEMS;
+    const storedItems: InventoryItem[] = (hotel?.settings?.inventory_items as InventoryItem[]) || [];
 
-    let items = storedItems.map((item) => enrichInventoryItem(item));
+    // Merge default items with stored items to ensure complete coverage of both assets and consumables
+    const itemMap = new Map<string, InventoryItem>();
+    for (const defItem of DEFAULT_INVENTORY_ITEMS) {
+      itemMap.set(defItem.id, defItem);
+    }
+    for (const sItem of storedItems) {
+      itemMap.set(sItem.id, sItem);
+    }
+
+    const mergedList = Array.from(itemMap.values());
+    let items = mergedList.map((item) => enrichInventoryItem(item));
     if (classification) {
       items = items.filter((i) => i.inventory_type === classification);
     }
@@ -727,13 +736,25 @@ export async function getInventorySummary(hotelId?: string): Promise<InventorySu
     }
   }
 
+  const now = new Date();
+  const todayPrefix = now.toISOString().split('T')[0];
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
   const purchasesMonth = transactions
     .filter((t) => t.transaction_type === 'purchase')
     .reduce((sum, t) => sum + (t.total_cost || 0), 0);
 
   const usageCount = transactions.filter(
-    (t) => t.transaction_type === 'usage' || t.transaction_type === 'damaged'
+    (t) => t.transaction_type === 'usage' || t.transaction_type === 'damaged' || t.transaction_type === 'waste'
   ).length;
+
+  const todayWaste = transactions
+    .filter((t) => t.transaction_type === 'waste' && t.transaction_date === todayPrefix)
+    .reduce((sum, t) => sum + (t.total_cost || 0), 0);
+
+  const monthWaste = transactions
+    .filter((t) => t.transaction_type === 'waste' && t.transaction_date.startsWith(monthPrefix))
+    .reduce((sum, t) => sum + (t.total_cost || 0), 0);
 
   return {
     total_items: items.length,
@@ -746,5 +767,80 @@ export async function getInventorySummary(hotelId?: string): Promise<InventorySu
     total_damaged_assets: totalDamaged,
     replacement_needed_count: replacementCount,
     estimated_replacement_cost: Math.round(estimatedReplacementCost * 100) / 100,
+    today_waste_value: Math.round(todayWaste * 100) / 100,
+    month_waste_value: Math.round(monthWaste * 100) / 100,
+  };
+}
+
+/**
+ * Fetch dedicated Food Wastage & Loss Summary
+ */
+export async function getWastageSummary(hotelId?: string) {
+  const transactions = await getInventoryTransactions(hotelId, undefined, 500);
+  const wasteTransactions = transactions.filter((t) => t.transaction_type === 'waste');
+
+  const now = new Date();
+  const todayPrefix = now.toISOString().split('T')[0];
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  let todayVal = 0;
+  let monthVal = 0;
+  const itemMap = new Map<string, { item_name: string; category: string; quantity: number; unit: string; total_cost: number }>();
+  const reasonMap = new Map<string, { count: number; total_cost: number }>();
+
+  for (const w of wasteTransactions) {
+    const cost = Math.abs(w.total_cost || 0);
+    const qty = Math.abs(w.quantity || 0);
+
+    if (w.transaction_date === todayPrefix) todayVal += cost;
+    if (w.transaction_date.startsWith(monthPrefix)) monthVal += cost;
+
+    // Item aggregation
+    const curItem = itemMap.get(w.item_id) || {
+      item_name: w.item_name || 'Item',
+      category: w.item_category || 'Food',
+      quantity: 0,
+      unit: w.unit || 'units',
+      total_cost: 0,
+    };
+    curItem.quantity += qty;
+    curItem.total_cost += cost;
+    itemMap.set(w.item_id, curItem);
+
+    // Reason aggregation
+    const reason = w.reason || 'Other';
+    const curReason = reasonMap.get(reason) || { count: 0, total_cost: 0 };
+    curReason.count += 1;
+    curReason.total_cost += cost;
+    reasonMap.set(reason, curReason);
+  }
+
+  const highestWastedItems = Array.from(itemMap.entries())
+    .map(([id, val]) => ({
+      item_id: id,
+      item_name: val.item_name,
+      category: val.category,
+      quantity: Math.round(val.quantity * 100) / 100,
+      unit: val.unit,
+      total_cost: Math.round(val.total_cost * 100) / 100,
+    }))
+    .sort((a, b) => b.total_cost - a.total_cost)
+    .slice(0, 10);
+
+  const reasonsBreakdown = Array.from(reasonMap.entries())
+    .map(([r, val]) => ({
+      reason: r,
+      count: val.count,
+      total_cost: Math.round(val.total_cost * 100) / 100,
+      share_pct: monthVal > 0 ? Number(((val.total_cost / monthVal) * 100).toFixed(1)) : 0,
+    }))
+    .sort((a, b) => b.total_cost - a.total_cost);
+
+  return {
+    today_waste_value: Math.round(todayVal * 100) / 100,
+    month_waste_value: Math.round(monthVal * 100) / 100,
+    total_waste_count: wasteTransactions.length,
+    highest_wasted_items: highestWastedItems,
+    reasons_breakdown: reasonsBreakdown,
   };
 }

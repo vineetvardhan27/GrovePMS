@@ -5,6 +5,7 @@ import {
   InventoryItem,
   InventoryTransaction,
   InventorySummary,
+  WastageSummary,
   DEFAULT_INVENTORY_CATEGORIES,
   INVENTORY_CLASSIFICATIONS,
 } from '../../lib/inventory/types';
@@ -14,9 +15,11 @@ import { formatDate } from '../../lib/utils/dates';
 import AddPurchaseModal from './AddPurchaseModal';
 import RecordUsageModal from './RecordUsageModal';
 import ReportDamageModal from './ReportDamageModal';
+import ReportWasteModal from './ReportWasteModal';
 import ItemFormModal from './ItemFormModal';
+import ItemDetailModal from './ItemDetailModal';
 import ReplacementPlanningView from './ReplacementPlanningView';
-import KpiCard from '../shared/KpiCard';
+import WastageDashboardView from './WastageDashboardView';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
 import {
@@ -35,6 +38,15 @@ import {
   Boxes,
   Truck,
   CheckCircle2,
+  Trash2,
+  TrendingDown,
+  Info,
+  DollarSign,
+  Utensils,
+  BedDouble,
+  Sparkles,
+  Eye,
+  Plus,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -42,6 +54,7 @@ interface InventoryDashboardProps {
   items: InventoryItem[];
   transactions: InventoryTransaction[];
   summary: InventorySummary;
+  wastageStats: WastageSummary;
   userRole: string;
 }
 
@@ -49,26 +62,34 @@ export default function InventoryDashboard({
   items,
   transactions,
   summary,
+  wastageStats,
   userRole,
 }: InventoryDashboardProps) {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'reorder' | 'planning' | 'audit'>('inventory');
+  // Navigation & Filter states
+  const [activeTab, setActiveTab] = useState<'inventory' | 'reorder' | 'planning' | 'wastage' | 'audit'>('inventory');
   const [selectedClassification, setSelectedClassification] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  // Modal states
   const [isPurchaseOpen, setIsPurchaseOpen] = useState<boolean>(false);
   const [isUsageOpen, setIsUsageOpen] = useState<boolean>(false);
   const [isDamageOpen, setIsDamageOpen] = useState<boolean>(false);
+  const [isWasteOpen, setIsWasteOpen] = useState<boolean>(false);
   const [isItemFormOpen, setIsItemFormOpen] = useState<boolean>(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+
   const [selectedItemForAction, setSelectedItemForAction] = useState<string | undefined>(undefined);
+  const [selectedItemForDetail, setSelectedItemForDetail] = useState<InventoryItem | null>(null);
   const [itemToEdit, setItemToEdit] = useState<InventoryItem | null>(null);
 
   const isOwnerOrManager = userRole === 'owner' || userRole === 'manager';
-  const canReportDamage = userRole === 'owner' || userRole === 'manager' || userRole === 'housekeeping';
+  const canReport = userRole === 'owner' || userRole === 'manager' || userRole === 'housekeeping';
 
+  // Filtered items
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesSearch =
@@ -78,126 +99,280 @@ export default function InventoryDashboard({
         selectedClassification === 'all' || item.inventory_type === selectedClassification;
       const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
       let matchesStatus = true;
-      if (statusFilter === 'healthy')       matchesStatus = item.stock_status === 'healthy';
-      if (statusFilter === 'low_stock')     matchesStatus = item.stock_status === 'low_stock';
-      if (statusFilter === 'out_of_stock')  matchesStatus = item.stock_status === 'out_of_stock';
-      if (statusFilter === 'damaged')       matchesStatus = (item.damaged_stock || 0) > 0;
+      if (statusFilter === 'healthy') matchesStatus = item.stock_status === 'healthy';
+      if (statusFilter === 'low_stock') matchesStatus = item.stock_status === 'low_stock';
+      if (statusFilter === 'out_of_stock') matchesStatus = item.stock_status === 'out_of_stock';
+      if (statusFilter === 'damaged') matchesStatus = (item.damaged_stock || 0) > 0;
       if (statusFilter === 'reorder_needed') matchesStatus = (item.suggested_purchase || 0) > 0;
       return matchesSearch && matchesClassification && matchesCategory && matchesStatus;
     });
   }, [items, searchQuery, selectedClassification, categoryFilter, statusFilter]);
 
+  // Suggested reorder items (Shortfall > 0)
   const reorderItems = useMemo(() => items.filter((item) => (item.suggested_purchase || 0) > 0), [items]);
 
   const totalReorderEstimatedCost = useMemo(
     () => reorderItems.reduce((sum, item) => sum + (item.suggested_purchase || 0) * (item.cost_per_unit || 0), 0),
-    [reorderItems],
+    [reorderItems]
   );
 
   const refreshData = () => router.refresh();
 
-  const handleOpenPurchaseFor = (itemId: string) => {
+  // Action handlers
+  const handleOpenPurchaseFor = (itemId?: string) => {
     setSelectedItemForAction(itemId);
     setIsPurchaseOpen(true);
   };
 
+  const handleOpenUsageFor = (itemId?: string) => {
+    setSelectedItemForAction(itemId);
+    setIsUsageOpen(true);
+  };
+
+  const handleOpenDamageFor = (itemId?: string) => {
+    setSelectedItemForAction(itemId);
+    setIsDamageOpen(true);
+  };
+
+  const handleOpenWasteFor = (itemId?: string) => {
+    setSelectedItemForAction(itemId);
+    setIsWasteOpen(true);
+  };
+
+  const handleOpenDetailFor = (item: InventoryItem) => {
+    setSelectedItemForDetail(item);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setItemToEdit(item);
+    setIsItemFormOpen(true);
+  };
+
+  const handleCreateNewItem = () => {
+    setItemToEdit(null);
+    setIsItemFormOpen(true);
+  };
+
   const TABS = [
-    { id: 'inventory', label: 'Stock & Asset Levels',          icon: Package,      badge: null },
-    { id: 'planning',  label: 'Annual Replacement',            icon: Calendar,     badge: (summary.replacement_needed_count || 0) > 0 ? { count: summary.replacement_needed_count, color: 'text-status-red bg-status-red/10 border-status-red/25' } : null },
-    { id: 'reorder',   label: 'Suggested Reorders',            icon: ShoppingCart, badge: reorderItems.length > 0 ? { count: reorderItems.length, color: 'text-status-amber bg-status-amber/10 border-status-amber/25' } : null },
-    { id: 'audit',     label: `Audit Log (${transactions.length})`, icon: History,  badge: null },
+    { id: 'inventory', label: 'Stock & Asset Levels', icon: Package, badge: null },
+    {
+      id: 'reorder',
+      label: 'Suggested Reorders',
+      icon: ShoppingCart,
+      badge:
+        reorderItems.length > 0
+          ? { count: reorderItems.length, color: 'text-status-amber bg-status-amber/10 border-status-amber/25' }
+          : null,
+    },
+    {
+      id: 'planning',
+      label: 'Annual Replacement',
+      icon: Calendar,
+      badge:
+        (summary.replacement_needed_count || 0) > 0
+          ? {
+              count: summary.replacement_needed_count,
+              color: 'text-status-red bg-status-red/10 border-status-red/25',
+            }
+          : null,
+    },
+    {
+      id: 'wastage',
+      label: 'Food Wastage & Loss',
+      icon: Trash2,
+      badge:
+        (summary.today_waste_value || 0) > 0
+          ? { count: 'Today', color: 'text-status-amber bg-status-amber/10 border-status-amber/25' }
+          : null,
+    },
+    { id: 'audit', label: `Audit Log (${transactions.length})`, icon: History, badge: null },
   ] as const;
 
   return (
     <div className="space-y-6">
-
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      {/* ── Page Header & Quick Action Buttons ── */}
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 pb-1 border-b border-border-subtle">
         <div>
-          <h1 className="text-[1.375rem] leading-tight font-serif font-bold text-brand-forest tracking-tight">
-            Hotel Inventory & Asset Management
+          <h1 className="text-display font-serif text-brand-forest">
+            Hotel Inventory &amp; Asset Management
           </h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Track blankets, linens, food supplies, and assets — with annual replacement planning
+          <p className="text-body text-ink-muted mt-0.5">
+            Track kitchen consumables, room linens, guest supplies, and hotel assets — with automated reorders, wastage tracking, and annual replacement planning
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {canReportDamage && (
-            <button
-              type="button"
-              onClick={() => { setSelectedItemForAction(undefined); setIsDamageOpen(true); }}
-              className="pms-btn-danger-outline"
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Report Damage</span>
-            </button>
+
+        {/* Global Operational Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          {canReport && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleOpenDamageFor()}
+                className="pms-btn-danger-outline h-9 px-3 text-xs gap-1.5 font-medium"
+                title="Report damaged or stained hotel assets"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Report Damage</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenWasteFor()}
+                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium text-status-amber border-status-amber/30 hover:bg-status-amber/10"
+                title="Report spoiled or expired food wastage"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Report Waste</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenUsageFor()}
+                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium"
+                title="Record daily consumable / food usage"
+              >
+                <MinusCircle className="w-3.5 h-3.5 text-brand-forest" />
+                <span>Record Usage</span>
+              </button>
+            </>
           )}
+
           {isOwnerOrManager && (
             <>
               <button
                 type="button"
-                onClick={() => { setSelectedItemForAction(undefined); setIsUsageOpen(true); }}
-                className="pms-btn-secondary"
+                onClick={() => handleOpenPurchaseFor()}
+                className="pms-btn-primary h-9 px-3.5 text-xs gap-1.5"
+                title="Record new purchase receipt"
               >
-                <MinusCircle className="w-4 h-4" />
-                <span>Record Usage</span>
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span>Add Purchase</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => { setSelectedItemForAction(undefined); setIsPurchaseOpen(true); }}
-                className="pms-btn-primary"
+                onClick={handleCreateNewItem}
+                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium"
+                title="Define a new inventory or asset item"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Add Purchase</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Item</span>
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard
-          label="Total Tracked Items"
-          value={summary.total_items}
-          subtitle={`${summary.healthy_count} healthy stock`}
-          icon={Boxes}
-          accent="default"
-          dotColor="bg-status-green"
-        />
-        <KpiCard
-          label="Damaged Assets"
-          value={summary.total_damaged_assets || 0}
-          subtitle="Blankets, linen & appliances"
-          icon={ShieldAlert}
-          accent={(summary.total_damaged_assets || 0) > 0 ? 'red' : 'default'}
-        />
-        <KpiCard
-          label="Replacements Needed"
-          value={summary.replacement_needed_count || 0}
-          subtitle="Target year procurement"
-          icon={Calendar}
-          accent={(summary.replacement_needed_count || 0) > 0 ? 'amber' : 'default'}
-        />
-        <KpiCard
-          label="Asset & Stock Value"
-          value={formatCurrency(summary.total_valuation)}
-          subtitle="Hotel pantry & asset inventory"
-          icon={Truck}
-        />
+      {/* ── 1. Top-Level Operational & Financial KPIs (6 Zero-Clip Cards) ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        {/* KPI 1: Tracked Items */}
+        <div className="pms-card p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Tracked Items</span>
+            <Boxes className="w-4 h-4 text-brand-forest/60" />
+          </div>
+          <p className="text-2xl font-bold font-sans tabular-nums text-brand-forest">
+            {summary.total_items}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">
+            {summary.healthy_count} healthy stock
+          </p>
+        </div>
+
+        {/* KPI 2: Low Stock */}
+        <div
+          className={`pms-card p-4 flex flex-col justify-between transition-colors ${
+            summary.low_stock_count > 0 || summary.out_of_stock_count > 0
+              ? 'border-l-4 border-l-status-amber bg-status-amber/5'
+              : ''
+          }`}
+        >
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
+              Low / Critical
+            </span>
+            <AlertTriangle className="w-4 h-4 text-status-amber" />
+          </div>
+          <p
+            className={`text-2xl font-bold font-sans tabular-nums ${
+              summary.low_stock_count > 0 || summary.out_of_stock_count > 0
+                ? 'text-status-amber'
+                : 'text-brand-forest'
+            }`}
+          >
+            {summary.low_stock_count + summary.out_of_stock_count}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">Below min threshold</p>
+        </div>
+
+        {/* KPI 3: Damaged Assets */}
+        <div className="pms-card p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Damaged Assets</span>
+            <ShieldAlert className="w-4 h-4 text-status-red/60" />
+          </div>
+          <p
+            className={`text-2xl font-bold font-sans tabular-nums ${
+              (summary.total_damaged_assets || 0) > 0 ? 'text-status-red' : 'text-brand-forest'
+            }`}
+          >
+            {summary.total_damaged_assets || 0}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">Linen &amp; appliances</p>
+        </div>
+
+        {/* KPI 4: Replacements Needed */}
+        <div className="pms-card p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Replacements</span>
+            <Calendar className="w-4 h-4 text-brand-forest/60" />
+          </div>
+          <p className="text-2xl font-bold font-sans tabular-nums text-brand-forest">
+            {summary.replacement_needed_count || 0}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">Target procurement</p>
+        </div>
+
+        {/* KPI 5: Stock Valuation */}
+        <div className="pms-card p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Stock Valuation</span>
+            <Truck className="w-4 h-4 text-brand-forest/60" />
+          </div>
+          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-brand-forest truncate">
+            {formatCurrency(summary.total_valuation)}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">Pantry &amp; asset inventory</p>
+        </div>
+
+        {/* KPI 6: Monthly Wastage */}
+        <div className="pms-card p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-ink-muted mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
+              Monthly Waste
+            </span>
+            <Trash2 className="w-4 h-4 text-status-amber" />
+          </div>
+          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-status-amber truncate">
+            {formatCurrency(summary.month_waste_value || 0)}
+          </p>
+          <p className="text-[11px] text-ink-muted mt-1 truncate">Food spoilage loss</p>
+        </div>
       </div>
 
-      {/* Classification Filter Bar */}
-      <div className="flex flex-wrap items-center gap-1.5 p-2 bg-white rounded-xl border border-border-subtle shadow-2xs">
+      {/* ── 2. Classification Pill Bar (Food vs Linen vs Room Supplies vs Assets) ── */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
         <button
           type="button"
           onClick={() => setSelectedClassification('all')}
-          className={`pms-pill-tab ${selectedClassification === 'all' ? 'pms-pill-tab-active' : ''}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+            selectedClassification === 'all'
+              ? 'bg-brand-forest text-white shadow-2xs'
+              : 'bg-white text-ink-muted hover:text-ink hover:bg-brand-sand border border-border-subtle'
+          }`}
         >
-          All Inventory
-          <span className={selectedClassification === 'all' ? 'pms-pill-tab-count' : 'pms-pill-tab-count-inactive'}>
-            {items.length}
-          </span>
+          All Inventory ({items.length})
         </button>
 
         {INVENTORY_CLASSIFICATIONS.map((c) => {
@@ -208,493 +383,556 @@ export default function InventoryDashboard({
               key={c.id}
               type="button"
               onClick={() => setSelectedClassification(c.id)}
-              className={`pms-pill-tab ${isActive ? 'pms-pill-tab-active' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-brand-forest text-white shadow-2xs'
+                  : 'bg-white text-ink-muted hover:text-ink hover:bg-brand-sand border border-border-subtle'
+              }`}
             >
-              <span>{c.label}</span>
-              <span className={isActive ? 'pms-pill-tab-count' : 'pms-pill-tab-count-inactive'}>
-                {count}
-              </span>
+              {c.label} ({count})
             </button>
           );
         })}
       </div>
 
-      {/* Tab Navigation */}
-      <div className="pms-tab-nav">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`pms-tab-item flex items-center gap-2 ${isActive ? 'pms-tab-item-active' : ''}`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span>{tab.label}</span>
-              {tab.badge && (
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${tab.badge.color}`}>
-                  {tab.badge.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* ── 3. Operational Workspace Views (Tabs Header) ── */}
+      <div className="space-y-3.5">
+        <div className="flex items-center gap-1 sm:gap-2 pb-1 border-b border-border-subtle overflow-x-auto">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-brand-forest text-white shadow-2xs'
+                    : 'text-ink-muted hover:text-ink hover:bg-brand-sand'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono border ${
+                      isActive ? 'bg-white/20 text-white border-white/30' : tab.badge.color
+                    }`}
+                  >
+                    {tab.badge.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* ================================================================
-          TAB 1: Stock & Asset Levels
-          ================================================================ */}
-      {activeTab === 'inventory' && (
-        <div className="space-y-4">
-          {/* Filter / Search Bar */}
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            <div className="relative w-full md:w-72">
-              <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search items, categories..."
-                className="pms-input pl-9"
-                aria-label="Search inventory items"
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        {/* ── TAB 1: MAIN STOCK & ASSET LEVELS TABLE ── */}
+        {activeTab === 'inventory' && (
+          <div className="space-y-3.5">
+            {/* Search and Filters Toolbar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search items, categories..."
+                  className="w-full sm:w-64 h-9 pl-9 pr-3 text-xs bg-white border border-border-subtle rounded-lg text-ink placeholder:text-ink-muted/70 focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all"
+                  aria-label="Search inventory items"
+                />
+              </div>
+
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="pms-select"
+                className="h-9 px-3 text-xs bg-white border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all cursor-pointer"
                 aria-label="Filter by category"
               >
                 <option value="all">All Categories</option>
-                {DEFAULT_INVENTORY_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {DEFAULT_INVENTORY_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
               </select>
+
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="pms-select"
-                aria-label="Filter by stock status"
+                className="h-9 px-3 text-xs bg-white border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest/20 focus:border-brand-forest transition-all cursor-pointer"
+                aria-label="Filter by status"
               >
                 <option value="all">All Statuses</option>
                 <option value="healthy">Healthy Stock</option>
                 <option value="low_stock">Low Stock</option>
                 <option value="out_of_stock">Out of Stock</option>
-                <option value="damaged">Has Damaged Items</option>
-                <option value="reorder_needed">Reorder Needed</option>
+                <option value="damaged">Has Damaged Units</option>
+                <option value="reorder_needed">Reorder Recommended</option>
               </select>
             </div>
-          </div>
 
-          {/* Inventory Table */}
-          <div className="pms-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="pms-table">
-                <thead className="pms-table-header">
-                  <tr>
-                    <th className="pms-table-th">Item & Classification</th>
-                    <th className="pms-table-th">Asset Breakdown</th>
-                    <th className="pms-table-th">Usable vs Par Stock</th>
-                    <th className="pms-table-th">Unit Rate</th>
-                    <th className="pms-table-th">Total Value</th>
-                    <th className="pms-table-th">Status</th>
-                    <th className="pms-table-th-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.length === 0 ? (
+            {/* Main Inventory Table */}
+            <div className="pms-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="pms-table">
+                  <thead className="pms-table-header">
                     <tr>
-                      <td colSpan={7}>
-                        <EmptyState
-                          icon={Package}
-                          title="No items found"
-                          description={
-                            searchQuery || categoryFilter !== 'all' || statusFilter !== 'all'
-                              ? 'Try adjusting your filters or search term.'
-                              : 'Add your first inventory item to start tracking stock.'
-                          }
-                          action={
-                            isOwnerOrManager && !searchQuery && categoryFilter === 'all' && statusFilter === 'all'
-                              ? {
-                                  label: '+ Add Inventory Item',
-                                  onClick: () => { setItemToEdit(null); setIsItemFormOpen(true); },
-                                  icon: PlusCircle,
-                                }
-                              : undefined
-                          }
-                          compact
-                        />
-                      </td>
+                      <th className="pms-table-th">Item &amp; Classification</th>
+                      <th className="pms-table-th">Asset Breakdown</th>
+                      <th className="pms-table-th">Usable vs Par Stock</th>
+                      <th className="pms-table-th text-right">Unit Rate</th>
+                      <th className="pms-table-th text-right">Total Value</th>
+                      <th className="pms-table-th text-center">Status</th>
+                      <th className="pms-table-th-right">Actions</th>
                     </tr>
-                  ) : (
-                    filteredItems.map((item) => {
-                      const isAsset = item.item_type === 'reusable_asset';
-                      return (
-                        <tr key={item.id} className="pms-table-row">
-                          {/* Name & Classification */}
-                          <td className="pms-table-td">
-                            <p className="text-sm font-semibold text-ink leading-tight">{item.name}</p>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-sand text-brand-forest uppercase tracking-wider border border-border-subtle">
-                                {item.inventory_type?.replace(/_/g, ' ')}
-                              </span>
-                              <span className="text-[11px] text-ink-muted">{item.category}</span>
-                            </div>
-                          </td>
-
-                          {/* Asset Breakdown */}
-                          <td className="pms-table-td">
-                            {isAsset ? (
-                              <div className="space-y-0.5 text-[12px] font-mono">
-                                <div className="flex items-center gap-2 text-ink">
-                                  <span className="font-semibold">{item.current_stock} avail</span>
-                                  <span className="text-brand-forest font-semibold">· {item.in_use_stock || 0} in use</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-ink-muted">
-                                  {(item.damaged_stock || 0) > 0 && (
-                                    <span className="text-status-red font-medium">{item.damaged_stock} damaged</span>
-                                  )}
-                                  {(item.repair_stock || 0) > 0 && (
-                                    <span className="text-status-amber">{item.repair_stock} repair</span>
-                                  )}
-                                  {(item.lost_stock || 0) > 0 && (
-                                    <span>{item.lost_stock} lost</span>
-                                  )}
-                                </div>
+                  </thead>
+                  <tbody>
+                    {filteredItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={7}>
+                          <EmptyState
+                            icon={Package}
+                            title="No inventory items found"
+                            description={
+                              searchQuery || categoryFilter !== 'all' || statusFilter !== 'all'
+                                ? 'Try adjusting your search query or filter options.'
+                                : 'Add items to track kitchen supplies, linens, and hotel assets.'
+                            }
+                            action={
+                              isOwnerOrManager
+                                ? {
+                                    label: 'Add First Item',
+                                    onClick: handleCreateNewItem,
+                                    icon: Plus,
+                                  }
+                                : undefined
+                            }
+                            compact
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredItems.map((item) => {
+                        const isAsset = item.item_type === 'reusable_asset';
+                        return (
+                          <tr key={item.id} className="pms-table-row transition-colors">
+                            {/* Item & Classification */}
+                            <td className="pms-table-td">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenDetailFor(item)}
+                                className="text-left font-bold text-xs sm:text-sm text-brand-forest hover:underline leading-tight block"
+                              >
+                                {item.name}
+                              </button>
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase bg-brand-sand text-brand-forest border border-border-subtle">
+                                  {item.inventory_type?.replace('_', ' ') || 'Consumable'}
+                                </span>
+                                <span className="text-[11px] text-ink-muted">{item.category}</span>
                               </div>
-                            ) : (
-                              <span className="text-sm font-mono font-semibold text-ink">
-                                {item.current_stock} {item.unit}
-                              </span>
-                            )}
-                          </td>
+                            </td>
 
-                          {/* Usable vs Required */}
-                          <td className="pms-table-td">
-                            <div className="space-y-0.5 text-[12px]">
-                              <p className="text-ink-muted">
-                                Usable: <span className="font-mono font-semibold text-brand-forest">{item.usable_stock} {item.unit}</span>
+                            {/* Asset Breakdown / Stock Count */}
+                            <td className="pms-table-td">
+                              {isAsset ? (
+                                <div className="space-y-0.5 text-xs">
+                                  <div className="font-mono font-bold text-ink">
+                                    {item.total_asset_count || item.current_stock} {item.unit} total
+                                  </div>
+                                  <div className="text-[11px] text-ink-muted">
+                                    <span>Store: {item.current_stock}</span> ·{' '}
+                                    <span>Rooms: {item.in_use_stock || 0}</span>
+                                    {(item.damaged_stock || 0) > 0 && (
+                                      <span className="text-status-red font-semibold">
+                                        {' '}· {item.damaged_stock} damaged
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="font-mono font-bold text-xs sm:text-sm text-ink">
+                                  {item.current_stock} {item.unit}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Usable vs Par Stock */}
+                            <td className="pms-table-td text-xs">
+                              <p className="font-semibold text-ink">
+                                Usable: <span className="font-mono">{item.usable_stock} {item.unit}</span>
                               </p>
-                              <p className="text-ink-muted">
-                                Par: <span className="font-mono font-semibold text-ink">{item.target_stock} {item.unit}</span>
+                              <p className="text-[11px] text-ink-muted">
+                                Par: <span className="font-mono">{item.target_stock} {item.unit}</span>
                               </p>
-                              {(item.replacement_needed || 0) > 0 && (
-                                <p className="text-status-red font-semibold font-mono text-[11px]">
-                                  Shortfall: −{item.replacement_needed} {item.unit}
-                                </p>
+                              {(item.suggested_purchase || 0) > 0 && (
+                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-status-amber/15 text-status-amber border border-status-amber/30">
+                                  Shortfall: -{item.suggested_purchase} {item.unit}
+                                </span>
                               )}
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* Unit Rate */}
-                          <td className="pms-table-td font-mono text-sm text-ink-muted whitespace-nowrap">
-                            {formatCurrency(item.cost_per_unit || 0)}/{item.unit}
-                          </td>
+                            {/* Unit Rate */}
+                            <td className="pms-table-td text-right font-mono text-xs text-ink whitespace-nowrap">
+                              {formatCurrency(item.cost_per_unit)}/{item.unit}
+                            </td>
 
-                          {/* Total Value */}
-                          <td className="pms-table-td font-mono font-semibold text-sm text-ink whitespace-nowrap">
-                            {formatCurrency(item.total_value || 0)}
-                          </td>
+                            {/* Total Value */}
+                            <td className="pms-table-td text-right font-mono font-bold text-xs sm:text-sm text-brand-forest whitespace-nowrap">
+                              {formatCurrency(item.total_value || 0)}
+                            </td>
 
-                          {/* Status */}
-                          <td className="pms-table-td">
-                            <div className="flex flex-col gap-1">
-                              {(item.damaged_stock || 0) > 0 && (
-                                <StatusBadge variant="damaged" label={`${item.damaged_stock} Damaged`} icon={ShieldAlert} />
+                            {/* Status */}
+                            <td className="pms-table-td text-center whitespace-nowrap">
+                              {item.stock_status && (
+                                <StatusBadge
+                                  variant={
+                                    item.stock_status === 'healthy'
+                                      ? 'healthy'
+                                      : item.stock_status === 'low_stock'
+                                      ? 'low'
+                                      : 'critical'
+                                  }
+                                  label={
+                                    item.stock_status === 'healthy'
+                                      ? 'Healthy'
+                                      : item.stock_status === 'low_stock'
+                                      ? 'Low Stock'
+                                      : 'Out of Stock'
+                                  }
+                                />
                               )}
-                              {item.stock_status === 'out_of_stock' && <StatusBadge variant="critical" />}
-                              {item.stock_status === 'low_stock'    && <StatusBadge variant="low" />}
-                              {item.stock_status === 'healthy' && (item.damaged_stock || 0) === 0 && <StatusBadge variant="healthy" />}
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* Actions */}
-                          <td className="pms-table-td">
-                            <div className="flex items-center justify-end gap-1">
-                              {canReportDamage && (
-                                <button
-                                  type="button"
-                                  title="Report Damage"
-                                  aria-label="Report damaged item"
-                                  onClick={() => { setSelectedItemForAction(item.id); setIsDamageOpen(true); }}
-                                  className="pms-btn-icon-danger"
-                                >
-                                  <ShieldAlert className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              {isOwnerOrManager && (
-                                <>
-                                  <button
-                                    type="button"
-                                    title="Add Purchase"
-                                    aria-label="Record a purchase"
-                                    onClick={() => { setSelectedItemForAction(item.id); setIsPurchaseOpen(true); }}
-                                    className="pms-btn-icon-success"
-                                  >
-                                    <PlusCircle className="w-3.5 h-3.5" />
-                                  </button>
-                                  {!isAsset && (
+                            {/* Actions */}
+                            <td className="pms-table-td whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
+                                {!isAsset && (
+                                  <>
                                     <button
                                       type="button"
+                                      onClick={() => handleOpenUsageFor(item.id)}
+                                      className="p-1 rounded text-ink-muted hover:text-brand-forest hover:bg-brand-sand transition-colors"
                                       title="Record Usage"
-                                      aria-label="Record consumption"
-                                      disabled={item.current_stock <= 0}
-                                      onClick={() => { setSelectedItemForAction(item.id); setIsUsageOpen(true); }}
-                                      className="pms-btn-icon-amber"
                                     >
                                       <MinusCircle className="w-3.5 h-3.5" />
                                     </button>
-                                  )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenWasteFor(item.id)}
+                                      className="p-1 rounded text-ink-muted hover:text-status-amber hover:bg-status-amber/10 transition-colors"
+                                      title="Report Wastage"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                )}
+
+                                {isAsset && (
                                   <button
                                     type="button"
-                                    title="Edit Item"
-                                    aria-label="Edit inventory item"
-                                    onClick={() => { setItemToEdit(item); setIsItemFormOpen(true); }}
-                                    className="pms-btn-icon"
+                                    onClick={() => handleOpenDamageFor(item.id)}
+                                    className="p-1 rounded text-ink-muted hover:text-status-red hover:bg-status-red/10 transition-colors"
+                                    title="Report Damage"
                                   >
-                                    <Edit className="w-3.5 h-3.5" />
+                                    <AlertTriangle className="w-3.5 h-3.5" />
                                   </button>
-                                </>
+                                )}
+
+                                {isOwnerOrManager && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenPurchaseFor(item.id)}
+                                    className="p-1 rounded text-ink-muted hover:text-status-green hover:bg-status-green/10 transition-colors"
+                                    title="Add Purchase / Stock"
+                                  >
+                                    <PlusCircle className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenDetailFor(item)}
+                                  className="p-1 rounded text-ink-muted hover:text-brand-forest hover:bg-brand-sand transition-colors"
+                                  title="View Item Details"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 2: SUGGESTED REORDERS ── */}
+        {activeTab === 'reorder' && (
+          <div className="space-y-4">
+            <div className="p-4 bg-brand-sand/60 rounded-xl border border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div>
+                <h3 className="text-sm font-serif font-bold text-brand-forest">
+                  Suggested Procurement &amp; Reorders
+                </h3>
+                <p className="text-ink-muted">
+                  Automatically computed for items with available stock below configured Par Target levels
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-ink-muted block text-[10px] uppercase font-bold tracking-wider">
+                    Total Estimated Budget:
+                  </span>
+                  <span className="font-mono font-bold text-brand-forest text-base tabular-nums">
+                    {formatCurrency(totalReorderEstimatedCost)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pms-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="pms-table">
+                  <thead className="pms-table-header">
+                    <tr>
+                      <th className="pms-table-th">Item</th>
+                      <th className="pms-table-th">Category</th>
+                      <th className="pms-table-th text-right">Current Available</th>
+                      <th className="pms-table-th text-right">Par Target</th>
+                      <th className="pms-table-th text-right">Shortfall Qty</th>
+                      <th className="pms-table-th text-right">Unit Rate</th>
+                      <th className="pms-table-th text-right">Estimated Cost</th>
+                      <th className="pms-table-th-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reorderItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={8}>
+                          <EmptyState
+                            icon={CheckCircle2}
+                            title="All stock levels healthy"
+                            description="No inventory items currently have stock below minimum threshold or par target."
+                            compact
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      reorderItems.map((item) => (
+                        <tr key={item.id} className="pms-table-row transition-colors">
+                          <td className="pms-table-td font-semibold text-ink">{item.name}</td>
+                          <td className="pms-table-td text-ink-muted">{item.category}</td>
+                          <td className="pms-table-td text-right font-mono font-semibold text-ink">
+                            {item.current_stock} {item.unit}
+                          </td>
+                          <td className="pms-table-td text-right font-mono text-ink">
+                            {item.target_stock} {item.unit}
+                          </td>
+                          <td className="pms-table-td text-right font-mono font-bold text-status-amber">
+                            {item.suggested_purchase} {item.unit}
+                          </td>
+                          <td className="pms-table-td text-right font-mono text-ink-muted">
+                            {formatCurrency(item.cost_per_unit)}
+                          </td>
+                          <td className="pms-table-td text-right font-mono font-bold text-brand-forest">
+                            {formatCurrency((item.suggested_purchase || 0) * item.cost_per_unit)}
+                          </td>
+                          <td className="pms-table-td whitespace-nowrap">
+                            <div className="flex items-center justify-end">
+                              {isOwnerOrManager && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPurchaseFor(item.id)}
+                                  className="pms-btn-primary h-7 px-2.5 text-xs gap-1 font-medium"
+                                >
+                                  <ShoppingCart className="w-3 h-3" />
+                                  <span>Order</span>
+                                </button>
                               )}
                             </div>
                           </td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================================================================
-          TAB 2: Annual Replacement Planning
-          ================================================================ */}
-      {activeTab === 'planning' && (
-        <ReplacementPlanningView
-          items={items}
-          onOpenPurchaseModal={handleOpenPurchaseFor}
-          isOwnerOrManager={isOwnerOrManager}
-        />
-      )}
-
-      {/* ================================================================
-          TAB 3: Suggested Reorders
-          ================================================================ */}
-      {activeTab === 'reorder' && (
-        <div className="space-y-4">
-          {/* Reorder Summary Card */}
-          <div className="pms-card p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-brand-forest text-white rounded-lg flex items-center justify-center shrink-0">
-                <ShoppingCart className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-brand-forest">Procurement & Suggested Orders</h3>
-                <p className="text-xs text-ink-muted mt-0.5">Calculated as Target Par Stock minus current Usable Stock</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6 shrink-0">
-              <div>
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-muted block">Items to Reorder</span>
-                <span className="text-xl font-bold font-serif text-status-amber">{reorderItems.length}</span>
-              </div>
-              <div className="border-l border-border-subtle pl-6">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-muted block">Estimated Order</span>
-                <span className="text-xl font-bold font-mono text-brand-forest">{formatCurrency(totalReorderEstimatedCost)}</span>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Reorder Table */}
+        {/* ── TAB 3: ANNUAL REPLACEMENT PLANNING ── */}
+        {activeTab === 'planning' && (
+          <ReplacementPlanningView
+            items={items}
+            onOpenPurchaseModal={handleOpenPurchaseFor}
+            isOwnerOrManager={isOwnerOrManager}
+          />
+        )}
+
+        {/* ── TAB 4: FOOD WASTAGE & LOSS DASHBOARD ── */}
+        {activeTab === 'wastage' && (
+          <WastageDashboardView
+            wastageStats={wastageStats}
+            transactions={transactions}
+            onOpenReportWaste={() => handleOpenWasteFor()}
+            canReport={canReport}
+          />
+        )}
+
+        {/* ── TAB 5: AUDIT LOG & TRANSACTION HISTORY ── */}
+        {activeTab === 'audit' && (
           <div className="pms-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="pms-table">
                 <thead className="pms-table-header">
                   <tr>
+                    <th className="pms-table-th">Date</th>
+                    <th className="pms-table-th">Action Type</th>
                     <th className="pms-table-th">Item Name</th>
-                    <th className="pms-table-th">Type</th>
-                    <th className="pms-table-th">Usable Stock</th>
-                    <th className="pms-table-th">Target Par</th>
-                    <th className="pms-table-th">Suggested Order</th>
-                    <th className="pms-table-th">Est. Cost</th>
-                    {isOwnerOrManager && <th className="pms-table-th-right">Action</th>}
+                    <th className="pms-table-th text-right">Quantity</th>
+                    <th className="pms-table-th text-right">Value</th>
+                    <th className="pms-table-th">Reason / Detail</th>
+                    <th className="pms-table-th">Recorded By</th>
+                    <th className="pms-table-th">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {reorderItems.length === 0 ? (
+                  {transactions.length === 0 ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <EmptyState
-                          icon={CheckCircle2}
-                          title="All supplies at full par"
-                          description="No reorder suggestions at this time. All stock levels are healthy."
+                          icon={History}
+                          title="No inventory movements logged"
+                          description="Purchases, consumption, wastage, and damage transactions will appear here."
                           compact
                         />
                       </td>
                     </tr>
                   ) : (
-                    reorderItems.map((item) => {
-                      const estCost = (item.suggested_purchase || 0) * (item.cost_per_unit || 0);
-                      return (
-                        <tr key={item.id} className="pms-table-row">
-                          <td className="pms-table-td text-sm font-semibold text-ink">{item.name}</td>
-                          <td className="pms-table-td">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-sand text-brand-forest uppercase tracking-wider border border-border-subtle">
-                              {item.inventory_type?.replace(/_/g, ' ')}
-                            </span>
-                          </td>
-                          <td className="pms-table-td font-mono font-semibold text-status-amber">
-                            {item.usable_stock} {item.unit}
-                          </td>
-                          <td className="pms-table-td font-mono font-semibold text-brand-forest">
-                            {item.target_stock} {item.unit}
-                          </td>
-                          <td className="pms-table-td">
-                            <span className="pms-badge pms-badge-low font-mono font-bold">
-                              +{item.suggested_purchase} {item.unit}
-                            </span>
-                          </td>
-                          <td className="pms-table-td font-mono font-semibold text-ink">
-                            {formatCurrency(estCost)}
-                          </td>
-                          {isOwnerOrManager && (
-                            <td className="pms-table-td text-right">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenPurchaseFor(item.id)}
-                                className="pms-btn-primary h-8 px-3 text-xs"
-                              >
-                                <PlusCircle className="w-3.5 h-3.5" />
-                                Purchase
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })
+                    transactions.map((t) => (
+                      <tr key={t.id} className="pms-table-row transition-colors">
+                        <td className="pms-table-td whitespace-nowrap font-medium text-ink">
+                          {formatDate(t.transaction_date)}
+                        </td>
+                        <td className="pms-table-td whitespace-nowrap">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                              t.transaction_type === 'purchase'
+                                ? 'bg-status-green/15 text-status-green border border-status-green/30'
+                                : t.transaction_type === 'usage'
+                                ? 'bg-brand-sand text-brand-forest border border-border-subtle'
+                                : t.transaction_type === 'waste'
+                                ? 'bg-status-amber/15 text-status-amber border border-status-amber/30'
+                                : t.transaction_type === 'damaged'
+                                ? 'bg-status-red/15 text-status-red border border-status-red/30'
+                                : 'bg-status-blue/15 text-status-blue border border-status-blue/30'
+                            }`}
+                          >
+                            {t.transaction_type}
+                          </span>
+                        </td>
+                        <td className="pms-table-td font-semibold text-ink">{t.item_name}</td>
+                        <td className="pms-table-td text-right font-mono font-semibold text-ink whitespace-nowrap">
+                          {t.quantity > 0 ? `+${t.quantity}` : t.quantity} {t.unit}
+                        </td>
+                        <td className="pms-table-td text-right font-mono text-xs text-ink whitespace-nowrap">
+                          {formatCurrency(t.total_cost)}
+                        </td>
+                        <td className="pms-table-td text-xs text-ink">
+                          {t.reason || t.condition_state || (t.supplier ? `Supplier: ${t.supplier}` : '—')}
+                        </td>
+                        <td className="pms-table-td text-xs text-ink-muted">{t.recorder_name || 'Staff'}</td>
+                        <td className="pms-table-td text-xs text-ink-muted max-w-[180px] truncate">
+                          {t.notes || '—'}
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ================================================================
-          TAB 4: Stock Movement & Audit Trail
-          ================================================================ */}
-      {activeTab === 'audit' && (
-        <div className="pms-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-brand-forest">Stock Movement & Audit Log</h3>
-            <span className="text-xs text-ink-muted">{transactions.length} movements</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="pms-table">
-              <thead className="pms-table-header">
-                <tr>
-                  <th className="pms-table-th">Date</th>
-                  <th className="pms-table-th">Item</th>
-                  <th className="pms-table-th">Event</th>
-                  <th className="pms-table-th">Quantity</th>
-                  <th className="pms-table-th">Source / Reason</th>
-                  <th className="pms-table-th">Value</th>
-                  <th className="pms-table-th">Recorded By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={7}>
-                      <EmptyState
-                        icon={History}
-                        title="No movements recorded yet"
-                        description="Purchase, usage, and damage events will appear here as transactions are recorded."
-                        compact
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  transactions.map((t) => {
-                    const isPurchase = t.transaction_type === 'purchase';
-                    const isDamage   = t.transaction_type === 'damaged';
-                    return (
-                      <tr key={t.id} className="pms-table-row">
-                        <td className="pms-table-td font-mono text-[12px] text-ink-muted whitespace-nowrap">
-                          {formatDate(t.transaction_date)}
-                        </td>
-                        <td className="pms-table-td">
-                          <p className="text-sm font-semibold text-ink leading-tight">{t.item_name || 'Item'}</p>
-                          <p className="text-[10px] text-ink-muted uppercase tracking-wide mt-0.5">{t.item_category}</p>
-                        </td>
-                        <td className="pms-table-td">
-                          {isPurchase && <StatusBadge variant="healthy"  label="Purchase"   icon={ArrowDownRight} />}
-                          {isDamage   && <StatusBadge variant="damaged"  label="Damaged"    icon={ShieldAlert} />}
-                          {!isPurchase && !isDamage && <StatusBadge variant="low" label="Usage" icon={ArrowUpRight} />}
-                        </td>
-                        <td className="pms-table-td font-mono font-bold text-sm">
-                          <span className={isPurchase ? 'text-status-green' : isDamage ? 'text-status-red' : 'text-status-amber'}>
-                            {isPurchase ? '+' : '−'}{t.quantity} {t.unit}
-                          </span>
-                        </td>
-                        <td className="pms-table-td">
-                          <p className="text-sm text-ink leading-tight">
-                            {t.room_number ? `${t.room_number} · ${t.reason}` : (t.supplier || t.reason || 'General')}
-                          </p>
-                          {t.condition_state && (
-                            <p className="text-[11px] text-status-red font-medium mt-0.5">Condition: {t.condition_state}</p>
-                          )}
-                          {t.notes && <p className="text-[11px] text-ink-muted truncate max-w-xs mt-0.5">{t.notes}</p>}
-                        </td>
-                        <td className="pms-table-td font-mono text-sm text-ink-muted">
-                          {formatCurrency(t.total_cost || 0)}
-                        </td>
-                        <td className="pms-table-td text-sm text-ink-muted">
-                          {t.recorder_name || 'Staff'}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Modals */}
+      {/* ── Modals ── */}
       <AddPurchaseModal
         isOpen={isPurchaseOpen}
-        onClose={() => setIsPurchaseOpen(false)}
+        onClose={() => {
+          setIsPurchaseOpen(false);
+          setSelectedItemForAction(undefined);
+        }}
         items={items}
         preselectedItemId={selectedItemForAction}
         onSuccess={refreshData}
       />
+
       <RecordUsageModal
         isOpen={isUsageOpen}
-        onClose={() => setIsUsageOpen(false)}
+        onClose={() => {
+          setIsUsageOpen(false);
+          setSelectedItemForAction(undefined);
+        }}
         items={items}
         preselectedItemId={selectedItemForAction}
         onSuccess={refreshData}
       />
+
       <ReportDamageModal
         isOpen={isDamageOpen}
-        onClose={() => setIsDamageOpen(false)}
+        onClose={() => {
+          setIsDamageOpen(false);
+          setSelectedItemForAction(undefined);
+        }}
         items={items}
         preselectedItemId={selectedItemForAction}
         onSuccess={refreshData}
       />
+
+      <ReportWasteModal
+        isOpen={isWasteOpen}
+        onClose={() => {
+          setIsWasteOpen(false);
+          setSelectedItemForAction(undefined);
+        }}
+        items={items.filter((i) => i.item_type !== 'reusable_asset')}
+        preselectedItemId={selectedItemForAction}
+        onSuccess={refreshData}
+      />
+
       <ItemFormModal
         isOpen={isItemFormOpen}
-        onClose={() => setIsItemFormOpen(false)}
+        onClose={() => {
+          setIsItemFormOpen(false);
+          setItemToEdit(null);
+        }}
         itemToEdit={itemToEdit}
         onSuccess={refreshData}
+      />
+
+      <ItemDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedItemForDetail(null);
+        }}
+        item={selectedItemForDetail}
+        transactions={transactions}
+        onOpenUsage={handleOpenUsageFor}
+        onOpenPurchase={handleOpenPurchaseFor}
+        onOpenDamage={handleOpenDamageFor}
+        onOpenWaste={handleOpenWasteFor}
+        onEdit={handleEditItem}
+        canManage={isOwnerOrManager}
       />
     </div>
   );

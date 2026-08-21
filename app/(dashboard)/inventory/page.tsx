@@ -4,6 +4,7 @@ import {
   getInventoryItems,
   getInventoryTransactions,
   getInventorySummary,
+  getWastageSummary,
 } from '../../../lib/inventory/queries';
 import InventoryDashboard from '../../../components/inventory/InventoryDashboard';
 
@@ -16,15 +17,16 @@ export default async function InventoryPage() {
     redirect('/login');
   }
 
-  // Enforce strict role gating: Owner, Manager, and Housekeeping (damage reporting) have access
+  // Enforce strict role gating: Owner, Manager, and Housekeeping (damage/wastage reporting) have access
   if (staff.role !== 'owner' && staff.role !== 'manager' && staff.role !== 'housekeeping') {
     redirect('/dashboard?access_denied=true');
   }
 
-  const [items, transactions, summary] = await Promise.all([
+  const [items, transactions, summary, wastageStats] = await Promise.all([
     getInventoryItems(staff.hotel_id),
-    getInventoryTransactions(staff.hotel_id, undefined, 100),
+    getInventoryTransactions(staff.hotel_id, undefined, 200),
     getInventorySummary(staff.hotel_id),
+    getWastageSummary(staff.hotel_id),
   ]);
 
   return (
@@ -32,6 +34,7 @@ export default async function InventoryPage() {
       items={items}
       transactions={transactions}
       summary={summary}
+      wastageStats={wastageStats}
       userRole={staff.role}
     />
   );

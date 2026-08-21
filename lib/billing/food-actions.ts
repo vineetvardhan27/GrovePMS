@@ -40,6 +40,20 @@ export interface AddFoodChargeInput {
   created_at?: string;
 }
 
+export interface MultipleFoodChargeItemInput {
+  menu_item_id: string;
+  quantity: number;
+}
+
+export interface AddMultipleFoodChargesInput {
+  booking_id: string;
+  service_type: FoodServiceType;
+  items: MultipleFoodChargeItemInput[];
+  tax_treatment: TaxTreatment;
+  remarks?: string | null;
+  created_at?: string;
+}
+
 /**
  * Fetch all food charges for a hotel or all active bookings
  */
@@ -335,6 +349,158 @@ export async function addFoodChargeAction(input: AddFoodChargeInput): Promise<{
   } catch (err: any) {
     console.error('addFoodChargeAction error:', err);
     return { error: `Failed to add food charge: ${err?.message || String(err)}` };
+  }
+}
+
+/**
+ * Add Multiple Food & Beverage items in a single billing session to a guest folio
+ */
+export async function addMultipleFoodChargesAction(input: AddMultipleFoodChargesInput): Promise<{
+  success?: boolean;
+  charges?: FoodChargeRecord[];
+  error?: string;
+}> {
+  try {
+    const staff = await getCurrentStaff();
+    if (!staff) {
+      return { error: 'Authentication required. Please sign in.' };
+    }
+
+    if (!staff.is_active) {
+      return { error: 'Your staff account is inactive. Please contact the administrator.' };
+    }
+
+    if (staff.role === 'housekeeping') {
+      return { error: 'Housekeeping staff cannot add food or billing charges.' };
+    }
+
+    if (!input.booking_id) {
+      return { error: 'Booking ID is required.' };
+    }
+
+    if (!input.items || input.items.length === 0) {
+      return { error: 'At least one food item must be selected.' };
+    }
+
+    const supabase = createClient();
+
+    // Verify target booking
+    const { data: booking, error: bookingErr } = (await supabase
+      .from('bookings')
+      .select('id, hotel_id, room_id, guest_id, booking_status, booking_number')
+      .eq('id', input.booking_id)
+      .eq('hotel_id', staff.hotel_id)
+      .maybeSingle()) as { data: any; error: any };
+
+    if (bookingErr || !booking) {
+      return { error: 'Target room booking was not found in your hotel.' };
+    }
+
+    if (booking.booking_status === 'cancelled') {
+      return { error: 'Cannot add food charges to a cancelled reservation.' };
+    }
+
+    if (booking.booking_status === 'checked_out') {
+      return { error: 'Cannot add food charges to a booking that is already checked out and finalized.' };
+    }
+
+    const menuItems = await getMenuItems(staff.hotel_id);
+    const categories = await getMenuCategories(staff.hotel_id);
+    const settings = await getHotelSettings(staff.hotel_id);
+    const effectiveGstRate = Number(settings.gst_percentage ?? settings.gst_rate ?? 12);
+    const taxTreatment: TaxTreatment = input.tax_treatment === 'non_gst' ? 'non_gst' : 'gst';
+    const nowIso = input.created_at || new Date().toISOString();
+
+    const createdCharges: FoodChargeRecord[] = [];
+
+    for (const orderItem of input.items) {
+      const qty = Number(orderItem.quantity);
+      if (isNaN(qty) || qty <= 0) continue;
+
+      const item = menuItems.find((m) => m.id === orderItem.menu_item_id);
+      if (!item) continue;
+
+      const unitPriceSnapshot = Number(item.selling_price);
+      const itemNameSnapshot = item.name;
+      const category = categories.find((c) => c.id === item.category_id);
+      const categorySnapshot = category?.name || input.service_type || 'Food & Beverage';
+
+      const taxableAmount = Math.round(qty * unitPriceSnapshot * 100) / 100;
+      let gstRate = 0;
+      let gstAmount = 0;
+      let totalAmount = taxableAmount;
+
+      if (taxTreatment === 'gst') {
+        gstRate = effectiveGstRate;
+        gstAmount = Math.round(((taxableAmount * gstRate) / 100) * 100) / 100;
+        totalAmount = Math.round((taxableAmount + gstAmount) * 100) / 100;
+      }
+
+      const chargeId = crypto.randomUUID();
+      const chargeRecord: FoodChargeRecord = {
+        id: chargeId,
+        hotel_id: staff.hotel_id,
+        booking_id: input.booking_id,
+        room_id: booking.room_id || null,
+        guest_id: booking.guest_id || null,
+        menu_item_id: item.id || null,
+        item_name_snapshot: itemNameSnapshot,
+        category_snapshot: categorySnapshot,
+        service_type: input.service_type,
+        quantity: qty,
+        unit_price_snapshot: unitPriceSnapshot,
+        tax_treatment: taxTreatment,
+        taxable_amount: taxableAmount,
+        gst_rate: gstRate,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+        remarks: input.remarks?.trim() || null,
+        recorded_by: staff.id,
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+
+      createdCharges.push(chargeRecord);
+    }
+
+    if (createdCharges.length === 0) {
+      return { error: 'No valid items could be added to the folio.' };
+    }
+
+    // 1. Try public.food_charges table
+    try {
+      await (supabase.from('food_charges') as any).insert(createdCharges);
+    } catch {
+      // Table fallback
+    }
+
+    // 2. Fallback store in hotel.settings
+    const { data: hotelData } = await (supabase.from('hotels') as any)
+      .select('id, settings')
+      .eq('id', staff.hotel_id)
+      .single();
+
+    const existingCharges: FoodChargeRecord[] = (hotelData?.settings?.food_charges as FoodChargeRecord[]) || [];
+    const updatedCharges = [...existingCharges, ...createdCharges];
+
+    await (supabase.from('hotels') as any)
+      .update({
+        settings: {
+          ...(hotelData?.settings || {}),
+          food_charges: updatedCharges,
+        },
+      })
+      .eq('id', staff.hotel_id);
+
+    revalidatePath(`/billing/${input.booking_id}`);
+    revalidatePath('/billing');
+    revalidatePath('/dashboard');
+    revalidatePath('/bookings');
+
+    return { success: true, charges: createdCharges };
+  } catch (err: any) {
+    console.error('addMultipleFoodChargesAction error:', err);
+    return { error: `Failed to add food charges: ${err?.message || String(err)}` };
   }
 }
 

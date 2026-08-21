@@ -8,6 +8,7 @@ import {
   RecordPurchaseInput,
   RecordUsageInput,
   ReportDamageInput,
+  ReportWasteInput,
   InventoryItem,
   InventoryTransaction,
 } from './types';
@@ -594,5 +595,115 @@ export async function toggleInventoryItemStatusAction(
   } catch (err: any) {
     console.error('toggleInventoryItemStatusAction error:', err);
     return { error: `Failed to toggle item status: ${err?.message || String(err)}` };
+  }
+}
+
+/**
+ * Record Food / Consumable Wastage & Spoilage
+ * Decreases inventory stock, calculates monetary loss, and logs audit record
+ */
+export async function recordWastageAction(input: ReportWasteInput): Promise<{
+  success?: boolean;
+  transaction?: InventoryTransaction;
+  new_stock?: number;
+  error?: string;
+}> {
+  try {
+    const staff = await getCurrentStaff();
+    if (!staff) {
+      return { error: 'Authentication required. Please sign in.' };
+    }
+
+    if (staff.role !== 'owner' && staff.role !== 'manager' && staff.role !== 'housekeeping') {
+      return { error: 'Access denied: Only staff can report inventory wastage.' };
+    }
+
+    const qty = Number(input.quantity);
+    if (isNaN(qty) || qty <= 0) {
+      return { error: 'Wastage quantity must be greater than zero.' };
+    }
+
+    if (!input.reason || !input.reason.trim()) {
+      return { error: 'Reason for wastage is required (e.g. Spoiled, Expired, Burnt, Overprepared).' };
+    }
+
+    const supabase = createClient();
+    const items = await getInventoryItems(staff.hotel_id);
+    const targetItem = items.find((i) => i.id === input.item_id);
+
+    if (!targetItem) {
+      return { error: 'Selected inventory item was not found.' };
+    }
+
+    const currentStock = Number(targetItem.current_stock || 0);
+    const newStock = Math.max(0, Math.round((currentStock - qty) * 100) / 100);
+    const transactionId = crypto.randomUUID();
+    const nowIso = new Date().toISOString();
+    const wasteDate = input.waste_date || nowIso.split('T')[0];
+    const totalCost = Math.round(qty * Number(targetItem.cost_per_unit || 0) * 100) / 100;
+
+    const transactionRecord: InventoryTransaction = {
+      id: transactionId,
+      hotel_id: staff.hotel_id,
+      item_id: targetItem.id,
+      item_name: targetItem.name,
+      item_category: targetItem.category,
+      item_type: targetItem.item_type,
+      inventory_type: targetItem.inventory_type,
+      transaction_type: 'waste',
+      quantity: -qty,
+      unit: targetItem.unit,
+      unit_price: Number(targetItem.cost_per_unit || 0),
+      total_cost: totalCost,
+      reason: input.reason.trim(),
+      notes: input.notes?.trim() || null,
+      recorded_by: staff.id,
+      recorder_name: staff.full_name,
+      transaction_date: wasteDate,
+      created_at: nowIso,
+    };
+
+    // 1. Try public.inventory_transactions & public.inventory_items table
+    try {
+      await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
+      await (supabase.from('inventory_items') as any)
+        .update({ current_stock: newStock, updated_at: nowIso })
+        .eq('id', targetItem.id)
+        .eq('hotel_id', staff.hotel_id);
+    } catch {
+      // Fallback
+    }
+
+    // 2. Fallback to hotel.settings
+    const { data: hotelData } = await (supabase.from('hotels') as any)
+      .select('id, settings')
+      .eq('id', staff.hotel_id)
+      .single();
+
+    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || items;
+    const existingTransactions: InventoryTransaction[] =
+      (hotelData?.settings?.inventory_transactions as InventoryTransaction[]) || [];
+
+    const updatedItems = existingItems.map((item) =>
+      item.id === targetItem.id ? { ...item, current_stock: newStock, updated_at: nowIso } : item
+    );
+
+    const updatedTransactions = [transactionRecord, ...existingTransactions];
+
+    await (supabase.from('hotels') as any)
+      .update({
+        settings: {
+          ...(hotelData?.settings || {}),
+          inventory_items: updatedItems,
+          inventory_transactions: updatedTransactions,
+        },
+      })
+      .eq('id', staff.hotel_id);
+
+    revalidatePath('/inventory');
+    return { success: true, transaction: transactionRecord, new_stock: newStock };
+  } catch (err: any) {
+    console.error('recordWastageAction error:', err);
+    return { error: `Failed to record wastage: ${err?.message || String(err)}` };
   }
 }
