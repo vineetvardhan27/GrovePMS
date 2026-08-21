@@ -25,6 +25,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { MenuCategory, MenuItem, SaveMenuItemInput, SaveMenuCategoryInput } from '../../../../lib/menu/types';
+import SettingsBackNavigation from '../../../../components/settings/SettingsBackNavigation';
 import {
   saveMenuItemAction,
   toggleMenuItemStatusAction,
@@ -289,50 +290,47 @@ export default function FoodMenuManager({
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">
-            <Link href="/settings" className="hover:text-brand-forest transition-colors">
-              Settings
-            </Link>
-            <span>/</span>
-            <span className="text-brand-forest">Food Menu</span>
+      <div className="space-y-2.5 pb-2.5 border-b border-border-subtle">
+        <SettingsBackNavigation currentPage="Food Menu" />
+
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-4">
+          <div>
+            <h1 className="text-display font-serif text-brand-forest flex items-center gap-2.5 leading-tight">
+              <UtensilsCrossed className="w-6 h-6 text-brand-forest shrink-0" />
+              <span>Food Menu Management</span>
+            </h1>
+            <p className="text-body text-ink-muted mt-1 leading-relaxed">
+              Configure restaurant &amp; room-service food items, categories, and selling tariffs
+            </p>
           </div>
-          <h1 className="text-display text-brand-forest flex items-center gap-3">
-            <UtensilsCrossed className="w-8 h-8 text-brand-forest" />
-            Food Menu Management
-          </h1>
-          <p className="text-body text-ink-muted mt-1">
-            Configure restaurant & room-service food items, categories, and selling tariffs
-          </p>
-        </div>
 
-        {/* Action Buttons for Owner / Manager */}
-        <div className="flex items-center gap-2">
-          {canEdit ? (
-            <>
-              <button
-                onClick={openCategoryModal}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs font-semibold hover:bg-brand-sand hover:border-brand-forest/40 transition-colors shadow-2xs"
-              >
-                <FolderPlus className="w-4 h-4 text-brand-forest" />
-                <span>Manage Categories</span>
-              </button>
+          {/* Action Buttons for Owner / Manager */}
+          <div className="flex items-center gap-2 shrink-0">
+            {canEdit ? (
+              <>
+                <button
+                  onClick={openCategoryModal}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border-subtle bg-white text-ink text-xs font-semibold hover:bg-brand-sand hover:border-brand-forest/40 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <FolderPlus className="w-4 h-4 text-brand-forest" />
+                  <span>Manage Categories</span>
+                </button>
 
-              <button
-                onClick={openAddItemModal}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-forest text-white text-xs font-semibold hover:bg-brand-forest-light transition-colors shadow-2xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Food Item</span>
-              </button>
-            </>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-status-blue/10 border border-status-blue/20 text-status-blue text-xs font-semibold">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Reception (View-Only Mode)</span>
-            </div>
-          )}
+                <button
+                  onClick={openAddItemModal}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-forest text-white text-xs font-semibold hover:bg-brand-forest-light transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Food Item</span>
+                </button>
+              </>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-status-blue/10 border border-status-blue/20 text-status-blue text-xs font-semibold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Reception (View-Only Mode)</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

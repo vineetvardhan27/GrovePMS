@@ -5,7 +5,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-display text-brand-forest">Settings</h1>
+        <h1 className="text-display font-serif text-brand-forest">Settings</h1>
         <p className="text-body text-ink-muted">Property and operational configuration</p>
       </div>
 

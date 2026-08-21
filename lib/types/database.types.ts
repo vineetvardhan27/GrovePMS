@@ -103,6 +103,21 @@ export type BanquetEventType =
 
 export type BanquetBookingStatus = 'inquiry' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
+export type BanquetPaymentStatus = 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
+
+export type BanquetChargeCategory =
+  | 'hall_rental'
+  | 'food_beverage'
+  | 'catering'
+  | 'decoration'
+  | 'audio_visual'
+  | 'equipment'
+  | 'generator'
+  | 'accommodation'
+  | 'service_charge'
+  | 'cleaning'
+  | 'miscellaneous';
+
 export interface HotelSettings {
   gst_enabled: boolean;
   gst_percentage: number;
@@ -748,6 +763,11 @@ export interface Database {
           customer_name: string;
           customer_phone: string;
           customer_email: string | null;
+          customer_address: string | null;
+          customer_gstin: string | null;
+          payment_status: BanquetPaymentStatus;
+          invoice_number: string | null;
+          invoice_date: string | null;
           event_date: string;
           start_time: string;
           end_time: string;
@@ -759,6 +779,11 @@ export interface Database {
           catering_notes: string | null;
           estimated_total: number;
           advance_paid: number;
+          subtotal: number;
+          tax_amount: number;
+          grand_total: number;
+          total_paid: number;
+          balance_due: number;
           tax_treatment: TaxTreatment;
           remarks: string | null;
           recorded_by: string | null;
@@ -774,6 +799,11 @@ export interface Database {
           customer_name: string;
           customer_phone: string;
           customer_email?: string | null;
+          customer_address?: string | null;
+          customer_gstin?: string | null;
+          payment_status?: BanquetPaymentStatus;
+          invoice_number?: string | null;
+          invoice_date?: string | null;
           event_date: string;
           start_time: string;
           end_time: string;
@@ -785,6 +815,11 @@ export interface Database {
           catering_notes?: string | null;
           estimated_total?: number;
           advance_paid?: number;
+          subtotal?: number;
+          tax_amount?: number;
+          grand_total?: number;
+          total_paid?: number;
+          balance_due?: number;
           tax_treatment?: TaxTreatment;
           remarks?: string | null;
           recorded_by?: string | null;
@@ -800,6 +835,11 @@ export interface Database {
           customer_name?: string;
           customer_phone?: string;
           customer_email?: string | null;
+          customer_address?: string | null;
+          customer_gstin?: string | null;
+          payment_status?: BanquetPaymentStatus;
+          invoice_number?: string | null;
+          invoice_date?: string | null;
           event_date?: string;
           start_time?: string;
           end_time?: string;
@@ -811,11 +851,116 @@ export interface Database {
           catering_notes?: string | null;
           estimated_total?: number;
           advance_paid?: number;
+          subtotal?: number;
+          tax_amount?: number;
+          grand_total?: number;
+          total_paid?: number;
+          balance_due?: number;
           tax_treatment?: TaxTreatment;
           remarks?: string | null;
           recorded_by?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      banquet_charges: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          banquet_booking_id: string;
+          category: BanquetChargeCategory;
+          description: string;
+          sac_code: string | null;
+          quantity: number;
+          unit_price: number;
+          discount: number;
+          tax_treatment: TaxTreatment;
+          tax_rate: number;
+          taxable_amount: number;
+          tax_amount: number;
+          total_amount: number;
+          notes: string | null;
+          recorded_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          banquet_booking_id: string;
+          category: BanquetChargeCategory;
+          description: string;
+          sac_code?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          discount?: number;
+          tax_treatment?: TaxTreatment;
+          tax_rate?: number;
+          taxable_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          notes?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          banquet_booking_id?: string;
+          category?: BanquetChargeCategory;
+          description?: string;
+          sac_code?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          discount?: number;
+          tax_treatment?: TaxTreatment;
+          tax_rate?: number;
+          taxable_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          notes?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      banquet_payments: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          banquet_booking_id: string;
+          amount: number;
+          payment_mode: PaymentMode;
+          payment_type: PaymentType;
+          reference_number: string | null;
+          notes: string | null;
+          recorded_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          banquet_booking_id: string;
+          amount: number;
+          payment_mode?: PaymentMode;
+          payment_type?: PaymentType;
+          reference_number?: string | null;
+          notes?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          banquet_booking_id?: string;
+          amount?: number;
+          payment_mode?: PaymentMode;
+          payment_type?: PaymentType;
+          reference_number?: string | null;
+          notes?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
         };
       };
     };
