@@ -25,6 +25,7 @@ import { MenuItem, MenuCategory } from '../../lib/menu/types';
 import { formatCurrency, numberToIndianWords } from '../../lib/utils/currency';
 import RecordPaymentForm from './RecordPaymentForm';
 import AddFoodModal from './AddFoodModal';
+import HotelInvoiceHeader from '../shared/HotelInvoiceHeader';
 import { checkOutAction } from '../../lib/checkinout/actions';
 import { deleteFoodChargeAction, FoodChargeRecord } from '../../lib/billing/food-actions';
 
@@ -446,75 +447,48 @@ export default function BillView({
         id="invoice-print-area"
         className="bg-white rounded-xl border border-border-subtle shadow-sm overflow-hidden text-ink font-sans"
       >
-        {/* Invoice Header */}
+        {/* Invoice Header with Official Hotel Logo */}
         <div className="p-6 sm:p-8 bg-brand-sand/40 border-b border-border-subtle">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
-            {/* Hotel Brand & Official Details */}
-            <div className="space-y-1.5 max-w-md">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-brand-forest text-white rounded-lg">
-                  <Building2 className="w-6 h-6" />
+          <HotelInvoiceHeader
+            hotelName={initialBill.hotel_name || 'HOTEL GREENERY VIEW'}
+            subtitle="Boutique Hospitality & Luxury Stay"
+            address={initialBill.hotel_address}
+            city={initialBill.hotel_city}
+            phone={initialBill.hotel_phone}
+            email={initialBill.hotel_email}
+            gstNumber={initialBill.hotel_gst_number}
+            panNumber={initialBill.hotel_pan_number}
+            className="border-b-0 pb-0"
+            rightContent={
+              <div className="space-y-2">
+                <div className="inline-block px-3.5 py-1.5 bg-brand-forest text-white text-xs font-bold uppercase tracking-wider rounded-md">
+                  {includeGst ? 'TAX INVOICE' : 'GUEST FOLIO / BILL'}
                 </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight">
-                    {initialBill.hotel_name}
-                  </h1>
-                  <p className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">
-                    Boutique Hospitality &amp; Luxury Stay
+
+                <div className="space-y-1 text-xs">
+                  <p>
+                    <span className="text-ink-muted">Invoice No: </span>
+                    <span className="font-mono font-bold text-ink text-sm">{initialBill.invoice_number}</span>
+                  </p>
+                  <p>
+                    <span className="text-ink-muted">Booking No: </span>
+                    <span className="font-mono font-semibold text-ink">{initialBill.booking_number}</span>
+                  </p>
+                  <p>
+                    <span className="text-ink-muted">Invoice Date: </span>
+                    <span className="font-medium text-ink">{initialBill.invoice_date}</span>
                   </p>
                 </div>
-              </div>
 
-              <p className="text-xs text-ink-muted pt-1 leading-relaxed">
-                {initialBill.hotel_address}, {initialBill.hotel_city}
-              </p>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-muted font-medium">
-                <span><strong>Phone:</strong> {initialBill.hotel_phone}</span>
-                <span><strong>Email:</strong> {initialBill.hotel_email}</span>
-              </div>
-              {initialBill.hotel_gst_number && (
-                <div className="pt-1 flex items-center gap-3 text-xs font-mono">
-                  <span className="bg-brand-forest/10 text-brand-forest px-2 py-0.5 rounded font-semibold">
-                    GSTIN: {initialBill.hotel_gst_number}
+                {/* Status Stamp */}
+                <div className="pt-1">
+                  <span className={`inline-block border-2 font-mono text-[11px] font-bold px-2.5 py-0.5 uppercase tracking-widest rounded ${badge.stampClass}`}>
+                    {badge.label}
                   </span>
-                  {initialBill.hotel_pan_number && (
-                    <span className="text-ink-muted">
-                      PAN: {initialBill.hotel_pan_number}
-                    </span>
-                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Right: Invoice Title & Meta */}
-            <div className="sm:text-right space-y-2 w-full sm:w-auto">
-              <div className="inline-block px-3.5 py-1.5 bg-brand-forest text-white text-xs font-bold uppercase tracking-wider rounded-md">
-                {includeGst ? 'TAX INVOICE' : 'GUEST FOLIO / BILL'}
               </div>
-
-              <div className="space-y-1 text-xs">
-                <p>
-                  <span className="text-ink-muted">Invoice No: </span>
-                  <span className="font-mono font-bold text-ink text-sm">{initialBill.invoice_number}</span>
-                </p>
-                <p>
-                  <span className="text-ink-muted">Booking No: </span>
-                  <span className="font-mono font-semibold text-ink">{initialBill.booking_number}</span>
-                </p>
-                <p>
-                  <span className="text-ink-muted">Invoice Date: </span>
-                  <span className="font-medium text-ink">{initialBill.invoice_date}</span>
-                </p>
-              </div>
-
-              {/* Status Stamp */}
-              <div className="pt-1">
-                <span className={`inline-block border-2 font-mono text-[11px] font-bold px-2.5 py-0.5 uppercase tracking-widest rounded ${badge.stampClass}`}>
-                  {badge.label}
-                </span>
-              </div>
-            </div>
-          </div>
+            }
+          />
         </div>
 
         {/* Structured 2-Column Info Grid */}

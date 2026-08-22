@@ -14,6 +14,7 @@ import {
   Users,
   Receipt,
   CreditCard,
+  UtensilsCrossed,
   BarChart3,
   Settings,
   Building2,
@@ -31,16 +32,17 @@ import { AvailableStaffAccount } from '../../lib/auth/switchAccount';
 import AccountSwitcher from './AccountSwitcher';
 
 const ALL_NAV_ITEMS = [
-  { name: 'Dashboard',    href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Rooms',        href: '/rooms',     icon: BedDouble },
-  { name: 'Bookings',     href: '/bookings',  icon: CalendarDays },
-  { name: 'Guests',       href: '/guests',    icon: Users },
-  { name: 'Billing',      href: '/billing',   icon: Receipt },
-  { name: 'Payments',     href: '/payments',  icon: CreditCard },
-  { name: 'Inventory',    href: '/inventory', icon: Package },
-  { name: 'Banquet Hall', href: '/banquet',   icon: PartyPopper },
-  { name: 'Reports',      href: '/reports',   icon: BarChart3 },
-  { name: 'Settings',     href: '/settings',  icon: Settings },
+  { name: 'Dashboard',       href: '/dashboard',     icon: LayoutDashboard },
+  { name: 'Rooms',           href: '/rooms',         icon: BedDouble },
+  { name: 'Bookings',        href: '/bookings',      icon: CalendarDays },
+  { name: 'Guests',          href: '/guests',        icon: Users },
+  { name: 'Billing',         href: '/billing',       icon: Receipt },
+  { name: 'Payments',        href: '/payments',      icon: CreditCard },
+  { name: 'Food & Beverage', href: '/food-beverage', icon: UtensilsCrossed },
+  { name: 'Inventory',       href: '/inventory',     icon: Package },
+  { name: 'Banquet Hall',    href: '/banquet',       icon: PartyPopper },
+  { name: 'Reports',         href: '/reports',       icon: BarChart3 },
+  { name: 'Settings',        href: '/settings',      icon: Settings },
 ];
 
 const ROLE_META: Record<StaffRole, { title: string; icon: any; avatarBg: string }> = {

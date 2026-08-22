@@ -6,6 +6,7 @@ import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';
 import { Printer, ArrowLeft, Building2, Copy, Check, FileText, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import HotelInvoiceHeader from '../shared/HotelInvoiceHeader';
 
 interface BanquetInvoiceViewProps {
   invoice: BanquetInvoice;
@@ -65,54 +66,38 @@ export default function BanquetInvoiceView({ invoice }: BanquetInvoiceViewProps)
         id="invoice-print-area"
         className="bg-white rounded-2xl border border-border-subtle shadow-xs p-6 sm:p-10 max-w-4xl mx-auto text-ink print:shadow-none print:border-0 print:p-0"
       >
-        {/* Header Branding */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-6 border-b-2 border-brand-forest">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-brand-forest text-white flex items-center justify-center font-serif font-bold text-lg">
-                H
-              </div>
-              <div>
-                <h1 className="text-xl font-serif font-bold text-brand-forest tracking-tight leading-none">
-                  {invoice.hotel_name}
-                </h1>
-                <p className="text-[11px] text-ink-muted uppercase tracking-widest mt-0.5">
-                  Luxury Hospitality &amp; Banquets
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 text-xs text-ink-muted space-y-0.5 leading-relaxed">
-              <p>{invoice.hotel_address}</p>
-              <p>{invoice.hotel_city}</p>
-              <p>Phone: {invoice.hotel_phone} | Email: {invoice.hotel_email}</p>
-              {invoice.hotel_gst_number && (
-                <p className="font-semibold text-ink font-mono text-[11px]">
-                  GSTIN: {invoice.hotel_gst_number}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="text-left sm:text-right space-y-1">
-            <span className="inline-block px-3 py-1 bg-brand-forest text-white text-xs font-bold uppercase tracking-wider rounded-md">
-              TAX INVOICE — BANQUET
-            </span>
-            <p className="text-sm font-mono font-bold text-brand-forest mt-2">{invoice.invoice_number}</p>
-            <p className="text-xs text-ink-muted">Date: {invoice.invoice_date}</p>
-            <p className="text-xs text-ink-muted">Booking Ref: {invoice.booking_number}</p>
-            <div className="pt-2">
-              <span
-                className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase ${
-                  invoice.payment_status === 'paid'
-                    ? 'bg-status-green/10 text-status-green border border-status-green/30'
-                    : 'bg-status-amber/10 text-status-amber border border-status-amber/30'
-                }`}
-              >
-                {invoice.payment_status === 'paid' ? 'PAID IN FULL' : 'PARTIALLY PAID'}
+        {/* Header Branding with Official Hotel Logo */}
+        <HotelInvoiceHeader
+          hotelName={invoice.hotel_name || 'HOTEL GREENERY VIEW'}
+          subtitle="Luxury Hospitality & Banquets"
+          address={invoice.hotel_address}
+          city={invoice.hotel_city}
+          phone={invoice.hotel_phone}
+          email={invoice.hotel_email}
+          gstNumber={invoice.hotel_gst_number}
+          className="border-b-2 border-brand-forest"
+          rightContent={
+            <div className="space-y-1">
+              <span className="inline-block px-3 py-1 bg-brand-forest text-white text-xs font-bold uppercase tracking-wider rounded-md">
+                TAX INVOICE — BANQUET
               </span>
+              <p className="text-sm font-mono font-bold text-brand-forest mt-2">{invoice.invoice_number}</p>
+              <p className="text-xs text-ink-muted">Date: {invoice.invoice_date}</p>
+              <p className="text-xs text-ink-muted">Booking Ref: {invoice.booking_number}</p>
+              <div className="pt-2">
+                <span
+                  className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-bold uppercase ${
+                    invoice.payment_status === 'paid'
+                      ? 'bg-status-green/10 text-status-green border border-status-green/30'
+                      : 'bg-status-amber/10 text-status-amber border border-status-amber/30'
+                  }`}
+                >
+                  {invoice.payment_status === 'paid' ? 'PAID IN FULL' : 'PARTIALLY PAID'}
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Billed To & Event Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 border-b border-border-subtle">

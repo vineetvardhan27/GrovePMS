@@ -9,6 +9,7 @@ import {
   Users,
   Receipt,
   CreditCard,
+  UtensilsCrossed,
   Package,
   PartyPopper,
   BarChart3,
@@ -16,16 +17,17 @@ import {
 } from 'lucide-react';
 
 const ALL_NAV_ITEMS = [
-  { name: 'Dashboard',   href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Rooms',       href: '/rooms',     icon: BedDouble },
-  { name: 'Bookings',    href: '/bookings',  icon: CalendarDays },
-  { name: 'Guests',      href: '/guests',    icon: Users },
-  { name: 'Billing',     href: '/billing',   icon: Receipt },
-  { name: 'Payments',    href: '/payments',  icon: CreditCard },
-  { name: 'Inventory',   href: '/inventory', icon: Package },
-  { name: 'Banquet Hall',href: '/banquet',   icon: PartyPopper },
-  { name: 'Reports',     href: '/reports',   icon: BarChart3 },
-  { name: 'Settings',    href: '/settings',  icon: Settings },
+  { name: 'Dashboard',       href: '/dashboard',     icon: LayoutDashboard },
+  { name: 'Rooms',           href: '/rooms',         icon: BedDouble },
+  { name: 'Bookings',        href: '/bookings',      icon: CalendarDays },
+  { name: 'Guests',          href: '/guests',        icon: Users },
+  { name: 'Billing',         href: '/billing',       icon: Receipt },
+  { name: 'Payments',        href: '/payments',      icon: CreditCard },
+  { name: 'Food & Beverage', href: '/food-beverage', icon: UtensilsCrossed },
+  { name: 'Inventory',       href: '/inventory',     icon: Package },
+  { name: 'Banquet Hall',    href: '/banquet',       icon: PartyPopper },
+  { name: 'Reports',         href: '/reports',       icon: BarChart3 },
+  { name: 'Settings',        href: '/settings',      icon: Settings },
 ];
 
 interface SidebarNavProps {
