@@ -1,0 +1,1 @@
+A staff-facing hotel management system covering bookings, room and food billing, banquet hall billing, inventory tracking for food and linens, role-based staff access, and analytics, built with Next.js and Supabase.
