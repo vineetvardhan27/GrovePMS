@@ -139,7 +139,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
 
                       <td className="p-4 text-center">
                         <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-brand-sand text-ink">
-                          {guest.total_stays || 1}
+                          {guest.total_stays ?? 0}
                         </span>
                       </td>
 
@@ -205,7 +205,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                 <div className="grid grid-cols-2 gap-3 p-4 bg-brand-sand/50 rounded-lg border border-border-subtle">
                   <div>
                     <span className="text-ink-muted block">Total Stays</span>
-                    <span className="text-lg font-bold text-ink font-serif">{selectedGuest.total_stays || 1} Visits</span>
+                    <span className="text-lg font-bold text-ink font-serif">{selectedGuest.total_stays ?? 0} Visits</span>
                   </div>
                   <div>
                     <span className="text-ink-muted block">Total Spent</span>

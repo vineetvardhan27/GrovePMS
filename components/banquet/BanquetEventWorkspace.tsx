@@ -20,6 +20,7 @@ import {
 import AddBanquetChargeModal from './AddBanquetChargeModal';
 import RecordBanquetPaymentModal from './RecordBanquetPaymentModal';
 import BanquetInvoiceView from './BanquetInvoiceView';
+import BanquetInvoiceDocument from './BanquetInvoiceDocument';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
 import {
@@ -71,6 +72,15 @@ export default function BanquetEventWorkspace({
   const { booking, hall, charges, payments } = folio;
   const isHousekeeping = userRole === 'housekeeping';
 
+  const handlePrintInvoice = () => {
+    const originalTitle = document.title;
+    document.title = invoice.pdf_filename.replace(/\.pdf$/i, '');
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
   const handleStatusChange = async (newStatus: BanquetBookingStatus) => {
     setIsUpdatingStatus(true);
     try {
@@ -100,175 +110,178 @@ export default function BanquetEventWorkspace({
   };
 
   return (
-    <div className="space-y-6">
-      {/* ── Breadcrumbs & Status Transitions ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-b border-border-subtle">
-        <div className="flex items-center gap-2 text-xs">
-          <Link href="/banquet" className="pms-btn-secondary h-8 px-3 text-xs gap-1.5 font-medium">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Banquet Dashboard</span>
-          </Link>
-          <span className="text-ink-muted">/</span>
-          <span className="font-mono font-bold text-brand-forest">
-            {booking.booking_number}
-          </span>
-        </div>
-
-        {/* Status Transition Action Buttons */}
-        {!isHousekeeping && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {booking.booking_status === 'confirmed' && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={() => handleStatusChange('in_progress')}
-                className="pms-btn-primary text-xs gap-1.5 h-8"
-              >
-                {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-                <span>Start Event</span>
-              </button>
-            )}
-            {booking.booking_status === 'in_progress' && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={() => handleStatusChange('completed')}
-                className="pms-btn-primary text-xs gap-1.5 h-8 bg-status-green hover:bg-status-green/90"
-              >
-                {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                <span>Complete Event</span>
-              </button>
-            )}
-            {booking.booking_status !== 'completed' && booking.booking_status !== 'cancelled' && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={() => {
-                  if (confirm('Cancel this banquet booking?')) handleStatusChange('cancelled');
-                }}
-                className="pms-btn-danger-outline text-xs gap-1 h-8"
-              >
-                <XCircle className="w-3.5 h-3.5" />
-                <span>Cancel</span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Main Event Workspace Card ── */}
-      <div className="pms-card p-5 sm:p-6 overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-          {/* Left: Event Details */}
-          <div className="space-y-3 min-w-0 flex-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-forest/10 text-brand-forest border border-brand-forest/20">
-                {booking.event_type}
-              </span>
-              <StatusBadge variant={booking.booking_status as any} />
-              <span
-                className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                  folio.payment_status === 'paid'
-                    ? 'bg-status-green/10 text-status-green border border-status-green/30'
-                    : folio.payment_status === 'partially_paid'
-                    ? 'bg-status-amber/10 text-status-amber border border-status-amber/30'
-                    : 'bg-status-red/10 text-status-red border border-status-red/30'
-                }`}
-              >
-                {folio.payment_status === 'paid'
-                  ? 'Paid in Full'
-                  : folio.payment_status === 'partially_paid'
-                  ? 'Partially Paid'
-                  : 'Unpaid'}
-              </span>
-            </div>
-
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest leading-tight">
-              {booking.event_name}
-            </h1>
-
-            {/* Event Specs */}
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-ink-muted">
-              <div className="flex items-center gap-1.5 font-medium">
-                <Calendar className="w-4 h-4 text-brand-forest shrink-0" />
-                <span className="text-ink font-semibold">{formatDate(booking.event_date)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <Clock className="w-4 h-4 text-brand-forest shrink-0" />
-                <span className="font-mono text-ink font-semibold">{booking.start_time} – {booking.end_time}</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <Building2 className="w-4 h-4 text-brand-forest shrink-0" />
-                <span className="text-ink font-medium">{hall.name}</span>
-              </div>
-              {booking.guest_count && (
-                <div className="flex items-center gap-1.5 font-medium">
-                  <Users className="w-4 h-4 text-brand-forest shrink-0" />
-                  <span className="font-mono text-ink font-semibold">{booking.guest_count} Guests</span>
-                </div>
-              )}
-            </div>
-
-            {/* Host info */}
-            <div className="pt-3.5 border-t border-border-subtle/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">Host / Client</span>
-                <p className="font-semibold text-ink mt-0.5">{booking.customer_name}</p>
-                {booking.customer_address && (
-                  <p className="text-[11px] text-ink-muted truncate mt-0.5">{booking.customer_address}</p>
-                )}
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">Contact</span>
-                <p className="font-mono font-medium text-ink mt-0.5 flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-ink-muted" />
-                  {booking.customer_phone}
-                </p>
-                {booking.customer_email && (
-                  <p className="text-[11px] text-ink-muted truncate mt-0.5">{booking.customer_email}</p>
-                )}
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">GSTIN / Invoice Ref</span>
-                <p className="font-mono font-medium text-ink mt-0.5">
-                  {booking.customer_gstin ? `GST: ${booking.customer_gstin}` : 'Non-GST / Retail'}
-                </p>
-                <p className="text-[11px] text-ink-muted font-mono mt-0.5">{booking.invoice_number || 'Inv: Pending'}</p>
-              </div>
-            </div>
+    <>
+      {/* ── SCREEN UI: Banquet Hall Management Workspace (hidden on print) ── */}
+      <div className="space-y-6 print:hidden">
+        {/* ── Breadcrumbs & Status Transitions ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-b border-border-subtle">
+          <div className="flex items-center gap-2 text-xs">
+            <Link href="/banquet" className="pms-btn-secondary h-8 px-3 text-xs gap-1.5 font-medium">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Banquet Dashboard</span>
+            </Link>
+            <span className="text-ink-muted">/</span>
+            <span className="font-mono font-bold text-brand-forest">
+              {booking.booking_number}
+            </span>
           </div>
 
-          {/* Right: Quick Folio Action CTAs */}
+          {/* Status Transition Action Buttons */}
           {!isHousekeeping && (
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 self-stretch lg:self-start lg:w-44">
-              <button
-                type="button"
-                onClick={() => setIsAddChargeOpen(true)}
-                className="pms-btn-primary w-full justify-center text-xs gap-1.5 h-9"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Charge</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsRecordPaymentOpen(true)}
-                className="pms-btn-secondary w-full justify-center text-xs gap-1.5 h-9"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Record Payment</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('invoice')}
-                className="pms-btn-secondary w-full justify-center text-xs gap-1.5 h-9"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Invoice</span>
-              </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {booking.booking_status === 'confirmed' && (
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusChange('in_progress')}
+                  className="pms-btn-primary text-xs gap-1.5 h-8"
+                >
+                  {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                  <span>Start Event</span>
+                </button>
+              )}
+              {booking.booking_status === 'in_progress' && (
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusChange('completed')}
+                  className="pms-btn-primary text-xs gap-1.5 h-8 bg-status-green hover:bg-status-green/90"
+                >
+                  {isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                  <span>Complete Event</span>
+                </button>
+              )}
+              {booking.booking_status !== 'completed' && booking.booking_status !== 'cancelled' && (
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  onClick={() => {
+                    if (confirm('Cancel this banquet booking?')) handleStatusChange('cancelled');
+                  }}
+                  className="pms-btn-danger-outline text-xs gap-1 h-8"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>Cancel</span>
+                </button>
+              )}
             </div>
           )}
         </div>
-      </div>
+
+        {/* ── Main Event Workspace Card ── */}
+        <div className="pms-card p-5 sm:p-6 overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+            {/* Left: Event Details */}
+            <div className="space-y-3 min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-forest/10 text-brand-forest border border-brand-forest/20">
+                  {booking.event_type}
+                </span>
+                <StatusBadge variant={booking.booking_status as any} />
+                <span
+                  className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    folio.payment_status === 'paid'
+                      ? 'bg-status-green/10 text-status-green border border-status-green/30'
+                      : folio.payment_status === 'partially_paid'
+                      ? 'bg-status-amber/10 text-status-amber border border-status-amber/30'
+                      : 'bg-status-red/10 text-status-red border border-status-red/30'
+                  }`}
+                >
+                  {folio.payment_status === 'paid'
+                    ? 'Paid in Full'
+                    : folio.payment_status === 'partially_paid'
+                    ? 'Partially Paid'
+                    : 'Unpaid'}
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest leading-tight">
+                {booking.event_name}
+              </h1>
+
+              {/* Event Specs */}
+              <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-ink-muted">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Calendar className="w-4 h-4 text-brand-forest shrink-0" />
+                  <span className="text-ink font-semibold">{formatDate(booking.event_date)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Clock className="w-4 h-4 text-brand-forest shrink-0" />
+                  <span className="font-mono text-ink font-semibold">{booking.start_time} – {booking.end_time}</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Building2 className="w-4 h-4 text-brand-forest shrink-0" />
+                  <span className="text-ink font-medium">{hall.name}</span>
+                </div>
+                {booking.guest_count && (
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Users className="w-4 h-4 text-brand-forest shrink-0" />
+                    <span className="font-mono text-ink font-semibold">{booking.guest_count} Guests</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Host info */}
+              <div className="pt-3.5 border-t border-border-subtle/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">Host / Client</span>
+                  <p className="font-semibold text-ink mt-0.5">{booking.customer_name}</p>
+                  {booking.customer_address && (
+                    <p className="text-[11px] text-ink-muted truncate mt-0.5">{booking.customer_address}</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">Contact</span>
+                  <p className="font-mono font-medium text-ink mt-0.5 flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-ink-muted" />
+                    {booking.customer_phone}
+                  </p>
+                  {booking.customer_email && (
+                    <p className="text-[11px] text-ink-muted truncate mt-0.5">{booking.customer_email}</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-ink-muted tracking-wider block">GSTIN / Invoice Ref</span>
+                  <p className="font-mono font-medium text-ink mt-0.5">
+                    {booking.customer_gstin ? `GST: ${booking.customer_gstin}` : 'Non-GST / Retail'}
+                  </p>
+                  <p className="text-[11px] text-ink-muted font-mono mt-0.5">{booking.invoice_number || 'Inv: Pending'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Quick Folio Action CTAs */}
+            {!isHousekeeping && (
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 self-stretch lg:self-start lg:w-44">
+                <button
+                  type="button"
+                  onClick={() => setIsAddChargeOpen(true)}
+                  className="pms-btn-primary w-full justify-center text-xs gap-1.5 h-9 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Charge</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsRecordPaymentOpen(true)}
+                  className="pms-btn-secondary w-full justify-center text-xs gap-1.5 h-9 cursor-pointer"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Record Payment</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintInvoice}
+                  className="pms-btn-secondary w-full justify-center text-xs gap-1.5 h-9 cursor-pointer"
+                  title="Print Tax Invoice directly as clean A4 document"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Invoice</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
       {/* Special Setup Remarks (if configured) */}
       {(booking.catering_notes || booking.remarks) && (
@@ -642,7 +655,7 @@ export default function BanquetEventWorkspace({
         {activeTab === 'invoice' && <BanquetInvoiceView invoice={invoice} />}
       </div>
 
-      {/* ── Modals ── */}
+      {/* ── Modals (hidden on print) ── */}
       <AddBanquetChargeModal
         isOpen={isAddChargeOpen}
         onClose={() => setIsAddChargeOpen(false)}
@@ -657,5 +670,11 @@ export default function BanquetEventWorkspace({
         onSuccess={() => router.refresh()}
       />
     </div>
-  );
+
+    {/* ── Dedicated Print-Only Invoice Document (visible only when printing) ── */}
+    <div className="hidden print:block w-full print-invoice-document">
+      <BanquetInvoiceDocument invoice={invoice} />
+    </div>
+  </>
+);
 }

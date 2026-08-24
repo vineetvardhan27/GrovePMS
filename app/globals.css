@@ -321,7 +321,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 8mm 10mm;
+    margin: 10mm 12mm 10mm 12mm;
   }
 
   html, body {
@@ -334,34 +334,86 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     min-height: auto !important;
+    width: 100% !important;
   }
 
+  /* Reset dashboard layout wrapper margins and padding */
+  main,
+  main > div,
+  .p-5,
+  .sm\:p-6,
+  .md\:p-8 {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide screen-only navigation, headers, sidebars, buttons, and management cards */
   header,
   nav,
   aside,
   footer,
   .print-hidden,
-  .print\\:hidden,
+  .print\:hidden,
   button,
   a[href]:not(.print-allow),
   .no-print {
     display: none !important;
   }
 
-  #invoice-print-area {
+  /* Force display of dedicated print containers */
+  .print-only,
+  .print\:block,
+  .print-invoice-document {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
     box-shadow: none !important;
-    border: 1px solid #e5e7eb !important;
+  }
+
+  #invoice-print-area,
+  #banquet-tax-invoice {
+    box-shadow: none !important;
+    border: none !important;
     border-radius: 0 !important;
     margin: 0 auto !important;
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
+    background: #ffffff !important;
   }
 
-  tr, .print-keep-together {
+  /* Table formatting for clean single & multi-page pagination */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tr,
+  .print-avoid-break,
+  .print-keep-together {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .bg-brand-forest {

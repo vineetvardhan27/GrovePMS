@@ -24,8 +24,10 @@ export default async function GuestDetailPage({ params }: GuestDetailPageProps) 
   }
 
   const guestBookings = allBookings.filter((b) => b.guest_id === guest.id);
-  const totalSpent = guestBookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
-  const totalPaid = guestBookings.reduce((sum, b) => {
+  const validBookings = guestBookings.filter((b) => b.booking_status !== 'cancelled');
+  const totalStays = guest.total_stays ?? validBookings.length;
+  const totalSpent = guest.total_spent ?? validBookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
+  const totalPaid = validBookings.reduce((sum, b) => {
     const payments = b.payments || [];
     return sum + payments.reduce((pSum, p) => pSum + (Number(p.amount) || 0), 0);
   }, 0);
@@ -43,9 +45,9 @@ export default async function GuestDetailPage({ params }: GuestDetailPageProps) 
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-display text-brand-forest">{guest.full_name}</h1>
-            {guestBookings.length >= 2 && (
+            {totalStays >= 2 && (
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-forest/10 text-brand-forest border border-brand-forest/20">
-                Repeat Guest ({guestBookings.length} stays)
+                Repeat Guest ({totalStays} stays)
               </span>
             )}
           </div>
@@ -100,7 +102,7 @@ export default async function GuestDetailPage({ params }: GuestDetailPageProps) 
           <div className="pt-3 border-t border-border-subtle grid grid-cols-2 gap-3 text-center">
             <div className="p-3 bg-brand-sand/40 rounded-xl">
               <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Stays</p>
-              <p className="text-xl font-bold text-ink mt-0.5 tabular-nums">{guestBookings.length}</p>
+              <p className="text-xl font-bold text-ink mt-0.5 tabular-nums">{totalStays}</p>
             </div>
             <div className="p-3 bg-brand-sand/40 rounded-xl">
               <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Spent</p>
