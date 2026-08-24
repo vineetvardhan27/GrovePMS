@@ -22,11 +22,13 @@ export default async function InventoryPage() {
     redirect('/dashboard?access_denied=true');
   }
 
-  const [items, transactions, summary, wastageStats] = await Promise.all([
+  const [items, transactions] = await Promise.all([
     getInventoryItems(staff.hotel_id),
     getInventoryTransactions(staff.hotel_id, undefined, 200),
-    getInventorySummary(staff.hotel_id),
-    getWastageSummary(staff.hotel_id),
+  ]);
+  const [summary, wastageStats] = await Promise.all([
+    getInventorySummary(staff.hotel_id, items, transactions),
+    getWastageSummary(staff.hotel_id, transactions),
   ]);
 
   return (

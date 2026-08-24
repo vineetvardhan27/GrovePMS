@@ -17,11 +17,11 @@ export default async function BanquetPage() {
   }
 
   // Role permissions: Owner, Manager, Reception, and Housekeeping
-  const [hall, bookings, summary] = await Promise.all([
+  const [hall, bookings] = await Promise.all([
     getBanquetHall(staff.hotel_id),
     getBanquetBookings(staff.hotel_id),
-    getBanquetSummary(staff.hotel_id),
   ]);
+  const summary = await getBanquetSummary(staff.hotel_id, bookings);
 
   return (
     <BanquetDashboard

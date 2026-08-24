@@ -1,4 +1,7 @@
+import * as React from 'react';
 import { createClient } from '../supabase/server';
+
+const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
 export interface HotelSettings {
   gst_enabled?: boolean;
@@ -57,7 +60,7 @@ const DEFAULT_HOTEL: Hotel = {
 
 let localHotelStore: Hotel = { ...DEFAULT_HOTEL };
 
-export async function getHotel(hotelId?: string): Promise<Hotel> {
+export const getHotel = serverCache(async function getHotel(hotelId?: string): Promise<Hotel> {
   try {
     const supabase = createClient();
     const { data, error } = (await supabase
@@ -85,11 +88,10 @@ export async function getHotel(hotelId?: string): Promise<Hotel> {
     console.error('Failed to connect to Supabase for hotel:', err);
   }
   return localHotelStore;
-}
+});
 
-
-export async function getHotelSettings(hotelId?: string): Promise<HotelSettings> {
+export const getHotelSettings = serverCache(async function getHotelSettings(hotelId?: string): Promise<HotelSettings> {
   const hotel = await getHotel(hotelId);
   return hotel.settings;
-}
+});
 

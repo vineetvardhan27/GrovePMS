@@ -42,23 +42,42 @@ export default async function FoodAndBeveragePage({ searchParams }: PageProps) {
   const tab = searchParams?.tab || 'overview';
   const hotelId = staff.hotel_id;
 
-  // Fetch parallel operational datasets
+  // Always fetch active kitchen orders count for the live subnav badge
+  const kitchenOrdersPromise = getActiveKitchenOrders(hotelId);
+
+  // Tab-scoped data queries (only fetch what the active tab displays)
+  let summaryPromise: Promise<any> = Promise.resolve(null);
+  let billsPromise: Promise<any> = Promise.resolve([]);
+  let menuItemsPromise: Promise<any> = Promise.resolve([]);
+  let menuCategoriesPromise: Promise<any> = Promise.resolve([]);
+  let reportsPromise: Promise<any> = Promise.resolve(null);
+
+  if (tab === 'overview') {
+    summaryPromise = getFBDashboardSummary(hotelId);
+    billsPromise = getFBBills(hotelId);
+  } else if (tab === 'bills') {
+    billsPromise = getFBBills(hotelId);
+  } else if (tab === 'menu') {
+    menuItemsPromise = getFBMenuItemsWithDetails(hotelId);
+    menuCategoriesPromise = getMenuCategories(hotelId);
+  } else if (tab === 'reports') {
+    reportsPromise = getFBReportsData(hotelId, 'this_month');
+  }
+
   const [
+    kitchenOrders,
     summary,
     bills,
-    kitchenOrders,
     menuItems,
     menuCategories,
     reports,
-    hotelSettings,
   ] = await Promise.all([
-    getFBDashboardSummary(hotelId),
-    getFBBills(hotelId),
-    getActiveKitchenOrders(hotelId),
-    getFBMenuItemsWithDetails(hotelId),
-    getMenuCategories(hotelId),
-    getFBReportsData(hotelId, 'this_month'),
-    getHotelSettings(hotelId),
+    kitchenOrdersPromise,
+    summaryPromise,
+    billsPromise,
+    menuItemsPromise,
+    menuCategoriesPromise,
+    reportsPromise,
   ]);
 
   const navTabs = [

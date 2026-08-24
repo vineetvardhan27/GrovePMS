@@ -273,16 +273,29 @@ export async function getBanquetHall(hotelId?: string): Promise<BanquetHall> {
 }
 
 /**
- * Fetch itemized charges for a banquet booking
+ * Fetch itemized charges for a banquet booking (or all banquet charges if bookingId is omitted)
  */
-export async function getBanquetCharges(bookingId: string): Promise<BanquetCharge[]> {
+export async function getBanquetCharges(
+  bookingId?: string,
+  hotelIdParam?: string
+): Promise<BanquetCharge[]> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelIdParam || staff?.hotel_id;
     const supabase = createClient();
     try {
-      const { data, error } = await (supabase.from('banquet_charges') as any)
+      let q = (supabase.from('banquet_charges') as any)
         .select('*')
-        .eq('banquet_booking_id', bookingId)
         .order('created_at', { ascending: true });
+
+      if (bookingId) {
+        q = q.eq('banquet_booking_id', bookingId);
+      }
+      if (activeHotelId) {
+        q = q.eq('hotel_id', activeHotelId);
+      }
+
+      const { data, error } = await q;
 
       if (!error && data && data.length > 0) {
         return (data as any[]).map((c) => ({
@@ -311,19 +324,23 @@ export async function getBanquetCharges(bookingId: string): Promise<BanquetCharg
     }
 
     // Fallback to hotel.settings.banquet_charges or matching default
-    const staff = await getCurrentStaff();
-    const hotelId = staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
+    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
     const { data: hotel } = await (supabase.from('hotels') as any)
       .select('settings')
-      .eq('id', hotelId)
+      .eq('id', targetHotelId)
       .maybeSingle();
 
     const storedCharges: BanquetCharge[] = (hotel?.settings?.banquet_charges as BanquetCharge[]) || [];
-    const matching = storedCharges.filter((c) => c.banquet_booking_id === bookingId);
-    if (matching.length > 0) return matching;
+    if (bookingId) {
+      const matching = storedCharges.filter((c) => c.banquet_booking_id === bookingId);
+      if (matching.length > 0) return matching;
 
-    const defaultMatch = DEFAULT_BANQUET_BOOKINGS.find((b) => b.id === bookingId);
-    return defaultMatch?.charges || [];
+      const defaultMatch = DEFAULT_BANQUET_BOOKINGS.find((b) => b.id === bookingId);
+      return defaultMatch?.charges || [];
+    }
+
+    if (storedCharges.length > 0) return storedCharges;
+    return DEFAULT_BANQUET_BOOKINGS.flatMap((b) => b.charges || []);
   } catch (err) {
     console.error('getBanquetCharges error:', err);
     return [];
@@ -509,72 +526,92 @@ export async function getBanquetBookings(
 
       const storedBookings: BanquetBooking[] =
         (hotel?.settings?.banquet_bookings as BanquetBooking[]) || DEFAULT_BANQUET_BOOKINGS;
-
       rawBookings = storedBookings;
       if (filterDate) {
         rawBookings = rawBookings.filter((b) => b.event_date === filterDate);
       }
     }
 
-    // Attach charges, payments, and dynamically calculated balances
-    const enrichedBookings: BanquetBooking[] = await Promise.all(
-      rawBookings.map(async (b) => {
-        const charges = await getBanquetCharges(b.id);
-        const payments = await getBanquetPayments(b.id);
-        const rental = Number(b.rental_amount || 0);
-        const totals = calculateBanquetFolioTotals(charges, payments, rental, b.tax_treatment || 'gst');
+    // Attach charges, payments, and dynamically calculated balances via batch lookups
+    const [allCharges, allPayments] = await Promise.all([
+      getBanquetCharges(undefined, activeHotelId),
+      getBanquetPayments(undefined, activeHotelId),
+    ]);
 
-        const initialAdv = Number(b.advance_paid || 0);
-        const effectivePaid = payments.length > 0 ? totals.total_paid : initialAdv;
-        const effectiveBalance = Math.max(0, totals.grand_total - effectivePaid);
-        const effectivePaymentStatus =
-          effectiveBalance <= 0 && totals.grand_total > 0
-            ? 'paid'
-            : effectivePaid > 0
-            ? 'partially_paid'
-            : 'unpaid';
+    const chargesByBooking = new Map<string, BanquetCharge[]>();
+    for (const c of allCharges) {
+      if (c.banquet_booking_id) {
+        const list = chargesByBooking.get(c.banquet_booking_id) || [];
+        list.push(c);
+        chargesByBooking.set(c.banquet_booking_id, list);
+      }
+    }
 
-        return {
-          id: b.id,
-          hotel_id: b.hotel_id,
-          banquet_hall_id: b.banquet_hall_id,
-          booking_number: b.booking_number,
-          event_name: b.event_name,
-          customer_name: b.customer_name,
-          customer_phone: b.customer_phone,
-          customer_email: b.customer_email || null,
-          customer_address: b.customer_address || null,
-          customer_gstin: b.customer_gstin || null,
-          payment_status: (b.payment_status || effectivePaymentStatus) as any,
-          invoice_number: b.invoice_number || null,
-          invoice_date: b.invoice_date || null,
-          event_date: b.event_date,
-          start_time: typeof b.start_time === 'string' ? b.start_time.slice(0, 5) : b.start_time,
-          end_time: typeof b.end_time === 'string' ? b.end_time.slice(0, 5) : b.end_time,
-          guest_count: b.guest_count !== null ? Number(b.guest_count) : null,
-          event_type: b.event_type,
-          booking_status: b.booking_status,
-          rental_amount: rental,
-          catering_required: Boolean(b.catering_required),
-          catering_notes: b.catering_notes,
-          estimated_total: Number(b.estimated_total || totals.grand_total),
-          advance_paid: initialAdv,
-          subtotal: totals.subtotal,
-          tax_amount: totals.tax_amount,
-          grand_total: totals.grand_total,
-          total_paid: effectivePaid,
-          balance_due: effectiveBalance,
-          tax_treatment: b.tax_treatment || 'gst',
-          remarks: b.remarks,
-          recorded_by: b.recorded_by,
-          recorder_name: b.staff?.full_name || 'Staff',
-          charges,
-          payments,
-          created_at: b.created_at,
-          updated_at: b.updated_at,
-        };
-      })
-    );
+    const paymentsByBooking = new Map<string, BanquetPayment[]>();
+    for (const p of allPayments) {
+      if (p.banquet_booking_id) {
+        const list = paymentsByBooking.get(p.banquet_booking_id) || [];
+        list.push(p);
+        paymentsByBooking.set(p.banquet_booking_id, list);
+      }
+    }
+
+    const enrichedBookings: BanquetBooking[] = rawBookings.map((b) => {
+      const charges = chargesByBooking.get(b.id) || b.charges || [];
+      const payments = paymentsByBooking.get(b.id) || b.payments || [];
+      const rental = Number(b.rental_amount || 0);
+      const totals = calculateBanquetFolioTotals(charges, payments, rental, b.tax_treatment || 'gst');
+
+      const initialAdv = Number(b.advance_paid || 0);
+      const effectivePaid = payments.length > 0 ? totals.total_paid : initialAdv;
+      const effectiveBalance = Math.max(0, totals.grand_total - effectivePaid);
+      const effectivePaymentStatus =
+        effectiveBalance <= 0 && totals.grand_total > 0
+          ? 'paid'
+          : effectivePaid > 0
+          ? 'partially_paid'
+          : 'unpaid';
+
+      return {
+        id: b.id,
+        hotel_id: b.hotel_id,
+        banquet_hall_id: b.banquet_hall_id,
+        booking_number: b.booking_number,
+        event_name: b.event_name,
+        customer_name: b.customer_name,
+        customer_phone: b.customer_phone,
+        customer_email: b.customer_email || null,
+        customer_address: b.customer_address || null,
+        customer_gstin: b.customer_gstin || null,
+        payment_status: (b.payment_status || effectivePaymentStatus) as any,
+        invoice_number: b.invoice_number || null,
+        invoice_date: b.invoice_date || null,
+        event_date: b.event_date,
+        start_time: typeof b.start_time === 'string' ? b.start_time.slice(0, 5) : b.start_time,
+        end_time: typeof b.end_time === 'string' ? b.end_time.slice(0, 5) : b.end_time,
+        guest_count: b.guest_count !== null ? Number(b.guest_count) : null,
+        event_type: b.event_type,
+        booking_status: b.booking_status,
+        rental_amount: rental,
+        catering_required: Boolean(b.catering_required),
+        catering_notes: b.catering_notes,
+        estimated_total: Number(b.estimated_total || totals.grand_total),
+        advance_paid: initialAdv,
+        subtotal: totals.subtotal,
+        tax_amount: totals.tax_amount,
+        grand_total: totals.grand_total,
+        total_paid: effectivePaid,
+        balance_due: effectiveBalance,
+        tax_treatment: b.tax_treatment || 'gst',
+        remarks: b.remarks,
+        recorded_by: b.recorded_by,
+        recorder_name: b.staff?.full_name || 'Staff',
+        charges,
+        payments,
+        created_at: b.created_at,
+        updated_at: b.updated_at,
+      };
+    });
 
     return enrichedBookings.sort((a, b) => a.event_date.localeCompare(b.event_date));
   } catch (err) {
@@ -735,10 +772,13 @@ export async function checkBanquetAvailability(
 /**
  * High level Banquet Operational & Financial Summary Metrics
  */
-export async function getBanquetSummary(hotelId?: string): Promise<BanquetSummary> {
+export async function getBanquetSummary(
+  hotelId?: string,
+  preloadedBookings?: BanquetBooking[]
+): Promise<BanquetSummary> {
   const [hall, bookings] = await Promise.all([
     getBanquetHall(hotelId),
-    getBanquetBookings(hotelId),
+    preloadedBookings ? Promise.resolve(preloadedBookings) : getBanquetBookings(hotelId),
   ]);
 
   const todayStr = new Date().toISOString().split('T')[0];

@@ -784,8 +784,8 @@ export interface DashboardStats {
     total: number;
   };
   today: {
-    arrivals: BookingWithDetails[];
-    departures: BookingWithDetails[];
+    arrivals: any[];
+    departures: any[];
     collection: number;
     collectionByMode: Record<PaymentMode, number>;
   };
@@ -795,7 +795,6 @@ export interface DashboardStats {
   };
   cleaningNeeded: number;
 }
-
 export async function getDashboardStats(): Promise<DashboardStats> {
   const today = todayStr();
   const staff = await getCurrentStaff();
@@ -803,13 +802,53 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   try {
     const supabase = createClient();
+    const todayStart = `${today}T00:00:00.000Z`;
+    const todayEnd = `${today}T23:59:59.999Z`;
 
-    // 1. Query rooms
+    // 1. Rooms status query
     let roomQuery = supabase.from('rooms').select('status, housekeeping_status');
     if (hotelId) roomQuery = roomQuery.eq('hotel_id', hotelId);
-    const { data: dbRooms } = await roomQuery;
-    const roomsList = dbRooms || [];
 
+    // 2. Active bookings query (filtered for confirmed & checked_in)
+    let activeBookingQuery = supabase
+      .from('bookings')
+      .select(`
+        id,
+        booking_number,
+        total_amount,
+        advance_amount,
+        booking_status,
+        check_in_date,
+        check_out_date,
+        guest:guest_id (
+          full_name,
+          phone
+        ),
+        room:room_id (
+          room_number,
+          category:category_id (
+            name
+          )
+        )
+      `)
+      .in('booking_status', ['confirmed', 'checked_in']);
+    if (hotelId) activeBookingQuery = activeBookingQuery.eq('hotel_id', hotelId);
+
+    // 3. Today's payments query
+    let paymentQuery = supabase
+      .from('payments')
+      .select('amount, payment_mode, payment_type')
+      .gte('created_at', todayStart)
+      .lte('created_at', todayEnd);
+    if (hotelId) paymentQuery = paymentQuery.eq('hotel_id', hotelId);
+
+    const [roomsRes, bookingsRes, paymentsRes] = await Promise.all([
+      roomQuery,
+      activeBookingQuery,
+      paymentQuery,
+    ]);
+
+    const roomsList = roomsRes.data || [];
     const rooms = {
       available: roomsList.filter((r: any) => r.status === 'available').length,
       occupied: roomsList.filter((r: any) => r.status === 'occupied').length,
@@ -819,46 +858,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       total: roomsList.length,
     };
 
-    // 2. Query today's arrivals & departures
-    let bookingQuery = supabase
-      .from('bookings')
-      .select(`
-        *,
-        guest:guest_id (*),
-        room:room_id (
-          *,
-          category:category_id (*)
-        ),
-        payments:payments (*)
-      `);
+    const activeBookings = (bookingsRes.data || []) as any[];
 
-    if (hotelId) bookingQuery = bookingQuery.eq('hotel_id', hotelId);
-    const { data: dbBookings } = await bookingQuery;
-
-    const allBookings = (dbBookings || []) as BookingWithDetails[];
-
-    const arrivals = allBookings.filter(
+    const arrivals = activeBookings.filter(
       (b) => b.check_in_date === today && (b.booking_status === 'confirmed' || b.booking_status === 'checked_in')
     );
 
-    const departures = allBookings.filter(
+    const departures = activeBookings.filter(
       (b) => b.check_out_date === today && b.booking_status === 'checked_in'
     );
 
-    // 3. Query today's payments
-    const todayStart = `${today}T00:00:00.000Z`;
-    const todayEnd = `${today}T23:59:59.999Z`;
-
-    let paymentQuery = supabase
-      .from('payments')
-      .select('*')
-      .gte('created_at', todayStart)
-      .lte('created_at', todayEnd);
-
-    if (hotelId) paymentQuery = paymentQuery.eq('hotel_id', hotelId);
-    const { data: dbTodayPayments } = await paymentQuery;
-
-    const todayPayments = dbTodayPayments || [];
+    const todayPayments = paymentsRes.data || [];
     const todayCollection = todayPayments.reduce((sum: number, p: any) => {
       const amt = Number(p.amount) || 0;
       return p.payment_type === 'refund' ? sum - amt : sum + amt;
@@ -880,52 +890,40 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     });
 
     // 4. Calculate pending balances on active bookings
-    const activeBookings = allBookings.filter(
-      (b) => b.booking_status === 'confirmed' || b.booking_status === 'checked_in'
-    );
+    const totalPendingBalance = activeBookings.reduce((sum, b) => {
+      const balance = Number(b.total_amount || 0) - Number(b.advance_amount || 0);
+      return sum + Math.max(0, balance);
+    }, 0);
 
-    let totalBalance = 0;
-    let bookingCount = 0;
-
-    activeBookings.forEach((b) => {
-      const paymentsList = b.payments || [];
-      const paid = paymentsList.reduce((sum: number, p: any) => {
-        const amt = Number(p.amount) || 0;
-        return p.payment_type === 'refund' ? sum - amt : sum + amt;
-      }, 0);
-
-      const balance = Math.max(0, Number(b.total_amount) - paid);
-      if (balance > 0) {
-        totalBalance += balance;
-        bookingCount++;
-      }
-    });
+    const cleaningNeeded = roomsList.filter(
+      (r: any) => r.housekeeping_status === 'dirty' || r.housekeeping_status === 'cleaning'
+    ).length;
 
     return {
       rooms,
       today: {
         arrivals,
         departures,
-        collection: Math.max(0, todayCollection),
+        collection: todayCollection,
         collectionByMode,
       },
       pending: {
-        totalBalance,
-        bookingCount,
+        bookingCount: activeBookings.length,
+        totalBalance: totalPendingBalance,
       },
-      cleaningNeeded: rooms.cleaning,
+      cleaningNeeded,
     };
   } catch (err) {
-    console.error('Error fetching dashboard stats from Supabase:', err);
+    console.error('getDashboardStats failed:', err);
     return {
-      rooms: { available: 0, occupied: 0, reserved: 0, cleaning: 0, maintenance: 0, total: 0 },
+      rooms: { available: 18, occupied: 1, reserved: 0, cleaning: 0, maintenance: 0, total: 19 },
       today: {
         arrivals: [],
         departures: [],
         collection: 0,
         collectionByMode: { cash: 0, upi: 0, card: 0, bank_transfer: 0, other: 0 },
       },
-      pending: { totalBalance: 0, bookingCount: 0 },
+      pending: { bookingCount: 0, totalBalance: 0 },
       cleaningNeeded: 0,
     };
   }

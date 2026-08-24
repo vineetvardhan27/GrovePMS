@@ -367,12 +367,12 @@ export async function getOutstandingReceivables(
 }
 
 export async function getHotelWidePaymentStats(
-  hotelId?: string
+  hotelId?: string,
+  preloadedTransactions?: UnifiedPaymentTransaction[],
+  preloadedOutstanding?: OutstandingReceivable[]
 ): Promise<HotelWidePaymentStats> {
-  const [transactions, outstandingItems] = await Promise.all([
-    getUnifiedPaymentsLedger(hotelId),
-    getOutstandingReceivables(hotelId),
-  ]);
+  const transactions = preloadedTransactions || (await getUnifiedPaymentsLedger(hotelId));
+  const outstandingItems = preloadedOutstanding || (await getOutstandingReceivables(hotelId));
 
   const now = new Date();
   const todayStr = toDateString(now);

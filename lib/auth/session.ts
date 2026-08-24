@@ -1,5 +1,9 @@
+import * as React from 'react';
 import { createClient } from '../supabase/server';
 import { StaffRole } from '../types/database.types';
+
+// Safe server-only cache helper that gracefully falls back if evaluated in client bundler
+const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
 export interface StaffProfile {
   id: string;
@@ -36,9 +40,9 @@ export function hasRouteAccess(role: StaffRole, pathname: string): boolean {
 /**
  * Server-side helper to get the currently authenticated staff member.
  * Derives identity exclusively from Supabase Auth + public.staff table.
- * Returns null if unauthenticated, or an object with error details if not registered as staff.
+ * Deduplicated per-request via serverCache.
  */
-export async function getCurrentStaff(): Promise<StaffProfile | null> {
+export const getCurrentStaff = serverCache(async function getCurrentStaff(): Promise<StaffProfile | null> {
   try {
     const supabase = createClient();
     const {
@@ -92,4 +96,4 @@ export async function getCurrentStaff(): Promise<StaffProfile | null> {
     console.error('getCurrentStaff exception:', err);
     return null;
   }
-}
+});

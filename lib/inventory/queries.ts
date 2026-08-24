@@ -707,9 +707,13 @@ export async function getAnnualReplacementPlan(
 /**
  * Fetch high-level inventory metrics summary
  */
-export async function getInventorySummary(hotelId?: string): Promise<InventorySummary> {
-  const items = await getInventoryItems(hotelId);
-  const transactions = await getInventoryTransactions(hotelId, undefined, 200);
+export async function getInventorySummary(
+  hotelId?: string,
+  preloadedItems?: InventoryItem[],
+  preloadedTransactions?: InventoryTransaction[]
+): Promise<InventorySummary> {
+  const items = preloadedItems || (await getInventoryItems(hotelId));
+  const transactions = preloadedTransactions || (await getInventoryTransactions(hotelId, undefined, 200));
 
   let healthy = 0;
   let low = 0;
@@ -775,8 +779,11 @@ export async function getInventorySummary(hotelId?: string): Promise<InventorySu
 /**
  * Fetch dedicated Food Wastage & Loss Summary
  */
-export async function getWastageSummary(hotelId?: string) {
-  const transactions = await getInventoryTransactions(hotelId, undefined, 500);
+export async function getWastageSummary(
+  hotelId?: string,
+  preloadedTransactions?: InventoryTransaction[]
+) {
+  const transactions = preloadedTransactions || (await getInventoryTransactions(hotelId, undefined, 500));
   const wasteTransactions = transactions.filter((t) => t.transaction_type === 'waste');
 
   const now = new Date();

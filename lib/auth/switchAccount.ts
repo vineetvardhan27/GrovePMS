@@ -18,35 +18,41 @@ export interface AvailableStaffAccount {
  * Fetch all active staff accounts available under the caller's hotel.
  * Only returns accounts belonging to the exact same hotel_id.
  */
-export async function getAvailableStaffAccounts(): Promise<AvailableStaffAccount[]> {
+export async function getAvailableStaffAccounts(knownHotelId?: string): Promise<AvailableStaffAccount[]> {
   try {
     const supabase = createServerSupabaseClient();
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser();
+    let hotelId = knownHotelId;
 
-    if (userErr || !user) {
-      return [];
-    }
+    if (!hotelId) {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
 
-    // 1. Get caller's active staff profile to determine hotel_id
-    const { data: callerStaff, error: callerErr } = (await supabase
-      .from('staff')
-      .select('id, hotel_id, is_active, role')
-      .eq('id', user.id)
-      .eq('is_active', true)
-      .maybeSingle()) as { data: { id: string; hotel_id: string; is_active: boolean; role: string } | null; error: any };
+      if (userErr || !user) {
+        return [];
+      }
 
-    if (callerErr || !callerStaff?.hotel_id) {
-      return [];
+      // 1. Get caller's active staff profile to determine hotel_id
+      const { data: callerStaff, error: callerErr } = (await supabase
+        .from('staff')
+        .select('id, hotel_id, is_active, role')
+        .eq('id', user.id)
+        .eq('is_active', true)
+        .maybeSingle()) as { data: { id: string; hotel_id: string; is_active: boolean; role: string } | null; error: any };
+
+      if (callerErr || !callerStaff?.hotel_id) {
+        return [];
+      }
+
+      hotelId = callerStaff.hotel_id;
     }
 
     // 2. Query all active staff in the same hotel
     const { data: accounts, error: accountsErr } = (await supabase
       .from('staff')
       .select('id, email, full_name, role, is_active, hotel_id')
-      .eq('hotel_id', callerStaff.hotel_id)
+      .eq('hotel_id', hotelId)
       .eq('is_active', true)
       .order('role', { ascending: true })) as { data: AvailableStaffAccount[] | null; error: any };
 

@@ -64,7 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const authorizedPaths = ROLE_NAV_ITEMS[staff.role] || ['/dashboard', '/rooms'];
   const roleMeta = ROLE_META[staff.role] || ROLE_META.reception;
   const RoleIcon = roleMeta.icon;
-  const availableAccounts = await getAvailableStaffAccounts();
+  const availableAccounts = await getAvailableStaffAccounts(staff.hotel_id);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-sand">

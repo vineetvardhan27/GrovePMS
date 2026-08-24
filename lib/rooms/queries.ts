@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { RoomStatus, HousekeepingStatus } from '../types/database.types';
@@ -7,6 +8,8 @@ import {
   PropertyResource,
   getEffectiveRoomRates,
 } from './types';
+
+const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
 export type { RoomCategory, RoomWithCategory, PropertyResource };
 export { getEffectiveRoomRates };
@@ -282,7 +285,7 @@ export const DEFAULT_BANQUET_HALL: PropertyResource = {
   is_active: true,
 };
 
-export async function getRoomCategories(hotelId?: string): Promise<RoomCategory[]> {
+export const getRoomCategories = serverCache(async function getRoomCategories(hotelId?: string): Promise<RoomCategory[]> {
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelId || staff?.hotel_id;
@@ -304,9 +307,9 @@ export async function getRoomCategories(hotelId?: string): Promise<RoomCategory[
     console.error('Failed to connect to Supabase for room categories:', err);
   }
   return DEFAULT_ROOM_CATEGORIES;
-}
+});
 
-export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
+export const getRooms = serverCache(async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelId || staff?.hotel_id;
@@ -341,9 +344,9 @@ export async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
   }
 
   return DEFAULT_ROOMS;
-}
+});
 
-export async function getPropertyResources(hotelId?: string): Promise<PropertyResource[]> {
+export const getPropertyResources = serverCache(async function getPropertyResources(hotelId?: string): Promise<PropertyResource[]> {
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelId || staff?.hotel_id;
@@ -362,4 +365,4 @@ export async function getPropertyResources(hotelId?: string): Promise<PropertyRe
   }
 
   return [DEFAULT_BANQUET_HALL];
-}
+});
