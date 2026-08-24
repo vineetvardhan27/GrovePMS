@@ -310,9 +310,9 @@ export default function PaymentsDashboard({
       </div>
 
       {/* ── 2. Date Range & Period Selector Toolbar ── */}
-      <div className="pms-card p-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted mr-1">
+      <div className="pms-card px-4 py-2.5 flex items-center justify-between gap-4 overflow-x-auto">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted mr-1 shrink-0 select-none">
             Reporting Period:
           </span>
           {(
@@ -332,7 +332,7 @@ export default function PaymentsDashboard({
                 key={preset.id}
                 type="button"
                 onClick={() => setDatePreset(preset.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center shrink-0 whitespace-nowrap transition-colors duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-brand-forest text-white shadow-2xs'
                     : 'text-ink-muted hover:text-ink hover:bg-brand-sand'
@@ -344,8 +344,8 @@ export default function PaymentsDashboard({
           })}
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
-          <Clock className="w-3.5 h-3.5 text-brand-forest" />
+        <div className="flex items-center gap-2 text-xs font-medium text-ink-muted shrink-0 whitespace-nowrap pl-2">
+          <Clock className="w-3.5 h-3.5 text-brand-forest shrink-0" />
           <span>Real-Time Persisted Data</span>
         </div>
       </div>
@@ -619,7 +619,7 @@ export default function PaymentsDashboard({
                                   : 'bg-brand-forest/10 text-brand-forest border border-brand-forest/20'
                               }`}
                             >
-                              {t.source === 'banquet' ? 'BANQUET' : t.source === 'food_beverage' ? 'F&B' : 'ROOM'}
+                              {t.source === 'banquet' ? 'BANQUET' : t.source === 'food_beverage' ? 'FOOD & BEVERAGE' : 'ROOM'}
                             </span>
                           </td>
 
@@ -729,10 +729,12 @@ export default function PaymentsDashboard({
                             className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                               o.source === 'banquet'
                                 ? 'bg-status-amber/15 text-status-amber border border-status-amber/30'
+                                : o.source === 'food_beverage'
+                                ? 'bg-status-blue/15 text-status-blue border border-status-blue/30'
                                 : 'bg-brand-forest/10 text-brand-forest border border-brand-forest/20'
                             }`}
                           >
-                            {o.source === 'banquet' ? 'BANQUET' : 'ROOM'}
+                            {o.source === 'banquet' ? 'BANQUET' : o.source === 'food_beverage' ? 'FOOD & BEVERAGE' : 'ROOM'}
                           </span>
                         </td>
 

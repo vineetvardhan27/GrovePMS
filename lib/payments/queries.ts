@@ -11,6 +11,7 @@ import {
   PaymentSource,
 } from './types';
 import { getBanquetBookings, getBanquetPayments } from '../banquet/queries';
+import { getFBBills } from '../fb/queries';
 import { getHotelSettings } from '../hotels/queries';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -131,6 +132,66 @@ export async function getUnifiedPaymentsLedger(
     console.error('Error fetching banquet payments for unified ledger:', err);
   }
 
+  // 3. Fetch Food & Beverage Payments from `fb_bills` & `fb_payments`
+  try {
+    const fbBills = await getFBBills(activeHotelId);
+
+    for (const bill of fbBills) {
+      // Exclude voided or cancelled bills
+      if (bill.bill_status === 'void' || bill.bill_status === 'cancelled') continue;
+
+      const billPayments = bill.payments || [];
+      for (let idx = 0; idx < billPayments.length; idx++) {
+        const p = billPayments[idx];
+        const amt = Number(p.amount) || 0;
+        if (amt <= 0) continue;
+
+        const roomNum = bill.room_number_snapshot;
+        const resourceName = roomNum
+          ? `Room ${roomNum}`
+          : bill.table_number
+          ? `Table ${bill.table_number}`
+          : bill.customer_type === 'walk_in'
+          ? 'Walk-in Restaurant'
+          : 'F&B Restaurant / POS';
+
+        const itemsList =
+          bill.items && bill.items.length > 0
+            ? bill.items
+                .map((i) => `${i.item_name_snapshot || (i as any).item_name || 'Item'} (${i.quantity}x)`)
+                .slice(0, 2)
+                .join(', ') + (bill.items.length > 2 ? ` +${bill.items.length - 2} more` : '')
+            : bill.orders && bill.orders.length > 0
+            ? `${bill.orders[0].meal_type || 'Food'} Order`
+            : 'Food & Beverage Service';
+
+        transactions.push({
+          id: p.id || `fbp-${bill.id}-${idx}`,
+          hotel_id: p.hotel_id || bill.hotel_id,
+          source: 'food_beverage',
+          source_label: 'Food & Beverage',
+          source_id: bill.id,
+          reference_number: bill.invoice_number || bill.bill_number || `HGV-FB-${bill.id.slice(0, 8)}`,
+          customer_name: bill.customer_name || 'F&B Guest',
+          customer_phone: bill.customer_phone || '',
+          resource_name: resourceName,
+          event_or_details: itemsList,
+          amount: amt,
+          payment_mode: (p.payment_mode as PaymentMode) || 'cash',
+          payment_type: (p.payment_type as string) || 'settlement',
+          transaction_reference: p.reference_number || null,
+          status: 'successful',
+          notes: p.notes,
+          recorded_by: p.recorder_name || 'Staff',
+          created_at: p.created_at || bill.created_at || new Date().toISOString(),
+          link_url: `/food-beverage/${bill.id}`,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching F&B payments for unified ledger:', err);
+  }
+
   // Sort strictly by created_at descending
   transactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
@@ -241,6 +302,64 @@ export async function getOutstandingReceivables(
     console.error('Error fetching banquet receivables:', err);
   }
 
+  // 3. Food & Beverage Receivables (Unpaid or partially paid standalone / pay_now bills)
+  try {
+    const fbBills = await getFBBills(activeHotelId);
+
+    for (const bill of fbBills) {
+      // Exclude voided, cancelled, or room-charged bills (room-charged are tracked in room folio receivables)
+      if (
+        bill.bill_status === 'void' ||
+        bill.bill_status === 'cancelled' ||
+        bill.billing_mode === 'charge_to_room'
+      ) {
+        continue;
+      }
+
+      const totalBilled = Number(bill.grand_total) || 0;
+      const totalPaid = Number(bill.total_paid) || 0;
+      const balanceDue = Math.max(0, Number(bill.balance_due ?? (totalBilled - totalPaid)));
+
+      if (balanceDue > 0 && bill.payment_status !== 'paid') {
+        const roomNum = bill.room_number_snapshot;
+        const resourceName = roomNum
+          ? `Room ${roomNum}`
+          : bill.table_number
+          ? `Table ${bill.table_number}`
+          : bill.customer_type === 'walk_in'
+          ? 'Walk-in Restaurant'
+          : 'Restaurant POS';
+
+        const itemsList =
+          bill.items && bill.items.length > 0
+            ? bill.items
+                .map((i) => `${i.item_name_snapshot || (i as any).item_name || 'Item'} (${i.quantity}x)`)
+                .slice(0, 2)
+                .join(', ') + (bill.items.length > 2 ? ` +${bill.items.length - 2} more` : '')
+            : 'Food & Beverage Order';
+
+        receivables.push({
+          id: bill.id,
+          source: 'food_beverage',
+          source_label: 'Food & Beverage',
+          reference_number: bill.invoice_number || bill.bill_number || `HGV-FB-${bill.id.slice(0, 8)}`,
+          customer_name: bill.customer_name || 'F&B Customer',
+          customer_phone: bill.customer_phone || '',
+          resource_name: resourceName,
+          event_or_details: itemsList,
+          total_billed: totalBilled,
+          total_paid: totalPaid,
+          balance_due: balanceDue,
+          date: bill.created_at ? bill.created_at.split('T')[0] : toDateString(new Date()),
+          status: bill.payment_status || 'unpaid',
+          link_url: `/food-beverage/${bill.id}`,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching F&B receivables:', err);
+  }
+
   // Sort by highest outstanding balance descending
   receivables.sort((a, b) => b.balance_due - a.balance_due);
 
@@ -275,7 +394,11 @@ export async function getHotelWidePaymentStats(
     .filter((o) => o.source === 'banquet')
     .reduce((s, o) => s + o.balance_due, 0);
 
-  const totalOutstanding = roomsOutstanding + banquetOutstanding;
+  const fbOutstanding = outstandingItems
+    .filter((o) => o.source === 'food_beverage')
+    .reduce((s, o) => s + o.balance_due, 0);
+
+  const totalOutstanding = roomsOutstanding + banquetOutstanding + fbOutstanding;
 
   // Total Business Value & Collection Rate
   const totalBusinessValue = periodTotalCollected + totalOutstanding;
@@ -285,9 +408,9 @@ export async function getHotelWidePaymentStats(
       : 100;
 
   // Breakdown by Source
-  const sourceKeys: PaymentSource[] = ['rooms', 'banquet', 'food_beverage', 'other'];
+  const sourceKeys: PaymentSource[] = ['rooms', 'banquet', 'food_beverage'];
   const sourceLabels: Record<PaymentSource, string> = {
-    rooms: 'Room Accommodations',
+    rooms: 'Rooms Accommodation',
     banquet: 'Banquet & Events',
     food_beverage: 'Food & Beverage',
     other: 'Other Services',
@@ -348,7 +471,7 @@ export async function getHotelWidePaymentStats(
       entry.count += 1;
       if (t.source === 'rooms') entry.rooms += t.amount;
       else if (t.source === 'banquet') entry.banquet += t.amount;
-      else entry.fnb += t.amount;
+      else if (t.source === 'food_beverage') entry.fnb += t.amount;
     }
   }
 
@@ -375,6 +498,7 @@ export async function getHotelWidePaymentStats(
     total_outstanding_receivables: totalOutstanding,
     rooms_outstanding: roomsOutstanding,
     banquet_outstanding: banquetOutstanding,
+    fb_outstanding: fbOutstanding,
     total_business_value: totalBusinessValue,
     collection_rate_percent: collectionRate,
     sources,

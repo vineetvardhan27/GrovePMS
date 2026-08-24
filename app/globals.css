@@ -11,6 +11,10 @@
     --border-subtle: #DDD5C6;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     background-color: #F6F2EC;
     color: #22221F;

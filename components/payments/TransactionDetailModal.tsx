@@ -203,7 +203,13 @@ export default function TransactionDetailModal({
               href={transaction.link_url}
               className="pms-btn-primary h-9 px-4 text-xs gap-1.5"
             >
-              <span>Open Folio Workspace</span>
+              <span>
+                {transaction.source === 'food_beverage'
+                  ? 'Open F&B Bill'
+                  : transaction.source === 'banquet'
+                  ? 'Open Banquet Workspace'
+                  : 'Open Room Folio'}
+              </span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           )}

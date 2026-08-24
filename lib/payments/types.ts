@@ -75,6 +75,7 @@ export interface HotelWidePaymentStats {
   total_outstanding_receivables: number;
   rooms_outstanding: number;
   banquet_outstanding: number;
+  fb_outstanding: number;
   total_business_value: number;
   collection_rate_percent: number;
   sources: SourceMetric[];
