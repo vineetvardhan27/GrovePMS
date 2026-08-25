@@ -28,6 +28,7 @@ export default function BanquetInvoiceDocument({
       {/* ── 1. Header Branding with Official Hotel Logo & Invoice Metadata ── */}
       <HotelInvoiceHeader
         hotelName={invoice.hotel_name || 'HOTEL GREENERY VIEW'}
+        logoUrl={invoice.hotel_logo_url || (invoice as any).logo_url || null}
         subtitle="Luxury Hospitality & Banquets"
         address={invoice.hotel_address}
         city={invoice.hotel_city}

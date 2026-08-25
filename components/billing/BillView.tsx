@@ -451,6 +451,7 @@ export default function BillView({
         <div className="p-6 sm:p-8 bg-brand-sand/40 border-b border-border-subtle">
           <HotelInvoiceHeader
             hotelName={initialBill.hotel_name || 'HOTEL GREENERY VIEW'}
+            logoUrl={initialBill.hotel_logo_url || null}
             subtitle="Boutique Hospitality & Luxury Stay"
             address={initialBill.hotel_address}
             city={initialBill.hotel_city}

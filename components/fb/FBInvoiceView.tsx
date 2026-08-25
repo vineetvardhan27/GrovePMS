@@ -113,7 +113,8 @@ export default function FBInvoiceView({ bill, hotelSettings, userRole }: FBInvoi
 
         {/* 1. Shared Official Hotel Invoice Header */}
         <HotelInvoiceHeader
-          hotelName={hotelSettings.name || 'HOTEL GREENERY VIEW'}
+          hotelName={(hotelSettings as any).name || 'HOTEL GREENERY VIEW'}
+          logoUrl={hotelSettings.logo_url || null}
           subtitle="Boutique Hospitality & Luxury Stay"
           address={hotelSettings.address}
           city={hotelSettings.city}

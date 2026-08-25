@@ -167,8 +167,9 @@ export interface BanquetInvoice {
   // Payments
   payments: BanquetPayment[];
 
-  // Hotel Info
+  // Hotel Info & Branding
   hotel_name: string;
+  hotel_logo_url?: string | null;
   hotel_address: string;
   hotel_city: string;
   hotel_gst_number: string | null;

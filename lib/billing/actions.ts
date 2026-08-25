@@ -1,4 +1,4 @@
-import { getHotelSettings } from '../hotels/queries';
+import { getHotel, getHotelSettings } from '../hotels/queries';
 import { getBookingById, PaymentRecord } from '../bookings/queries';
 import { getFoodCharges, FoodChargeRecord } from './food-actions';
 import { numberToIndianWords } from '../utils/currency';
@@ -70,6 +70,7 @@ export interface GeneratedBill {
 
   // Hotel info
   hotel_name: string;
+  hotel_logo_url?: string | null;
   hotel_address: string;
   hotel_city: string;
   hotel_gst_number: string | null;
@@ -148,7 +149,8 @@ export async function generateBill(bookingId: string, includeGst: boolean = true
     throw new Error(`Booking ${bookingId} not found.`);
   }
 
-  const settings = await getHotelSettings(booking.hotel_id);
+  const hotel = await getHotel(booking.hotel_id);
+  const settings = hotel.settings;
 
   // Derive immutable invoice details
   const { invoice_number, invoice_date } = deriveInvoiceNumber(booking);
@@ -295,13 +297,14 @@ export async function generateBill(bookingId: string, includeGst: boolean = true
 
     payments,
 
-    hotel_name: 'HOTEL GREENERY VIEW',
-    hotel_address: settings.address || 'Nature Valley Road, Near Tea Gardens',
+    hotel_name: hotel.name || 'HOTEL GREENERY VIEW',
+    hotel_logo_url: settings.logo_url || hotel.logo_url || null,
+    hotel_address: settings.address || hotel.address || 'Nature Valley Road, Near Tea Gardens',
     hotel_city: settings.city || 'Darjeeling, West Bengal 734101',
     hotel_gst_number: settings.gst_number || (settings.gst_enabled ? '19AABCH9876K1Z8' : null),
     hotel_pan_number: settings.pan_number || 'AABCH9876K',
-    hotel_phone: settings.phone || '+91 98765 43210',
-    hotel_email: settings.email || 'reservations@hotelgreeneryview.com',
+    hotel_phone: settings.phone || hotel.phone || '+91 98765 43210',
+    hotel_email: settings.email || hotel.email || 'reservations@hotelgreeneryview.com',
 
     include_gst: includeGst,
     generated_at: new Date().toISOString(),

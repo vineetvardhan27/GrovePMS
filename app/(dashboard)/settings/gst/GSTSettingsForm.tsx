@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Percent, Check, AlertCircle, Building2, Receipt, Phone, Mail, MapPin } from 'lucide-react';
 import { HotelSettings } from '../../../../lib/hotels/queries';
 import { updateHotelSettingsAction } from '../../../../lib/hotels/actions';
+import HotelLogoUpload from '../../../../components/settings/HotelLogoUpload';
 
 interface GSTSettingsFormProps {
   hotelId: string;
@@ -17,6 +18,7 @@ export default function GSTSettingsForm({
   hotelName,
 }: GSTSettingsFormProps) {
   const [settings, setSettings] = useState<HotelSettings>(initialSettings);
+  const [logoUrl, setLogoUrl] = useState<string | null>(initialSettings.logo_url || null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -36,7 +38,7 @@ export default function GSTSettingsForm({
     const pin_code = formData.get('pin_code') as string;
     const phone = formData.get('phone') as string;
     const email = formData.get('email') as string;
-    const logo_url = formData.get('logo_url') as string;
+    const formLogoUrl = (formData.get('logo_url') as string) || logoUrl || null;
 
     const payload: Partial<HotelSettings> = {
       gst_enabled,
@@ -50,7 +52,7 @@ export default function GSTSettingsForm({
       pin_code: pin_code.trim(),
       phone: phone.trim(),
       email: email.trim(),
-      logo_url: logo_url.trim() || null,
+      logo_url: formLogoUrl ? formLogoUrl.trim() : null,
     };
 
     const result = await updateHotelSettingsAction(hotelId, payload);
@@ -58,6 +60,7 @@ export default function GSTSettingsForm({
 
     if (result.success && result.settings) {
       setSettings(result.settings);
+      setLogoUrl(result.settings.logo_url || null);
       setMessage({
         type: 'success',
         text: 'GST and tax settings saved successfully. All future bills will automatically use this configuration.',
@@ -171,27 +174,26 @@ export default function GSTSettingsForm({
       <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs space-y-5">
         <div className="flex items-center gap-2.5 pb-3 border-b border-border-subtle">
           <Building2 className="w-5 h-5 text-brand-forest" />
-          <h2 className="text-h2 text-ink font-bold">Property Branding &amp; Logo</h2>
-        </div>
-
-        <div className="space-y-4">
           <div>
-            <label htmlFor="logo_url" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              Hotel Billing &amp; Invoicing Logo (URL / Image Path)
-            </label>
-            <input
-              id="logo_url"
-              name="logo_url"
-              type="text"
-              defaultValue={settings.logo_url || ''}
-              placeholder="e.g. /images/hotel-logo.png or https://..."
-              className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
-            />
-            <p className="text-[11px] text-ink-muted mt-1">
-              Used across your Property Header, Room Tax Invoices, F&amp;B Bills, Banquet Invoices, and Reports. (The universal PMS logo remains on the browser favicon).
+            <h2 className="text-h2 text-ink font-bold">Property Branding &amp; Logo</h2>
+            <p className="text-xs text-ink-muted mt-0.5">
+              Directly upload your official hotel logo. It will automatically be used on your PMS dashboard, guest folios, restaurant bills, banquet invoices, and PDF reports.
             </p>
           </div>
         </div>
+
+        {/* Hidden input to preserve logo_url when saving general GST form */}
+        <input type="hidden" name="logo_url" value={logoUrl || ''} />
+
+        {/* Direct Upload Component */}
+        <HotelLogoUpload
+          currentLogoUrl={logoUrl}
+          hotelName={hotelName}
+          onLogoChange={(newLogoUrl) => {
+            setLogoUrl(newLogoUrl);
+            setSettings((prev) => ({ ...prev, logo_url: newLogoUrl }));
+          }}
+        />
       </div>
 
       {/* Invoice Header Details */}

@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+import { useAuth } from '../providers/AuthProvider';
+
 export interface HotelInvoiceHeaderProps {
   hotelName?: string;
   logoUrl?: string | null;
@@ -34,11 +36,12 @@ export default function HotelInvoiceHeader({
   rightContent,
   className = '',
 }: HotelInvoiceHeaderProps) {
+  const { hotelLogoUrl } = useAuth();
   const displayAddress = address || 'Hotel Greenery View, ICAR Road, Lingding Post Office Tadong, Pin 737102, Gangtok, Sikkim, India';
   const displayCity = city || 'Gangtok';
   const displayPhone = phone || '+91 9732378888';
   const displayEmail = email || 'hotelgreeneryview@gmail.com';
-  const displayLogo = logoUrl || '/logo.png';
+  const displayLogo = logoUrl || hotelLogoUrl || '/logo.png';
 
   return (
     <div
@@ -46,13 +49,14 @@ export default function HotelInvoiceHeader({
     >
       {/* Left: Official Hotel Logo & Branding */}
       <div className="flex items-start gap-3.5 max-w-lg">
-        <div className="w-12 h-12 rounded-lg bg-brand-forest/10 flex items-center justify-center p-1 border border-brand-forest/20 shrink-0">
+        <div className="w-14 h-14 rounded-lg bg-white flex items-center justify-center p-1 border border-border-subtle shrink-0 shadow-2xs overflow-hidden">
           {displayLogo ? (
             <img
               src={displayLogo}
               alt={hotelName}
-              className="h-9 w-auto object-contain"
+              className="max-h-full max-w-full object-contain"
               loading="eager"
+              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-10 h-10 rounded-md bg-brand-forest text-white font-bold font-serif text-sm flex items-center justify-center">

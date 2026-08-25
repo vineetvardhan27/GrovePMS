@@ -35,7 +35,7 @@ function runLogoVerification() {
   const sharedHeaderPath = path.resolve(process.cwd(), 'components/shared/HotelInvoiceHeader.tsx');
   assert(fs.existsSync(sharedHeaderPath), 'components/shared/HotelInvoiceHeader.tsx exists');
   const headerCode = fs.readFileSync(sharedHeaderPath, 'utf8');
-  assert(headerCode.includes('src="/logo.png"'), 'HotelInvoiceHeader renders src="/logo.png"');
+  assert(headerCode.includes("'/logo.png'") || headerCode.includes('src="/logo.png"'), 'HotelInvoiceHeader renders logo with /logo.png fallback');
   assert(headerCode.includes('alt={hotelName}'), 'HotelInvoiceHeader has dynamic hotel alt tag');
   assert(headerCode.includes('HOTEL GREENERY VIEW'), 'HotelInvoiceHeader defaults to HOTEL GREENERY VIEW');
 
@@ -46,12 +46,13 @@ function runLogoVerification() {
   assert(billViewCode.includes('HotelInvoiceHeader'), 'BillView.tsx imports and uses HotelInvoiceHeader');
   assert(!billViewCode.includes('<Building2 className="w-6 h-6" />'), 'BillView.tsx no longer uses placeholder Building2 icon');
 
-  // 4. Check Banquet Tax Invoice (BanquetInvoiceView.tsx)
-  console.log('\n--- 4. Banquet Tax Invoice (BanquetInvoiceView.tsx) ---');
-  const banquetViewPath = path.resolve(process.cwd(), 'components/banquet/BanquetInvoiceView.tsx');
-  const banquetCode = fs.readFileSync(banquetViewPath, 'utf8');
-  assert(banquetCode.includes('HotelInvoiceHeader'), 'BanquetInvoiceView.tsx imports and uses HotelInvoiceHeader');
-  assert(!banquetCode.includes('>H</div>'), 'BanquetInvoiceView.tsx no longer uses letter H placeholder');
+  // 4. Check Banquet Tax Invoice (BanquetInvoiceDocument.tsx / BanquetInvoiceView.tsx)
+  console.log('\n--- 4. Banquet Tax Invoice (BanquetInvoiceDocument.tsx) ---');
+  const banquetDocPath = path.resolve(process.cwd(), 'components/banquet/BanquetInvoiceDocument.tsx');
+  assert(fs.existsSync(banquetDocPath), 'components/banquet/BanquetInvoiceDocument.tsx exists');
+  const banquetDocCode = fs.readFileSync(banquetDocPath, 'utf8');
+  assert(banquetDocCode.includes('HotelInvoiceHeader'), 'BanquetInvoiceDocument.tsx imports and uses HotelInvoiceHeader');
+  assert(!banquetDocCode.includes('>H</div>'), 'BanquetInvoiceDocument.tsx no longer uses letter H placeholder');
 
   // 5. Check Food & Beverage Invoice (FBInvoiceView.tsx)
   console.log('\n--- 5. Food & Beverage Invoice (FBInvoiceView.tsx) ---');

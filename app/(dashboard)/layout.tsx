@@ -129,9 +129,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Brand header */}
         <div className="px-4 py-4 flex items-center gap-3 border-b border-white/8">
-          <div className="h-10 w-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
+          <div className="h-10 w-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
             {staff.hotel_logo_url ? (
-              <img src={staff.hotel_logo_url} alt={staff.hotel_name} className="h-8 w-auto object-contain" />
+              <img src={staff.hotel_logo_url} alt={staff.hotel_name} className="max-h-8 max-w-full w-auto object-contain" />
             ) : (
               <div className="w-8 h-8 rounded-md bg-brand-forest text-white font-bold font-serif text-xs flex items-center justify-center">
                 {staff.hotel_name.slice(0, 2).toUpperCase()}
