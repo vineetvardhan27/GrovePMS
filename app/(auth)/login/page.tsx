@@ -1,7 +1,8 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { Hotel, KeyRound, Mail, AlertCircle, Lock } from 'lucide-react';
+import Image from 'next/image';
+import { KeyRound, Mail, AlertCircle, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { signIn } from './actions';
 
@@ -31,12 +32,19 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white border border-border-subtle rounded-2xl shadow-sm overflow-hidden p-6 sm:p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-brand-forest text-white rounded-xl shadow-xs mx-auto">
-            <Hotel className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-xs border border-border-subtle bg-white flex items-center justify-center mx-auto p-1">
+            <Image
+              src="/Grove.png"
+              alt="Grove Logo"
+              width={64}
+              height={64}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <div>
             <h1 className="text-h1 text-brand-forest">PMS Portal</h1>
-            <p className="text-caption text-ink-muted mt-0.5">Hotel Greenery View Control Centre</p>
+            <p className="text-caption text-ink-muted mt-0.5">Grove Hospitality OS — Control Centre</p>
           </div>
         </div>
 

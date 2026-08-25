@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Hotel, Menu, X, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X, ArrowRight } from 'lucide-react';
 
 const PRODUCT_NAME = 'Grove';
 const PRODUCT_TAGLINE = 'Hospitality OS';
@@ -35,8 +36,15 @@ export default function PublicHeader({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="p-2 rounded-xl bg-brand-forest text-white transition-transform duration-200 group-hover:scale-105">
-            <Hotel className="w-5 h-5" />
+          <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-xs border border-border-subtle bg-white flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+            <Image
+              src="/Grove.png"
+              alt="Grove Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <div className="leading-none">
             <span className="font-serif font-bold text-brand-forest text-base sm:text-lg block">

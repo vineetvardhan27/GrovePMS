@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
+import Image from 'next/image';
 import {
   Hotel,
   Building2,
@@ -109,8 +110,15 @@ export default function RegisterHotelPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border-subtle">
           <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-brand-forest text-white rounded-2xl shadow-xs">
-              <Hotel className="w-7 h-7" />
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shadow-xs border border-border-subtle bg-white flex items-center justify-center p-1 shrink-0">
+              <Image
+                src="/Grove.png"
+                alt="Grove Logo"
+                width={56}
+                height={56}
+                className="w-full h-full object-contain"
+                priority
+              />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest">

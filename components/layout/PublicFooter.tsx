@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Hotel, Lock, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
+import { Lock, ShieldCheck } from 'lucide-react';
 
 const PRODUCT_NAME = 'Grove';
 const PRODUCT_TAGLINE = 'Hospitality OS';
@@ -14,8 +15,14 @@ export default function PublicFooter() {
           {/* 1. Brand column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-3 group">
-              <div className="p-1.5 bg-brand-forest text-white rounded-lg transition-transform group-hover:scale-105">
-                <Hotel className="w-4 h-4" />
+              <div className="relative w-8 h-8 rounded-lg overflow-hidden shadow-2xs border border-border-subtle bg-white flex items-center justify-center transition-transform group-hover:scale-105">
+                <Image
+                  src="/Grove.png"
+                  alt="Grove Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="leading-none">
                 <span className="font-serif font-bold text-brand-forest text-sm block">

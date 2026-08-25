@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Hotel,
   ShieldCheck,
@@ -312,8 +313,14 @@ function HeroDashboard({ inView }: { inView: boolean }) {
         {/* Product Chrome Top Bar */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-border-subtle bg-brand-sand/30">
           <div className="flex items-center gap-2">
-            <div className="p-1 bg-brand-forest rounded-md">
-              <Hotel className="w-3 h-3 text-white" />
+            <div className="w-5 h-5 rounded overflow-hidden bg-white border border-border-subtle flex items-center justify-center shrink-0">
+              <Image
+                src="/Grove.png"
+                alt="Grove"
+                width={20}
+                height={20}
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="text-[11px] text-ink font-semibold tracking-wide">
               {PRODUCT_NAME}

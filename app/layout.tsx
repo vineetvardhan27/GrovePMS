@@ -20,15 +20,13 @@ export const metadata: Metadata = {
   description: 'The unified operating system for modern hospitality. Manage rooms, reservations, guests, billing, and operations from one connected platform.',
   icons: {
     icon: [
-      { url: '/logo.png', type: 'image/png' },
-      { url: '/favicon.ico' },
+      { url: '/Grove.png', type: 'image/png' },
     ],
     shortcut: [
-      { url: '/logo.png' },
-      { url: '/favicon.ico' },
+      { url: '/Grove.png', type: 'image/png' },
     ],
     apple: [
-      { url: '/logo.png', type: 'image/png' },
+      { url: '/Grove.png', type: 'image/png' },
     ],
   },
 };
@@ -40,6 +38,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+      <head>
+        <link rel="icon" href="/Grove.png" type="image/png" sizes="any" />
+        <link rel="shortcut icon" href="/Grove.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/Grove.png" />
+      </head>
       <body className="bg-brand-sand text-ink antialiased">
         <AuthProvider>
           {children}
