@@ -47,8 +47,8 @@ export async function signIn(prevState: AuthState | null, formData: FormData): P
       return { error: 'Sign-in failed to establish an authenticated session. Please try again.' };
     }
 
-    // Verify staff account exists
-    const { data: staff, error: staffErr } = (await supabase
+    // Verify staff account exists by auth.users.id
+    let { data: staff, error: staffErr } = (await supabase
       .from('staff')
       .select('id, hotel_id, role, is_active')
       .eq('id', authData.user.id)
@@ -58,10 +58,31 @@ export async function signIn(prevState: AuthState | null, formData: FormData): P
       console.error('Staff lookup after login failed:', staffErr.message);
     }
 
-    if (staff && !staff.is_active) {
+    // Fallback lookup by email
+    if (!staff && authData.user.email) {
+      const { data: staffByEmail } = await supabase
+        .from('staff')
+        .select('id, hotel_id, role, is_active')
+        .ilike('email', authData.user.email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (staffByEmail) {
+        staff = staffByEmail;
+      }
+    }
+
+    if (!staff) {
+      await supabase.auth.signOut();
+      return {
+        error: 'Your account is not associated with any active hotel property. Please contact your hotel owner or register your property.',
+      };
+    }
+
+    if (!staff.is_active) {
       await supabase.auth.signOut();
       return { error: 'Your staff account is currently deactivated. Please contact the hotel owner.' };
     }
+
 
   } catch (err: any) {
     if (err?.message === 'NEXT_REDIRECT') {
@@ -75,60 +96,14 @@ export async function signIn(prevState: AuthState | null, formData: FormData): P
 }
 
 /**
- * Sign up a new staff member or hotel admin via Supabase Auth
+ * Public staff registration is disabled. Staff accounts must be created by authenticated owners inside the PMS.
  */
-export async function signUp(prevState: AuthState | null, formData: FormData): Promise<AuthState> {
-  const email = (formData.get('email') as string)?.trim();
-  const password = formData.get('password') as string;
-  const fullName = (formData.get('full_name') as string)?.trim();
-  const role = (formData.get('role') as StaffRole) || 'reception';
-
-  if (!email || !password || !fullName) {
-    return { error: 'Please provide email, password, and full name.' };
-  }
-
-  if (password.length < 6) {
-    return { error: 'Password must be at least 6 characters long.' };
-  }
-
-  try {
-    const supabase = createClient();
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role,
-        },
-      },
-    });
-
-    if (signUpError) {
-      console.error('Supabase signUp error:', signUpError.message);
-      if (signUpError.message.includes('already registered')) {
-        return { error: 'An account with this email already exists. Please sign in instead.' };
-      }
-      return { error: signUpError.message };
-    }
-
-    if (signUpData?.user && signUpData?.session) {
-      // Auto-confirmed / session established
-      redirect('/dashboard');
-    }
-
-    return {
-      success: true,
-      message: 'Account created successfully! If email confirmation is enabled on your project, please check your inbox before logging in.',
-    };
-  } catch (err: any) {
-    if (err?.message === 'NEXT_REDIRECT') {
-      throw err;
-    }
-    console.error('Unexpected signUp exception:', err);
-    return { error: 'Failed to create account. Please try again.' };
-  }
+export async function signUp(): Promise<AuthState> {
+  return {
+    error: 'Public staff registration is disabled. Please contact your hotel owner/administrator to create your staff account.',
+  };
 }
+
 
 /**
  * Sign out and clear Supabase session

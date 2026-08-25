@@ -16,8 +16,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Hotel Greenery View — Control Centre',
-  description: 'Hotel Management System for Hotel Greenery View, Gangtok, Sikkim',
+  title: 'Grove — Hospitality OS',
+  description: 'The unified operating system for modern hospitality. Manage rooms, reservations, guests, billing, and operations from one connected platform.',
   icons: {
     icon: [
       { url: '/logo.png', type: 'image/png' },

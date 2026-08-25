@@ -298,10 +298,11 @@ export const getRoomCategories = serverCache(async function getRoomCategories(ho
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching room categories from Supabase:', error.message);
-      return DEFAULT_ROOM_CATEGORIES;
+      return activeHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_ROOM_CATEGORIES : [];
     }
-    if (data && data.length > 0) {
-      return data as RoomCategory[];
+    if (data) {
+      if (data.length > 0) return data as RoomCategory[];
+      if (activeHotelId && activeHotelId !== 'a0000000-0000-0000-0000-000000000001') return [];
     }
   } catch (err) {
     console.error('Failed to connect to Supabase for room categories:', err);
@@ -331,13 +332,16 @@ export const getRooms = serverCache(async function getRooms(hotelId?: string): P
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching rooms from Supabase:', error.message);
-      return DEFAULT_ROOMS;
+      return activeHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_ROOMS : [];
     }
-    if (data && data.length > 0) {
-      return data.map((r: any) => ({
-        ...r,
-        category: r.category || DEFAULT_ROOM_CATEGORIES[0],
-      })) as RoomWithCategory[];
+    if (data) {
+      if (data.length > 0) {
+        return data.map((r: any) => ({
+          ...r,
+          category: r.category || DEFAULT_ROOM_CATEGORIES[0],
+        })) as RoomWithCategory[];
+      }
+      if (activeHotelId && activeHotelId !== 'a0000000-0000-0000-0000-000000000001') return [];
     }
   } catch (err) {
     console.error('Failed to connect to Supabase for rooms:', err);

@@ -534,10 +534,12 @@ export async function getInventoryItems(
 
     const storedItems: InventoryItem[] = (hotel?.settings?.inventory_items as InventoryItem[]) || [];
 
-    // Merge default items with stored items to ensure complete coverage of both assets and consumables
+    // Merge default items with stored items for seed hotel, or use stored items for new tenants
     const itemMap = new Map<string, InventoryItem>();
-    for (const defItem of DEFAULT_INVENTORY_ITEMS) {
-      itemMap.set(defItem.id, defItem);
+    if (targetHotelId === 'a0000000-0000-0000-0000-000000000001') {
+      for (const defItem of DEFAULT_INVENTORY_ITEMS) {
+        itemMap.set(defItem.id, defItem);
+      }
     }
     for (const sItem of storedItems) {
       itemMap.set(sItem.id, sItem);

@@ -198,9 +198,11 @@ export async function getMenuCategories(hotelId?: string): Promise<MenuCategory[
  * Fetch all menu items with joined category for the current hotel
  */
 export async function getMenuItems(hotelId?: string, includeInactive: boolean = true): Promise<MenuItem[]> {
+  let resolvedHotelId = hotelId;
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelId || staff?.hotel_id;
+    resolvedHotelId = activeHotelId;
     const supabase = createClient();
 
     const categories = await getMenuCategories(activeHotelId);
@@ -246,6 +248,10 @@ export async function getMenuItems(hotelId?: string, includeInactive: boolean = 
     }
   } catch (err) {
     console.error('getMenuItems error:', err);
+  }
+
+  if (resolvedHotelId && resolvedHotelId !== 'a0000000-0000-0000-0000-000000000001') {
+    return [];
   }
 
   const categories = DEFAULT_MENU_CATEGORIES;

@@ -16,13 +16,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Redirect /sign-in to /login
+  if (pathname === '/sign-in') {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/login';
+    return NextResponse.redirect(redirectUrl);
+  }
+
   // Update supabase session and check auth
   const { response, user } = await updateSession(request);
 
   const isAuthenticated = Boolean(user);
   const activeRole: StaffRole = (user?.user_metadata?.role as StaffRole) || 'reception';
 
-  const isAuthRoute = pathname.startsWith('/login');
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/sign-in');
+
   const isDashboardRoute =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/rooms') ||

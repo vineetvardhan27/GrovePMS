@@ -4,6 +4,7 @@ import React from 'react';
 
 export interface HotelInvoiceHeaderProps {
   hotelName?: string;
+  logoUrl?: string | null;
   subtitle?: string;
   address?: string;
   city?: string;
@@ -17,11 +18,12 @@ export interface HotelInvoiceHeaderProps {
 
 /**
  * Shared Authoritative Hotel Invoice & Bill Header
- * Renders the official Hotel Greenery View logo.png across all PMS billing documents
+ * Dynamically renders the current hotel's custom logoUrl and name across all PMS billing documents
  * (Room Billing Invoices, Guest Folios, F&B Invoices, Banquet Invoices, and Payment Receipts).
  */
 export default function HotelInvoiceHeader({
   hotelName = 'HOTEL GREENERY VIEW',
+  logoUrl,
   subtitle = 'BOUTIQUE HOSPITALITY & LUXURY STAY',
   address,
   city,
@@ -36,6 +38,7 @@ export default function HotelInvoiceHeader({
   const displayCity = city || 'Gangtok';
   const displayPhone = phone || '+91 9732378888';
   const displayEmail = email || 'hotelgreeneryview@gmail.com';
+  const displayLogo = logoUrl || '/logo.png';
 
   return (
     <div
@@ -44,12 +47,18 @@ export default function HotelInvoiceHeader({
       {/* Left: Official Hotel Logo & Branding */}
       <div className="flex items-start gap-3.5 max-w-lg">
         <div className="w-12 h-12 rounded-lg bg-brand-forest/10 flex items-center justify-center p-1 border border-brand-forest/20 shrink-0">
-          <img
-            src="/logo.png"
-            alt={hotelName}
-            className="h-9 w-auto object-contain"
-            loading="eager"
-          />
+          {displayLogo ? (
+            <img
+              src={displayLogo}
+              alt={hotelName}
+              className="h-9 w-auto object-contain"
+              loading="eager"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-md bg-brand-forest text-white font-bold font-serif text-sm flex items-center justify-center">
+              {hotelName.slice(0, 2).toUpperCase()}
+            </div>
+          )}
         </div>
 
         <div className="space-y-0.5">

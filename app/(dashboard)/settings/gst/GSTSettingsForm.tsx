@@ -36,6 +36,7 @@ export default function GSTSettingsForm({
     const pin_code = formData.get('pin_code') as string;
     const phone = formData.get('phone') as string;
     const email = formData.get('email') as string;
+    const logo_url = formData.get('logo_url') as string;
 
     const payload: Partial<HotelSettings> = {
       gst_enabled,
@@ -49,6 +50,7 @@ export default function GSTSettingsForm({
       pin_code: pin_code.trim(),
       phone: phone.trim(),
       email: email.trim(),
+      logo_url: logo_url.trim() || null,
     };
 
     const result = await updateHotelSettingsAction(hotelId, payload);
@@ -165,11 +167,38 @@ export default function GSTSettingsForm({
         </div>
       </div>
 
-      {/* Invoice Header Details */}
+      {/* Hotel Branding & Logo Configuration Panel */}
       <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs space-y-5">
         <div className="flex items-center gap-2.5 pb-3 border-b border-border-subtle">
           <Building2 className="w-5 h-5 text-brand-forest" />
-          <h2 className="text-h2 text-ink font-bold">Property Invoice Header</h2>
+          <h2 className="text-h2 text-ink font-bold">Property Branding &amp; Logo</h2>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="logo_url" className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+              Hotel Billing &amp; Invoicing Logo (URL / Image Path)
+            </label>
+            <input
+              id="logo_url"
+              name="logo_url"
+              type="text"
+              defaultValue={settings.logo_url || ''}
+              placeholder="e.g. /images/hotel-logo.png or https://..."
+              className="w-full px-3.5 py-2.5 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
+            />
+            <p className="text-[11px] text-ink-muted mt-1">
+              Used across your Property Header, Room Tax Invoices, F&amp;B Bills, Banquet Invoices, and Reports. (The universal PMS logo remains on the browser favicon).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Invoice Header Details */}
+      <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs space-y-5">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-border-subtle">
+          <MapPin className="w-5 h-5 text-brand-forest" />
+          <h2 className="text-h2 text-ink font-bold">Property Invoice Header Details</h2>
         </div>
 
         <div className="space-y-4">

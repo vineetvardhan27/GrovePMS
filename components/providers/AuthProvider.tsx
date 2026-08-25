@@ -12,6 +12,7 @@ interface AuthContextType {
   role: StaffRole | null;
   hotelId: string | null;
   hotelName: string | null;
+  hotelLogoUrl: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   refreshStaff: () => Promise<void>;
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   hotelId: null,
   hotelName: null,
+  hotelLogoUrl: null,
   isLoading: true,
   isAuthenticated: false,
   refreshStaff: async () => {},
@@ -41,9 +43,9 @@ export function AuthProvider({
 
   const supabase = createClient();
 
-  const fetchStaffProfile = useCallback(async (userId: string) => {
+  const fetchStaffProfile = useCallback(async (userId: string, userEmail?: string) => {
     try {
-      const { data: staffData, error: staffErr } = (await supabase
+      let { data: staffData, error: staffErr } = (await supabase
         .from('staff')
         .select(`
           id,
@@ -55,7 +57,8 @@ export function AuthProvider({
           hotel:hotel_id (
             id,
             name,
-            slug
+            slug,
+            settings
           )
         `)
         .eq('id', userId)
@@ -65,8 +68,36 @@ export function AuthProvider({
         console.error('AuthProvider: error fetching staff profile:', staffErr.message);
       }
 
-      if (staffData && staffData.is_active) {
+      if (!staffData && userEmail) {
+        const { data: staffByEmail } = await supabase
+          .from('staff')
+          .select(`
+            id,
+            email,
+            full_name,
+            role,
+            is_active,
+            hotel_id,
+            hotel:hotel_id (
+              id,
+              name,
+              slug,
+              settings
+            )
+          `)
+          .ilike('email', userEmail.trim().toLowerCase())
+          .maybeSingle();
+
+        if (staffByEmail) {
+          staffData = staffByEmail;
+        }
+      }
+
+      if (staffData && staffData.is_active && staffData.hotel_id) {
         const hotelData = staffData.hotel as any;
+        const hotelSettings = hotelData?.settings || null;
+        const hotelLogoUrl = hotelSettings?.logo_url || hotelData?.logo_url || null;
+
         setStaff({
           id: staffData.id,
           email: staffData.email,
@@ -75,11 +106,14 @@ export function AuthProvider({
           hotel_id: staffData.hotel_id,
           hotel_name: hotelData?.name || 'Hotel Greenery View',
           hotel_slug: hotelData?.slug || 'hotel-greenery-view',
+          hotel_logo_url: hotelLogoUrl,
+          hotel_settings: hotelSettings,
           is_active: staffData.is_active,
         });
       } else {
         setStaff(null);
       }
+
     } catch (err) {
       console.error('AuthProvider: unexpected error:', err);
       setStaff(null);
@@ -91,7 +125,7 @@ export function AuthProvider({
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
       if (currentUser) {
-        await fetchStaffProfile(currentUser.id);
+        await fetchStaffProfile(currentUser.id, currentUser.email);
       } else {
         setStaff(null);
       }
@@ -112,7 +146,7 @@ export function AuthProvider({
       setUser(currentUser);
 
       if (currentUser) {
-        await fetchStaffProfile(currentUser.id);
+        await fetchStaffProfile(currentUser.id, currentUser.email);
       } else {
         setStaff(null);
       }
@@ -132,6 +166,7 @@ export function AuthProvider({
         role: staff?.role ?? null,
         hotelId: staff?.hotel_id ?? null,
         hotelName: staff?.hotel_name ?? null,
+        hotelLogoUrl: staff?.hotel_logo_url ?? null,
         isLoading,
         isAuthenticated: Boolean(user && staff),
         refreshStaff,

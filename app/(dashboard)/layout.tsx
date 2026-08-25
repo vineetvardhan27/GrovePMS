@@ -9,14 +9,13 @@ import {
   Building2,
   AlertTriangle,
 } from 'lucide-react';
-import { getCurrentStaff, ROLE_NAV_ITEMS } from '../../lib/auth/session';
+import { getStaffResolution, ROLE_NAV_ITEMS } from '../../lib/auth/session';
 import { getAvailableStaffAccounts } from '../../lib/auth/switchAccount';
 import { signOut } from '../(auth)/login/actions';
 import { StaffRole } from '../../lib/types/database.types';
 import MobileNavDrawer from '../../components/shared/MobileNavDrawer';
 import SidebarNav from '../../components/shared/SidebarNav';
 import AccountSwitcher from '../../components/shared/AccountSwitcher';
-import { createClient } from '../../lib/supabase/server';
 
 const ROLE_META: Record<StaffRole, { title: string; icon: any; avatarBg: string }> = {
   owner:        { title: 'Owner',        icon: Building2,  avatarBg: 'bg-brand-sand text-brand-forest' },
@@ -30,15 +29,15 @@ function initials(name: string) {
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const staff = await getCurrentStaff();
+  const resolution = await getStaffResolution();
 
-  // No staff profile — check if user is authenticated
-  if (!staff) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  // 1. Unauthenticated -> redirect to login
+  if (resolution.status === 'unauthenticated') {
+    redirect('/login');
+  }
 
-    if (!user) redirect('/login');
-
+  // 2. Case A: No staff record
+  if (resolution.status === 'no_staff_record') {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-brand-sand">
         <div className="max-w-md w-full bg-white rounded-xl border border-border-subtle p-8 shadow-card text-center space-y-6">
@@ -48,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div>
             <h1 className="text-lg font-semibold text-ink">Account Not Assigned</h1>
             <p className="text-sm text-ink-muted mt-2 leading-relaxed">
-              Your account ({user.email}) is authenticated, but has not been assigned to a hotel. Please contact your administrator.
+              Your account ({resolution.user.email}) is authenticated, but has not been assigned to a hotel. Please contact your administrator.
             </p>
           </div>
           <form action={signOut}>
@@ -61,8 +60,60 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
-  const authorizedPaths = ROLE_NAV_ITEMS[staff.role] || ['/dashboard', '/rooms'];
-  const roleMeta = ROLE_META[staff.role] || ROLE_META.reception;
+  // 3. Case B: Staff deactivated
+  if (resolution.status === 'inactive_staff') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-sand">
+        <div className="max-w-md w-full bg-white rounded-xl border border-border-subtle p-8 shadow-card text-center space-y-6">
+          <div className="w-12 h-12 bg-action-danger/12 text-action-danger rounded-xl flex items-center justify-center mx-auto border border-action-danger/20">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-ink">Account Deactivated</h1>
+            <p className="text-sm text-ink-muted mt-2 leading-relaxed">
+              Your account ({resolution.user.email}) has been deactivated. Please contact your administrator.
+            </p>
+          </div>
+          <form action={signOut}>
+            <button type="submit" className="pms-btn-primary w-full justify-center">
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Case C: Hotel configuration missing
+  if (resolution.status === 'hotel_not_found') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-sand">
+        <div className="max-w-md w-full bg-white rounded-xl border border-border-subtle p-8 shadow-card text-center space-y-6">
+          <div className="w-12 h-12 bg-action-danger/12 text-action-danger rounded-xl flex items-center justify-center mx-auto border border-action-danger/20">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-ink">Hotel Configuration Error</h1>
+            <p className="text-sm text-ink-muted mt-2 leading-relaxed">
+              The hotel property assigned to your account could not be found. Please contact support.
+            </p>
+          </div>
+          <form action={signOut}>
+            <button type="submit" className="pms-btn-primary w-full justify-center">
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  const staff = resolution.staff;
+
+
+  const userRole = (staff.role as StaffRole) || 'reception';
+  const authorizedPaths = ROLE_NAV_ITEMS[userRole] || ['/dashboard', '/rooms'];
+  const roleMeta = ROLE_META[userRole] || ROLE_META.reception;
   const RoleIcon = roleMeta.icon;
   const availableAccounts = await getAvailableStaffAccounts(staff.hotel_id);
 
@@ -76,12 +127,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Brand header */}
         <div className="px-4 py-4 flex items-center gap-3 border-b border-white/8">
-          <div className="h-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
-            <img src="/logo.png" alt="Hotel Greenery View Logo" className="h-8 w-auto object-contain" />
+          <div className="h-10 w-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
+            {staff.hotel_logo_url ? (
+              <img src={staff.hotel_logo_url} alt={staff.hotel_name} className="h-8 w-auto object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-md bg-brand-forest text-white font-bold font-serif text-xs flex items-center justify-center">
+                {staff.hotel_name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <h2 className="font-serif text-[14px] font-bold tracking-tight truncate leading-tight text-white">
-              Greenery View
+              {staff.hotel_name}
             </h2>
             <p className="text-[10px] text-brand-sand/60 truncate">Control Centre</p>
           </div>

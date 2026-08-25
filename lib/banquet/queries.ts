@@ -408,11 +408,11 @@ export async function getBanquetPayments(
       if (matching.length > 0) return matching;
 
       const defaultMatch = DEFAULT_BANQUET_BOOKINGS.find((b) => b.id === bookingId);
-      return defaultMatch?.payments || [];
+      return (targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? (defaultMatch?.payments || []) : []);
     }
 
     if (storedPayments.length > 0) return storedPayments;
-    return DEFAULT_BANQUET_BOOKINGS.flatMap((b) => b.payments || []);
+    return targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_BANQUET_BOOKINGS.flatMap((b) => b.payments || []) : [];
   } catch (err) {
     console.error('getBanquetPayments error:', err);
     return [];
@@ -525,7 +525,7 @@ export async function getBanquetBookings(
         .maybeSingle();
 
       const storedBookings: BanquetBooking[] =
-        (hotel?.settings?.banquet_bookings as BanquetBooking[]) || DEFAULT_BANQUET_BOOKINGS;
+        (hotel?.settings?.banquet_bookings as BanquetBooking[]) || (targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_BANQUET_BOOKINGS : []);
       rawBookings = storedBookings;
       if (filterDate) {
         rawBookings = rawBookings.filter((b) => b.event_date === filterDate);

@@ -17,7 +17,11 @@ import {
   X,
 } from 'lucide-react';
 import { StaffProfile } from '../../lib/auth/session';
-import { AvailableStaffAccount, switchStaffAccountAction } from '../../lib/auth/switchAccount';
+import {
+  AvailableStaffAccount,
+  switchStaffAccountAction,
+} from '../../lib/auth/switchAccount';
+import { canSwitchAccounts } from '../../lib/auth/switchAccountHelpers';
 import { StaffRole } from '../../lib/types/database.types';
 import { signOut } from '../../app/(auth)/login/actions';
 
@@ -103,9 +107,18 @@ export default function AccountSwitcher({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  const otherAccounts = availableAccounts.filter((acc) => acc.id !== currentStaff.id);
-  const currentMeta = ROLE_META[currentStaff.role] || ROLE_META.reception;
+  const currentRole = currentStaff.role as StaffRole;
+  const currentMeta = ROLE_META[currentRole] || ROLE_META.reception;
   const CurrentIcon = currentMeta.icon;
+
+  // Accounts the caller can switch INTO (excluding current self)
+  const otherAccounts = availableAccounts.filter((acc) => acc.id !== currentStaff.id);
+
+  // Role hierarchy: whether this role has anyone else to switch to
+  const hasOthersToSwitchTo = canSwitchAccounts(currentRole) && otherAccounts.length > 0;
+
+  // Only Owner/Manager can manage staff
+  const canManageStaff = currentRole === 'owner' || currentRole === 'manager';
 
   const handleSwitch = (targetAccount: AvailableStaffAccount) => {
     if (isPending || switchingToId) return;
@@ -142,11 +155,13 @@ export default function AccountSwitcher({
         }}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label="Switch Account"
+        aria-label="Account Menu"
         className="flex items-center gap-2 text-xs text-ink font-medium px-3 py-1.5 rounded-lg border border-border-subtle bg-brand-sand/60 hover:bg-brand-sand transition-colors duration-150 min-h-[32px] cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30"
       >
         <Users className="w-3.5 h-3.5 text-brand-forest" />
-        <span className="hidden sm:inline">Switch Account</span>
+        <span className="hidden sm:inline">
+          {hasOthersToSwitchTo ? 'Switch Account' : currentMeta.label}
+        </span>
         <span className="sm:hidden">{currentMeta.label}</span>
         <ChevronDown
           className={`w-3.5 h-3.5 text-ink-muted transition-transform duration-150 ${
@@ -159,20 +174,22 @@ export default function AccountSwitcher({
       {isOpen && (
         <div
           role="dialog"
-          aria-label="Switch Account Popover"
+          aria-label="Account Menu Popover"
           className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl border border-border-subtle shadow-modal z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
         >
           {/* Header */}
           <div className="px-4 py-3 bg-brand-sand/40 border-b border-border-subtle flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-brand-forest" />
-              <h3 className="text-sm font-semibold text-brand-forest">Switch Account</h3>
+              <h3 className="text-sm font-semibold text-brand-forest">
+                {hasOthersToSwitchTo ? 'Switch Account' : 'Active Account'}
+              </h3>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-brand-sand transition-colors cursor-pointer"
-              aria-label="Close switcher"
+              aria-label="Close panel"
             >
               <X className="w-4 h-4" />
             </button>
@@ -222,17 +239,13 @@ export default function AccountSwitcher({
               </div>
             </div>
 
-            {/* AVAILABLE ACCOUNTS */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted px-2 mb-1.5">
-                Available Hotel Accounts ({otherAccounts.length})
-              </p>
+            {/* AVAILABLE ACCOUNTS — only shown for roles with hierarchy access */}
+            {hasOthersToSwitchTo && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted px-2 mb-1.5">
+                  Available Accounts
+                </p>
 
-              {otherAccounts.length === 0 ? (
-                <div className="p-4 text-center rounded-lg bg-brand-sand/30 border border-border-subtle text-xs text-ink-muted">
-                  You are currently using the only staff account registered for this property.
-                </div>
-              ) : (
                 <div className="space-y-1.5">
                   {otherAccounts.map((account) => {
                     const meta = ROLE_META[account.role] || ROLE_META.reception;
@@ -282,23 +295,35 @@ export default function AccountSwitcher({
                     );
                   })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* No-switch message for Reception / Housekeeping */}
+            {!hasOthersToSwitchTo && (
+              <div className="p-3 rounded-lg bg-brand-sand/30 border border-border-subtle text-xs text-ink-muted text-center">
+                Account switching is not available for your role.
+              </div>
+            )}
           </div>
 
           {/* Footer Actions */}
           <div className="px-4 py-3 bg-brand-sand/30 border-t border-border-subtle flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                router.push('/settings');
-              }}
-              className="text-xs text-ink-muted hover:text-brand-forest font-medium flex items-center gap-1.5 py-1 px-2 rounded hover:bg-brand-sand transition-colors cursor-pointer"
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>Manage Staff</span>
-            </button>
+            {canManageStaff ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push('/settings/staff');
+                }}
+                className="text-xs text-ink-muted hover:text-brand-forest font-medium flex items-center gap-1.5 py-1 px-2 rounded hover:bg-brand-sand transition-colors cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Manage Staff</span>
+              </button>
+            ) : (
+              /* Spacer so Sign Out stays right-aligned for non-manager roles */
+              <span />
+            )}
 
             <form action={signOut}>
               <button

@@ -48,11 +48,16 @@ export async function updateHotelSettingsAction(
     };
 
     // 2. Update hotel in Supabase
+    const updatePayload: any = {
+      settings: updatedSettings,
+      updated_at: new Date().toISOString(),
+    };
+    if (settings.logo_url !== undefined) {
+      updatePayload.logo_url = settings.logo_url;
+    }
+
     const { error: updateErr } = await (supabase.from('hotels') as any)
-      .update({
-        settings: updatedSettings,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', targetHotelId);
 
     if (updateErr) {
@@ -64,6 +69,7 @@ export async function updateHotelSettingsAction(
     revalidatePath('/settings/gst');
     revalidatePath('/billing');
     revalidatePath('/dashboard');
+    revalidatePath('/', 'layout');
 
     return { success: true, settings: updatedSettings as HotelSettings };
   } catch (err: any) {

@@ -4,6 +4,7 @@ import { createClient as createServerSupabaseClient } from '../supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { StaffRole } from '../types/database.types';
+import { SWITCH_ALLOWED_ROLES, canSwitchToAccount } from './switchAccountHelpers';
 
 export interface AvailableStaffAccount {
   id: string;
@@ -14,54 +15,76 @@ export interface AvailableStaffAccount {
   hotel_id: string;
 }
 
+
 /**
- * Fetch all active staff accounts available under the caller's hotel.
- * Only returns accounts belonging to the exact same hotel_id.
+ * Fetch staff accounts the current authenticated user is authorized to switch into.
+ *
+ * - Strictly scoped to caller's hotel_id (server-side, not frontend-filtered).
+ * - Applies role hierarchy: caller role determines which target roles are visible.
+ * - Reception and Housekeeping only receive their own record.
  */
 export async function getAvailableStaffAccounts(knownHotelId?: string): Promise<AvailableStaffAccount[]> {
   try {
     const supabase = createServerSupabaseClient();
-    let hotelId = knownHotelId;
 
-    if (!hotelId) {
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
+    // 1. Resolve caller's authenticated identity
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser();
 
-      if (userErr || !user) {
-        return [];
-      }
+    if (userErr || !user) return [];
 
-      // 1. Get caller's active staff profile to determine hotel_id
-      const { data: callerStaff, error: callerErr } = (await supabase
+    // 2. Get caller's active staff record (hotel_id + role)
+    const { data: callerStaff, error: callerErr } = (await supabase
+      .from('staff')
+      .select('id, hotel_id, role, is_active')
+      .eq('id', user.id)
+      .eq('is_active', true)
+      .maybeSingle()) as {
+      data: { id: string; hotel_id: string; role: StaffRole; is_active: boolean } | null;
+      error: any;
+    };
+
+    if (callerErr || !callerStaff?.hotel_id) return [];
+
+    const hotelId = knownHotelId || callerStaff.hotel_id;
+    // Safety: always use the *authenticated* hotel_id — never trust a passed parameter
+    // if it differs from the actual staff record.
+    const resolvedHotelId = callerStaff.hotel_id;
+
+    // 3. Determine which roles this caller may switch into
+    const allowedRoles = SWITCH_ALLOWED_ROLES[callerStaff.role] ?? [];
+
+    // Reception and Housekeeping can only see themselves — no switcher needed
+    if (allowedRoles.length <= 1) {
+      // Return only the caller's own record
+      const { data: self } = (await supabase
         .from('staff')
-        .select('id, hotel_id, is_active, role')
-        .eq('id', user.id)
-        .eq('is_active', true)
-        .maybeSingle()) as { data: { id: string; hotel_id: string; is_active: boolean; role: string } | null; error: any };
-
-      if (callerErr || !callerStaff?.hotel_id) {
-        return [];
-      }
-
-      hotelId = callerStaff.hotel_id;
+        .select('id, email, full_name, role, is_active, hotel_id')
+        .eq('id', callerStaff.id)
+        .maybeSingle()) as { data: AvailableStaffAccount | null };
+      return self ? [self] : [];
     }
 
-    // 2. Query all active staff in the same hotel
+    // 4. Query active staff in the SAME hotel only, filtered by hierarchy roles
     const { data: accounts, error: accountsErr } = (await supabase
       .from('staff')
       .select('id, email, full_name, role, is_active, hotel_id')
-      .eq('hotel_id', hotelId)
+      .eq('hotel_id', resolvedHotelId)   // ← tenant boundary enforced server-side
       .eq('is_active', true)
-      .order('role', { ascending: true })) as { data: AvailableStaffAccount[] | null; error: any };
+      .in('role', allowedRoles)          // ← hierarchy enforced server-side
+      .order('role', { ascending: true })) as {
+      data: AvailableStaffAccount[] | null;
+      error: any;
+    };
 
     if (accountsErr || !accounts) {
       console.error('Error fetching available staff accounts:', accountsErr?.message);
       return [];
     }
 
-    // Custom role ordering: owner -> manager -> reception -> housekeeping
+    // Custom role ordering: owner → manager → reception → housekeeping
     const roleWeight: Record<StaffRole, number> = {
       owner: 1,
       manager: 2,
@@ -70,7 +93,7 @@ export async function getAvailableStaffAccounts(knownHotelId?: string): Promise<
     };
 
     return accounts.sort(
-      (a, b) => (roleWeight[a.role] || 99) - (roleWeight[b.role] || 99)
+      (a, b) => (roleWeight[a.role] ?? 99) - (roleWeight[b.role] ?? 99)
     );
   } catch (err) {
     console.error('getAvailableStaffAccounts exception:', err);
@@ -87,7 +110,14 @@ export interface SwitchAccountResult {
 
 /**
  * Secure Server Action to switch active staff account.
- * Validates session, hotel boundary, and establishes a genuine Supabase Auth session for the target account.
+ *
+ * Full validation chain:
+ *   1. Verify caller's Supabase Auth session
+ *   2. Verify caller's staff record (hotel_id + role)
+ *   3. Verify target staff exists, is active, same hotel
+ *   4. Enforce hierarchy: canSwitchToAccount()
+ *   5. Generate a server-signed magic-link token for the target account
+ *   6. Verify the token to update HTTP-only session cookies
  */
 export async function switchStaffAccountAction(targetStaffId: string): Promise<SwitchAccountResult> {
   try {
@@ -109,34 +139,62 @@ export async function switchStaffAccountAction(targetStaffId: string): Promise<S
       .select('id, hotel_id, is_active, role')
       .eq('id', currentUser.id)
       .eq('is_active', true)
-      .maybeSingle()) as { data: { id: string; hotel_id: string; is_active: boolean; role: string } | null; error: any };
+      .maybeSingle()) as {
+      data: { id: string; hotel_id: string; is_active: boolean; role: StaffRole } | null;
+      error: any;
+    };
 
     if (callerErr || !callerStaff) {
       return { success: false, error: 'Caller account is not active or recognized as staff.' };
     }
 
-    // If already on the target account, return success immediately
+    // Switching to self is always valid
     if (callerStaff.id === targetStaffId) {
       return { success: true };
     }
 
-    // 3. Verify target staff exists, is active, and is in the exact same hotel
+    // 3. Verify target staff: must be active AND in the exact same hotel
     const { data: targetStaff, error: targetErr } = (await ssrClient
       .from('staff')
       .select('id, email, full_name, role, is_active, hotel_id')
       .eq('id', targetStaffId)
       .eq('is_active', true)
-      .eq('hotel_id', callerStaff.hotel_id)
-      .maybeSingle()) as { data: { id: string; email: string; full_name: string; role: StaffRole; is_active: boolean; hotel_id: string } | null; error: any };
+      .eq('hotel_id', callerStaff.hotel_id)  // ← tenant boundary enforced
+      .maybeSingle()) as {
+      data: {
+        id: string;
+        email: string;
+        full_name: string;
+        role: StaffRole;
+        is_active: boolean;
+        hotel_id: string;
+      } | null;
+      error: any;
+    };
 
     if (targetErr || !targetStaff) {
       return {
         success: false,
-        error: 'Target account not found, deactivated, or unauthorized for this property.',
+        error: 'Target account not found, deactivated, or belongs to a different property.',
       };
     }
 
-    // 4. Initialize Supabase Admin client to generate a secure magiclink verification token
+    // 4. Enforce role hierarchy — central authorization check
+    if (
+      !canSwitchToAccount(
+        callerStaff.role,
+        callerStaff.hotel_id,
+        targetStaff.role,
+        targetStaff.hotel_id
+      )
+    ) {
+      return {
+        success: false,
+        error: `Your role (${callerStaff.role}) is not authorized to switch into a ${targetStaff.role} account.`,
+      };
+    }
+
+    // 5. Initialize Supabase Admin client for session token generation
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -158,7 +216,7 @@ export async function switchStaffAccountAction(targetStaffId: string): Promise<S
       return { success: false, error: 'Failed to generate authorization token for target account.' };
     }
 
-    // 5. Verify the token on the SSR client instance to update active HTTP-only session cookies
+    // 6. Verify the token on the SSR client to update HTTP-only session cookies
     const { data: verifyData, error: verifyErr } = await ssrClient.auth.verifyOtp({
       token_hash: linkData.properties.hashed_token,
       type: 'magiclink',
@@ -169,7 +227,7 @@ export async function switchStaffAccountAction(targetStaffId: string): Promise<S
       return { success: false, error: 'Failed to transition active session cookies.' };
     }
 
-    // 6. Invalidate server component cache
+    // 7. Invalidate server component cache for full reload
     revalidatePath('/', 'layout');
 
     return {

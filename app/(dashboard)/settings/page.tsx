@@ -1,4 +1,4 @@
-import { Settings, Percent, BedDouble, ArrowRight, UtensilsCrossed } from 'lucide-react';
+import { Settings, Percent, BedDouble, ArrowRight, UtensilsCrossed, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SettingsPage() {
@@ -6,10 +6,32 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-display font-serif text-brand-forest">Settings</h1>
-        <p className="text-body text-ink-muted">Property and operational configuration</p>
+        <p className="text-body text-ink-muted">Property, staff credentials, and operational configuration</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Staff / Users Management */}
+        <Link
+          href="/settings/staff"
+          className="bg-white rounded-xl border border-border-subtle p-6 space-y-3 hover:border-brand-forest/50 transition-colors shadow-2xs group flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="p-2.5 bg-brand-sand rounded-lg text-brand-forest group-hover:bg-brand-forest group-hover:text-white transition-colors">
+                <Users className="w-5 h-5" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-ink-muted group-hover:text-brand-forest transition-colors" />
+            </div>
+            <div className="mt-3">
+              <h3 className="font-serif font-bold text-ink text-base">Staff &amp; Users</h3>
+              <p className="text-caption text-ink-muted mt-1">
+                Manage hotel staff accounts, operational roles (Owner, Manager, Reception, Housekeeping), and access status
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-brand-forest font-medium">Manage Staff &amp; Team →</span>
+        </Link>
+
         {/* Room Categories */}
         <Link
           href="/settings/room-categories"
@@ -25,14 +47,14 @@ export default function SettingsPage() {
             <div className="mt-3">
               <h3 className="font-serif font-bold text-ink text-base">Room Categories</h3>
               <p className="text-caption text-ink-muted mt-1">
-                Configure room types, weekday & weekend rates, and max occupancy
+                Configure room types, weekday &amp; weekend rates, and max occupancy
               </p>
             </div>
           </div>
           <span className="text-xs text-brand-forest font-medium">Manage Categories →</span>
         </Link>
 
-        {/* GST & Taxes */}
+        {/* GST & Taxes / Hotel Information */}
         <Link
           href="/settings/gst"
           className="bg-white rounded-xl border border-border-subtle p-6 space-y-3 hover:border-brand-forest/50 transition-colors shadow-2xs group flex flex-col justify-between"
@@ -45,14 +67,15 @@ export default function SettingsPage() {
               <ArrowRight className="w-4 h-4 text-ink-muted group-hover:text-brand-forest transition-colors" />
             </div>
             <div className="mt-3">
-              <h3 className="font-serif font-bold text-ink text-base">GST &amp; Taxes</h3>
+              <h3 className="font-serif font-bold text-ink text-base">GST, Taxes &amp; Hotel Branding</h3>
               <p className="text-caption text-ink-muted mt-1">
-                Configure GST percentage, GSTIN, and tax invoice format in hotels.settings
+                Configure GST percentage, GSTIN, property address, contact details, and hotel logo
               </p>
             </div>
           </div>
-          <span className="text-xs text-brand-forest font-medium">Configure GST →</span>
+          <span className="text-xs text-brand-forest font-medium">Configure Hotel &amp; GST →</span>
         </Link>
+
         {/* Food Menu Management */}
         <Link
           href="/settings/food-menu"
@@ -68,7 +91,7 @@ export default function SettingsPage() {
             <div className="mt-3">
               <h3 className="font-serif font-bold text-ink text-base">Food Menu</h3>
               <p className="text-caption text-ink-muted mt-1">
-                Manage restaurant & room-service food items, categories, selling prices, and active availability
+                Manage restaurant &amp; room-service food items, categories, selling prices, and active availability
               </p>
             </div>
           </div>

@@ -126,8 +126,14 @@ export default function MobileNavDrawer({
         {/* Header */}
         <div className="px-4 py-4 border-b border-white/8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="h-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
-              <img src="/logo.png" alt="Hotel Greenery View Logo" className="h-8 w-auto object-contain" />
+            <div className="h-10 w-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs">
+              {(staff as any).hotel_logo_url ? (
+                <img src={(staff as any).hotel_logo_url} alt={staff.hotel_name} className="h-8 w-auto object-contain" />
+              ) : (
+                <div className="w-8 h-8 rounded-md bg-brand-forest text-white font-bold font-serif text-xs flex items-center justify-center">
+                  {staff.hotel_name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <h2 className="font-serif text-[14px] font-bold truncate text-white leading-tight">

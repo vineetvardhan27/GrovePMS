@@ -3,6 +3,8 @@ import { createClient } from '../supabase/server';
 
 const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
+import { getCurrentStaff } from '../auth/session';
+
 export interface HotelSettings {
   gst_enabled?: boolean;
   gst_percentage?: number;
@@ -19,12 +21,14 @@ export interface HotelSettings {
   check_out_time?: string;
   currency_symbol?: string;
   currency_code?: string;
+  logo_url?: string | null;
 }
 
 export interface Hotel {
   id: string;
   name: string;
   slug: string;
+  logo_url?: string | null;
   settings: HotelSettings;
   address?: string;
   phone?: string;
@@ -36,6 +40,7 @@ const DEFAULT_HOTEL: Hotel = {
   id: 'a0000000-0000-0000-0000-000000000001',
   name: 'Hotel Greenery View',
   slug: 'hotelgreeneryview',
+  logo_url: null,
   address: '14 Hill View Road, Mussoorie',
   phone: '+91 98765 43210',
   email: 'contact@hotelgreeneryview.com',
@@ -55,6 +60,7 @@ const DEFAULT_HOTEL: Hotel = {
     check_out_time: '11:00',
     currency_symbol: '₹',
     currency_code: 'INR',
+    logo_url: null,
   },
 };
 
@@ -62,11 +68,14 @@ let localHotelStore: Hotel = { ...DEFAULT_HOTEL };
 
 export const getHotel = serverCache(async function getHotel(hotelId?: string): Promise<Hotel> {
   try {
+    const staff = await getCurrentStaff();
+    const activeHotelId = hotelId || staff?.hotel_id || DEFAULT_HOTEL.id;
+
     const supabase = createClient();
     const { data, error } = (await supabase
       .from('hotels')
       .select('*')
-      .eq('id', hotelId || DEFAULT_HOTEL.id)
+      .eq('id', activeHotelId)
       .single()) as { data: any; error: any };
 
     if (error) {
@@ -78,9 +87,11 @@ export const getHotel = serverCache(async function getHotel(hotelId?: string): P
         gst_rate: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
         gst_percentage: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
         gst_enabled: rawSettings.gst_enabled !== false,
+        logo_url: data.logo_url || rawSettings.logo_url || null,
       };
       return {
         ...data,
+        logo_url: data.logo_url || rawSettings.logo_url || null,
         settings: normalizedSettings,
       } as Hotel;
     }
