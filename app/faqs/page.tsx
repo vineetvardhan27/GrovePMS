@@ -6,7 +6,7 @@ import PublicFooter from '@/components/layout/PublicFooter';
 import { HelpCircle, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
-export const faqsData = [
+const faqsData = [
   {
     q: 'What is a hotel PMS?',
     a: 'A Property Management System (PMS) is the core operational software that hotels use to coordinate daily workflows — including room inventory, front desk check-ins, reservations, guest ledgers, billing, housekeeping status, and financial reporting.',

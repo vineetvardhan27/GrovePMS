@@ -27,7 +27,7 @@ import {
 import { StaffRole } from '../../lib/types/database.types';
 import { signOut } from '../../app/(auth)/login/actions';
 
-import { StaffProfile } from '../../lib/auth/session';
+import type { StaffProfile } from '../../lib/auth/types';
 import { AvailableStaffAccount } from '../../lib/auth/switchAccount';
 import AccountSwitcher from './AccountSwitcher';
 

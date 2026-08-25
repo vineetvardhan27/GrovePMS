@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from './lib/supabase/middleware';
 import { StaffRole } from './lib/types/database.types';
-import { hasRouteAccess } from './lib/auth/session';
+import { hasRoutePermission } from './lib/auth/permissions';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
 
   // 3. If authenticated, enforce Role-Based Route Gating per PRD §5 & Architecture.md §4
   if (isAuthenticated && isDashboardRoute) {
-    const isAllowed = hasRouteAccess(activeRole, pathname);
+    const isAllowed = hasRoutePermission(activeRole, pathname);
 
     if (!isAllowed) {
       // Role not authorized for this specific route -> redirect to dashboard

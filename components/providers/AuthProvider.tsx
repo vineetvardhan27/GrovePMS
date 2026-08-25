@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClient } from '../../lib/supabase/client';
-import { StaffProfile } from '../../lib/auth/session';
+import type { StaffProfile } from '../../lib/auth/types';
 import { StaffRole } from '../../lib/types/database.types';
 import { User } from '@supabase/supabase-js';
 

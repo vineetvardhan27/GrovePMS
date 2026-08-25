@@ -16,7 +16,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
-import { StaffProfile } from '../../lib/auth/session';
+import type { StaffProfile } from '../../lib/auth/types';
 import {
   AvailableStaffAccount,
   switchStaffAccountAction,

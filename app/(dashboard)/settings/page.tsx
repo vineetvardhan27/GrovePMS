@@ -1,6 +1,8 @@
 import { Settings, Percent, BedDouble, ArrowRight, UtensilsCrossed, Users } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default function SettingsPage() {
   return (
     <div className="space-y-6">

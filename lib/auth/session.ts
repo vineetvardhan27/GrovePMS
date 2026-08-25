@@ -1,32 +1,14 @@
-import * as React from 'react';
+import { cache } from 'react';
 import { createClient } from '../supabase/server';
 import { StaffRole } from '../types/database.types';
 import { User } from '@supabase/supabase-js';
 
-// Safe server-only cache helper that gracefully falls back if evaluated in client bundler
-const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
+const serverCache = typeof cache === 'function' ? cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
 import { hasRoutePermission, ROLE_ALLOWED_ROUTES } from './permissions';
+import { StaffProfile, StaffResolutionResult } from './types';
 
-export interface StaffProfile {
-  id: string;
-  email: string;
-  full_name: string;
-  role: StaffRole;
-  hotel_id: string;
-  hotel_name: string;
-  hotel_slug?: string;
-  hotel_logo_url?: string | null;
-  hotel_settings?: Record<string, any> | null;
-  is_active: boolean;
-}
-
-export type StaffResolutionResult =
-  | { status: 'unauthenticated'; user: null; staff: null }
-  | { status: 'no_staff_record'; user: User; staff: null }
-  | { status: 'inactive_staff'; user: User; staff: any }
-  | { status: 'hotel_not_found'; user: User; staff: any }
-  | { status: 'success'; user: User; staff: StaffProfile };
+export type { StaffProfile, StaffResolutionResult };
 
 export const ROLE_NAV_ITEMS = ROLE_ALLOWED_ROUTES;
 export const hasRouteAccess = hasRoutePermission;
