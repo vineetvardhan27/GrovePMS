@@ -35,182 +35,7 @@ export const DEFAULT_BANQUET_HALL: BanquetHall = {
   is_active: true,
 };
 
-export const DEFAULT_BANQUET_BOOKINGS: BanquetBooking[] = [
-  {
-    id: 'bb000000-0000-4000-8000-000000000001',
-    banquet_hall_id: DEFAULT_BANQUET_HALL.id,
-    booking_number: 'HGV-BNQ-2026-001',
-    event_name: 'Vikram & Ananya Wedding Reception',
-    customer_name: 'Vikramaditya Roy',
-    customer_phone: '+91 98765 11223',
-    customer_email: 'vikram.roy@example.com',
-    customer_address: 'Alipore, Kolkata, West Bengal 700027',
-    customer_gstin: null,
-    payment_status: 'partially_paid',
-    invoice_number: 'HGV-BNQ-INV-20260822-0001',
-    invoice_date: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-    event_date: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-    start_time: '18:00',
-    end_time: '23:30',
-    guest_count: 180,
-    event_type: 'reception',
-    booking_status: 'confirmed',
-    rental_amount: 35000,
-    catering_required: true,
-    catering_notes: 'North Indian & South Indian mixed buffet, Live Chaat Counter',
-    estimated_total: 85000,
-    advance_paid: 25000,
-    subtotal: 85000,
-    tax_amount: 15300,
-    grand_total: 100300,
-    total_paid: 25000,
-    balance_due: 75300,
-    tax_treatment: 'gst',
-    remarks: 'Stage flower decoration and DJ setup required by 16:30',
-    charges: [
-      {
-        id: 'bc000000-0000-4000-8000-000000000001',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000001',
-        category: 'hall_rental',
-        description: 'Grand Banquet Hall Full Day Rental (18:00 - 23:30)',
-        sac_code: '996311',
-        quantity: 1,
-        unit_price: 35000,
-        discount: 0,
-        tax_treatment: 'gst',
-        tax_rate: 18,
-        taxable_amount: 35000,
-        tax_amount: 6300,
-        total_amount: 41300,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'bc000000-0000-4000-8000-000000000002',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000001',
-        category: 'catering',
-        description: 'Wedding Buffet & Live Counters (180 pax × ₹250)',
-        sac_code: '996331',
-        quantity: 180,
-        unit_price: 250,
-        discount: 0,
-        tax_treatment: 'gst',
-        tax_rate: 18,
-        taxable_amount: 45000,
-        tax_amount: 8100,
-        total_amount: 53100,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'bc000000-0000-4000-8000-000000000003',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000001',
-        category: 'audio_visual',
-        description: 'AV Projector, High-Gain Screen & Collar Mics',
-        sac_code: '996311',
-        quantity: 1,
-        unit_price: 5000,
-        discount: 0,
-        tax_treatment: 'gst',
-        tax_rate: 18,
-        taxable_amount: 5000,
-        tax_amount: 900,
-        total_amount: 5900,
-        created_at: new Date().toISOString(),
-      },
-    ],
-    payments: [
-      {
-        id: 'bp000000-0000-4000-8000-000000000001',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000001',
-        amount: 25000,
-        payment_mode: 'upi',
-        payment_type: 'advance',
-        reference_number: 'UPI-HGV-8923412',
-        notes: 'Initial booking deposit via Google Pay',
-        created_at: new Date().toISOString(),
-      },
-    ],
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'bb000000-0000-4000-8000-000000000002',
-    banquet_hall_id: DEFAULT_BANQUET_HALL.id,
-    booking_number: 'HGV-BNQ-2026-002',
-    event_name: 'Apex Pharma Annual Leadership Summit',
-    customer_name: 'Dr. Ramesh Kulkarni',
-    customer_phone: '+91 98220 54321',
-    customer_email: 'ramesh.kulkarni@apexpharma.com',
-    customer_address: 'Salt Lake Sector V, Kolkata, West Bengal 700091',
-    customer_gstin: '19AAACP1234F1Z5',
-    payment_status: 'partially_paid',
-    invoice_number: 'HGV-BNQ-INV-20260822-0002',
-    invoice_date: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    event_date: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    start_time: '09:00',
-    end_time: '17:00',
-    guest_count: 85,
-    event_type: 'conference',
-    booking_status: 'confirmed',
-    rental_amount: 28000,
-    catering_required: true,
-    catering_notes: 'Morning tea with cookies, Executive Lunch Buffet, High Tea',
-    estimated_total: 62000,
-    advance_paid: 30000,
-    subtotal: 62000,
-    tax_amount: 11160,
-    grand_total: 73160,
-    total_paid: 30000,
-    balance_due: 43160,
-    tax_treatment: 'gst',
-    remarks: 'Projector, 4 cordless collar microphones, and stage podium setup needed',
-    charges: [
-      {
-        id: 'bc000000-0000-4000-8000-000000000004',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000002',
-        category: 'hall_rental',
-        description: 'Full Day Conference Hall Package with Stage & Podium',
-        sac_code: '996311',
-        quantity: 1,
-        unit_price: 28000,
-        discount: 0,
-        tax_treatment: 'gst',
-        tax_rate: 18,
-        taxable_amount: 28000,
-        tax_amount: 5040,
-        total_amount: 33040,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'bc000000-0000-4000-8000-000000000005',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000002',
-        category: 'catering',
-        description: 'Corporate Executive Lunch & High Tea (85 pax × ₹400)',
-        sac_code: '996331',
-        quantity: 85,
-        unit_price: 400,
-        discount: 0,
-        tax_treatment: 'gst',
-        tax_rate: 18,
-        taxable_amount: 34000,
-        tax_amount: 6120,
-        total_amount: 40120,
-        created_at: new Date().toISOString(),
-      },
-    ],
-    payments: [
-      {
-        id: 'bp000000-0000-4000-8000-000000000002',
-        banquet_booking_id: 'bb000000-0000-4000-8000-000000000002',
-        amount: 30000,
-        payment_mode: 'bank_transfer',
-        payment_type: 'advance',
-        reference_number: 'NEFT-AXIS-992384',
-        notes: 'Corporate advance from Apex Pharma Ltd.',
-        created_at: new Date().toISOString(),
-      },
-    ],
-    created_at: new Date().toISOString(),
-  },
-];
+export const DEFAULT_BANQUET_BOOKINGS: BanquetBooking[] = [];
 
 /**
  * Fetch the property's Banquet Hall details
@@ -332,15 +157,10 @@ export async function getBanquetCharges(
 
     const storedCharges: BanquetCharge[] = (hotel?.settings?.banquet_charges as BanquetCharge[]) || [];
     if (bookingId) {
-      const matching = storedCharges.filter((c) => c.banquet_booking_id === bookingId);
-      if (matching.length > 0) return matching;
-
-      const defaultMatch = DEFAULT_BANQUET_BOOKINGS.find((b) => b.id === bookingId);
-      return defaultMatch?.charges || [];
+      return storedCharges.filter((c) => c.banquet_booking_id === bookingId);
     }
 
-    if (storedCharges.length > 0) return storedCharges;
-    return DEFAULT_BANQUET_BOOKINGS.flatMap((b) => b.charges || []);
+    return storedCharges;
   } catch (err) {
     console.error('getBanquetCharges error:', err);
     return [];
@@ -404,15 +224,10 @@ export async function getBanquetPayments(
 
     const storedPayments: BanquetPayment[] = (hotel?.settings?.banquet_payments as BanquetPayment[]) || [];
     if (bookingId) {
-      const matching = storedPayments.filter((p) => p.banquet_booking_id === bookingId);
-      if (matching.length > 0) return matching;
-
-      const defaultMatch = DEFAULT_BANQUET_BOOKINGS.find((b) => b.id === bookingId);
-      return (targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? (defaultMatch?.payments || []) : []);
+      return storedPayments.filter((p) => p.banquet_booking_id === bookingId);
     }
 
-    if (storedPayments.length > 0) return storedPayments;
-    return targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_BANQUET_BOOKINGS.flatMap((b) => b.payments || []) : [];
+    return storedPayments;
   } catch (err) {
     console.error('getBanquetPayments error:', err);
     return [];
@@ -525,7 +340,7 @@ export async function getBanquetBookings(
         .maybeSingle();
 
       const storedBookings: BanquetBooking[] =
-        (hotel?.settings?.banquet_bookings as BanquetBooking[]) || (targetHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_BANQUET_BOOKINGS : []);
+        (hotel?.settings?.banquet_bookings as BanquetBooking[]) || [];
       rawBookings = storedBookings;
       if (filterDate) {
         rawBookings = rawBookings.filter((b) => b.event_date === filterDate);
