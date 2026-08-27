@@ -60,12 +60,12 @@ export async function updateHotelSettingsAction(
   try {
     const supabase = createServerClient();
 
-    // 1. Fetch current settings
+    // 1. Fetch current hotel record and settings
     const { data: hotel, error: fetchErr } = (await supabase
       .from('hotels')
-      .select('settings')
+      .select('settings, address, phone, email')
       .eq('id', targetHotelId)
-      .single()) as { data: { settings: any } | null; error: any };
+      .single()) as { data: { settings: any; address?: string; phone?: string; email?: string } | null; error: any };
 
     if (fetchErr) {
       console.error('Error fetching current hotel settings:', fetchErr.message);
@@ -73,24 +73,69 @@ export async function updateHotelSettingsAction(
 
     const currentSettings = (hotel?.settings || {}) as any;
 
-    const updatedSettings = {
+    // Server-side validation
+    let gstPercentage = currentSettings.gst_percentage ?? 12;
+    if (settings.gst_percentage !== undefined) {
+      const parsedGst = Number(settings.gst_percentage);
+      if (isNaN(parsedGst) || parsedGst < 0 || parsedGst > 100) {
+        return { success: false, error: 'GST percentage must be a valid number between 0% and 100%.' };
+      }
+      gstPercentage = parsedGst;
+    }
+
+    const updatedSettings: HotelSettings = {
       ...currentSettings,
       ...settings,
-      gst_percentage: settings.gst_percentage !== undefined ? Number(settings.gst_percentage) : (currentSettings.gst_percentage ?? 12),
-      gst_rate: settings.gst_percentage !== undefined ? Number(settings.gst_percentage) : (currentSettings.gst_rate ?? 12),
-      gst_enabled: settings.gst_enabled !== undefined ? settings.gst_enabled : (currentSettings.gst_enabled ?? true),
-      gst_number: settings.gst_number !== undefined ? settings.gst_number : currentSettings.gst_number,
-      pan_number: settings.pan_number !== undefined ? settings.pan_number : currentSettings.pan_number,
+      gst_percentage: gstPercentage,
+      gst_rate: gstPercentage,
+      gst_enabled: settings.gst_enabled !== undefined ? Boolean(settings.gst_enabled) : (currentSettings.gst_enabled ?? true),
+      gst_number: settings.gst_number !== undefined
+        ? (settings.gst_number ? String(settings.gst_number).trim() : null)
+        : currentSettings.gst_number,
+      pan_number: settings.pan_number !== undefined
+        ? (settings.pan_number ? String(settings.pan_number).trim() : null)
+        : currentSettings.pan_number,
+      address: settings.address !== undefined
+        ? String(settings.address).trim()
+        : (currentSettings.address ?? hotel?.address),
+      city: settings.city !== undefined
+        ? String(settings.city).trim()
+        : currentSettings.city,
+      state: settings.state !== undefined
+        ? String(settings.state).trim()
+        : currentSettings.state,
+      pin_code: settings.pin_code !== undefined
+        ? String(settings.pin_code).trim()
+        : currentSettings.pin_code,
+      phone: settings.phone !== undefined
+        ? String(settings.phone).trim()
+        : (currentSettings.phone ?? hotel?.phone),
+      email: settings.email !== undefined
+        ? String(settings.email).trim()
+        : (currentSettings.email ?? hotel?.email),
+      logo_url: settings.logo_url !== undefined
+        ? (settings.logo_url ? String(settings.logo_url).trim() : null)
+        : (currentSettings.logo_url ?? null),
+    };
+
+    // 2. Build update payload for hotels table
+    // Note: logo_url is housed inside settings JSONB; it is not a direct column on hotels
+    const updatePayload: Record<string, any> = {
+      settings: {
+        ...updatedSettings,
+        updated_at: new Date().toISOString(),
+      },
       updated_at: new Date().toISOString(),
     };
 
-    // 2. Update hotel in Supabase
-    const updatePayload: any = {
-      settings: updatedSettings,
-      updated_at: new Date().toISOString(),
-    };
-    if (settings.logo_url !== undefined) {
-      updatePayload.logo_url = settings.logo_url;
+    if (settings.address !== undefined && updatedSettings.address) {
+      updatePayload.address = updatedSettings.address;
+    }
+    if (settings.phone !== undefined && updatedSettings.phone) {
+      updatePayload.phone = updatedSettings.phone;
+    }
+    if (settings.email !== undefined && updatedSettings.email) {
+      updatePayload.email = updatedSettings.email;
     }
 
     const { error: updateErr } = await (supabase.from('hotels') as any)
@@ -111,7 +156,7 @@ export async function updateHotelSettingsAction(
     revalidatePath('/reports');
     revalidatePath('/', 'layout');
 
-    return { success: true, settings: updatedSettings as HotelSettings };
+    return { success: true, settings: updatedSettings };
   } catch (err: any) {
     console.error('Failed to update hotel settings:', err);
     return { success: false, error: err?.message || 'Database connection error.' };
