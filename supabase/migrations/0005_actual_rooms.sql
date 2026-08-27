@@ -1,6 +1,5 @@
 -- Migration: 0005_actual_rooms.sql
--- Description: Replace demo room categories and rooms with actual Hotel Greenery View
---              physical floor and room structure.
+-- Description: Configure actual Hotel Greenery View physical floor and room structure.
 --
 -- Hotel layout:
 --   Basement     (floor=0) : 1 Family Apartment  (FA-01)
@@ -12,43 +11,11 @@
 --
 -- Total: 18 regular rooms + 1 Family Apartment = 19 accommodation units
 --
--- Safety: Uses ON CONFLICT DO NOTHING for categories/rooms to be idempotent.
---         Deletes only the known demo UUIDs that were created in seed.sql so that
---         any real bookings tied to other room_ids are not affected.
+-- Safety: Non-destructive upsert (ON CONFLICT DO UPDATE).
+--         Preserves all existing bookings, payments, and guest foreign-key references.
 
 -- ============================================================
--- 1. Remove demo room records (known seed UUIDs only)
---    Must delete rooms first due to FK constraint on room_categories
--- ============================================================
-
-DELETE FROM rooms
-WHERE id IN (
-    'd0000000-0000-0000-0000-000000000101',
-    'd0000000-0000-0000-0000-000000000102',
-    'd0000000-0000-0000-0000-000000000103',
-    'd0000000-0000-0000-0000-000000000104',
-    'd0000000-0000-0000-0000-000000000201',
-    'd0000000-0000-0000-0000-000000000202',
-    'd0000000-0000-0000-0000-000000000203',
-    'd0000000-0000-0000-0000-000000000204',
-    'd0000000-0000-0000-0000-000000000301',
-    'd0000000-0000-0000-0000-000000000302'
-);
-
--- ============================================================
--- 2. Remove demo room categories (known seed UUIDs only)
--- ============================================================
-
-DELETE FROM room_categories
-WHERE id IN (
-    'c0000000-0000-0000-0000-000000000001',
-    'c0000000-0000-0000-0000-000000000002',
-    'c0000000-0000-0000-0000-000000000003'
-);
-
--- ============================================================
--- 3. Insert actual room categories
---    IDs: c0000000-0000-0000-0000-00000000000x (001-005)
+-- 1. Insert or Update Room Categories (5 categories)
 -- ============================================================
 
 INSERT INTO room_categories (id, hotel_id, name, description, base_rate, weekend_rate, max_occupancy, extra_bed_rate)
@@ -88,12 +55,19 @@ VALUES
         'Spacious multi-room apartment in the basement, ideal for families',
         7500.00, 9000.00, 6, 1200.00
     )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    hotel_id = EXCLUDED.hotel_id,
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    base_rate = EXCLUDED.base_rate,
+    weekend_rate = EXCLUDED.weekend_rate,
+    max_occupancy = EXCLUDED.max_occupancy,
+    extra_bed_rate = EXCLUDED.extra_bed_rate,
+    updated_at = NOW();
 
 -- ============================================================
--- 4. Insert actual rooms
+-- 2. Insert or Update Actual Rooms (19 units)
 --    Floor mapping: Basement=0, Ground=1, First=2, Second=3, Upper=4
---    All rooms start as 'available' / 'clean' (status is live from DB)
 -- ============================================================
 
 INSERT INTO rooms (id, hotel_id, category_id, room_number, floor, status, housekeeping_status)
@@ -128,4 +102,12 @@ VALUES
     ('d0000000-0000-0000-0000-000000000403', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000004', '303',   4, 'available', 'clean'),
     ('d0000000-0000-0000-0000-000000000404', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000004', '304',   4, 'available', 'clean')
 
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+    hotel_id = EXCLUDED.hotel_id,
+    category_id = EXCLUDED.category_id,
+    room_number = EXCLUDED.room_number,
+    floor = EXCLUDED.floor,
+    status = EXCLUDED.status,
+    housekeeping_status = EXCLUDED.housekeeping_status,
+    updated_at = NOW();
+
