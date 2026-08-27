@@ -19,6 +19,7 @@ import {
   Edit2,
   Lock,
 } from 'lucide-react';
+import PasswordInput from '../../../../components/shared/PasswordInput';
 import {
   StaffAccount,
   StaffActionResult,
@@ -471,18 +472,14 @@ export default function StaffManager({
 
               <div>
                 <label className="block text-xs font-semibold text-ink mb-1">Password * (minimum 6 characters)</label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 bg-brand-sand/40 border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest"
-                  />
-                </div>
+                <PasswordInput
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full py-2 bg-brand-sand/40 border border-border-subtle rounded-lg text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest"
+                />
               </div>
 
               <div>

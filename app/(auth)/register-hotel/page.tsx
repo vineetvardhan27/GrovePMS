@@ -18,10 +18,9 @@ import {
   ArrowRight,
   Sparkles,
   ShieldCheck,
-  Eye,
-  EyeOff,
   Crown,
 } from 'lucide-react';
+import PasswordInput from '../../../components/shared/PasswordInput';
 import Link from 'next/link';
 import { registerHotelAndOwner } from './actions';
 
@@ -51,8 +50,6 @@ function SubmitButton() {
 
 export default function RegisterHotelPage() {
   const [state, action] = useFormState(registerHotelAndOwner, null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Success view
   if (state?.success) {
@@ -323,50 +320,28 @@ export default function RegisterHotelPage() {
                 <label className="block text-xs font-semibold text-ink mb-1.5" htmlFor="password">
                   Password * (min 6 characters)
                 </label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink p-1"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                  className="w-full py-2.5 bg-brand-sand/40 border border-border-subtle rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-ink mb-1.5" htmlFor="confirm_password">
                   Confirm Password *
                 </label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
-                  <input
-                    id="confirm_password"
-                    name="confirm_password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink p-1"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <PasswordInput
+                  id="confirm_password"
+                  name="confirm_password"
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                  className="w-full py-2.5 bg-brand-sand/40 border border-border-subtle rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest"
+                />
               </div>
             </div>
           </div>

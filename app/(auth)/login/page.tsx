@@ -2,7 +2,8 @@
 
 import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { KeyRound, Mail, AlertCircle, Lock } from 'lucide-react';
+import PasswordInput from '../../../components/shared/PasswordInput';
+import { Mail, AlertCircle, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { signIn } from './actions';
 
@@ -80,18 +81,14 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-ink mb-1.5" htmlFor="password">
               Password
             </label>
-            <div className="relative">
-              <KeyRound className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch text-base md:text-sm"
-              />
-            </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="w-full py-2.5 bg-brand-sand/40 border border-border-subtle rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch text-base md:text-sm"
+            />
           </div>
 
           <div className="pt-2">
