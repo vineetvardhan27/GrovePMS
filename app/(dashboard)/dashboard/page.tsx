@@ -25,6 +25,7 @@ import { getDashboardStats } from '../../../lib/reports/queries';
 import { getRooms, getRoomCategories } from '../../../lib/rooms/queries';
 import { formatCurrency } from '../../../lib/utils/currency';
 import DashboardRoomGrid from '../../../components/dashboard/DashboardRoomGrid';
+import PropertyStatusCards from '../../../components/dashboard/PropertyStatusCards';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,42 +42,6 @@ export default async function DashboardPage({
   ]);
 
   const isAccessDenied = searchParams?.access_denied === 'true';
-
-  // Primary Room Status Indicators (Rank 1 Priority - large Inter tabular numbers)
-  const roomStatusKPIs = [
-    {
-      label: 'Available',
-      value: stats.rooms.available,
-      icon: CheckCircle2,
-      colorClass: 'text-status-green',
-      borderClass: 'border-l-status-green',
-      href: '/rooms',
-    },
-    {
-      label: 'Occupied',
-      value: stats.rooms.occupied,
-      icon: Users,
-      colorClass: 'text-status-red',
-      borderClass: 'border-l-status-red',
-      href: '/rooms',
-    },
-    {
-      label: 'Reserved',
-      value: stats.rooms.reserved,
-      icon: Calendar,
-      colorClass: 'text-status-blue',
-      borderClass: 'border-l-status-blue',
-      href: '/bookings',
-    },
-    {
-      label: 'Arriving Today',
-      value: stats.today.arrivals.length,
-      icon: Clock,
-      colorClass: 'text-status-amber',
-      borderClass: 'border-l-status-amber',
-      href: '/bookings',
-    },
-  ];
 
   const modeIcons: Record<string, any> = {
     cash: Banknote,
@@ -186,36 +151,14 @@ export default async function DashboardPage({
       </div>
 
       {/* Primary Visual Element: Live Room Status Counters */}
-      <div className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
-          Current Property Status
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {roomStatusKPIs.map((kpi) => {
-            const Icon = kpi.icon;
-            return (
-              <Link
-                key={kpi.label}
-                href={kpi.href}
-                className={`bg-white rounded-lg p-4 border border-border-subtle border-l-4 ${kpi.borderClass} shadow-2xs hover:shadow-md transition-all group cursor-pointer`}
-              >
-                <div className="flex items-center justify-between text-ink-muted mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">
-                    {kpi.label}
-                  </span>
-                  <div className="p-1 rounded bg-brand-sand">
-                    <Icon className={`w-4 h-4 ${kpi.colorClass}`} />
-                  </div>
-                </div>
-                {/* Numeric KPIs in Inter tabular-nums (Design.md §2) */}
-                <p className={`text-2xl md:text-3xl font-bold font-sans tabular-nums ${kpi.colorClass}`}>
-                  {kpi.value}
-                </p>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      <PropertyStatusCards
+        stats={{
+          available: stats.rooms.available,
+          occupied: stats.rooms.occupied,
+          reserved: stats.rooms.reserved,
+          arrivingToday: stats.today.arrivals.length,
+        }}
+      />
 
       {/* Signature Section: Live Room Grid (Design.md §0) */}
       <div>
