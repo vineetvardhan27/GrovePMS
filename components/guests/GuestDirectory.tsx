@@ -19,6 +19,7 @@ import type { Guest } from '../../lib/guests/queries';
 import type { BookingWithDetails } from '../../lib/bookings/queries';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';
+import { maskIdNumber } from '../../lib/utils/idExtractor';
 
 interface GuestDirectoryProps {
   initialGuests: Guest[];
@@ -119,7 +120,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                       <td className="p-4 text-ink-muted">
                         {guest.id_type ? (
                           <span>
-                            {guest.id_type}: <span className="font-mono text-ink">{guest.id_number || 'On file'}</span>
+                            {guest.id_type}: <span className="font-mono text-ink">{maskIdNumber(guest.id_type, guest.id_number)}</span>
                           </span>
                         ) : (
                           '—'

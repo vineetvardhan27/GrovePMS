@@ -32,6 +32,8 @@ import { BookingSource, PaymentMode } from '../../lib/types/database.types';
 import { formatCurrency } from '../../lib/utils/currency';
 import { calculateStayRates } from '../../lib/utils/dates';
 import { useAuth } from '../providers/AuthProvider';
+import IdUploadDropzone from '../guests/IdUploadDropzone';
+import { uploadGuestDocumentAction } from '../../lib/guests/documents';
 
 interface BookingFormProps {
   rooms: RoomWithCategory[];
@@ -68,6 +70,7 @@ export default function BookingForm({
   const [guestIdNumber, setGuestIdNumber] = useState<string>('');
   const [guestAddress, setGuestAddress] = useState<string>('');
   const [isRepeatGuest, setIsRepeatGuest] = useState<boolean>(false);
+  const [selectedIdFile, setSelectedIdFile] = useState<File | null>(null);
 
   // Stay & Financials
   const [adults, setAdults] = useState<number>(2);
@@ -224,6 +227,21 @@ export default function BookingForm({
       }
 
       if (result.success) {
+        // If an ID file was selected, upload and attach it to the guest profile
+        const createdGuestId = result.booking?.guest_id;
+        if (selectedIdFile && createdGuestId) {
+          try {
+            const formData = new FormData();
+            formData.append('file', selectedIdFile);
+            formData.append('guest_id', createdGuestId);
+            formData.append('document_type', guestIdType || 'Aadhaar');
+            formData.append('id_number', guestIdNumber || '');
+            await uploadGuestDocumentAction(formData);
+          } catch (uploadErr) {
+            console.warn('ID document upload notice after booking creation:', uploadErr);
+          }
+        }
+
         router.push('/bookings');
         router.refresh();
       }
@@ -345,6 +363,7 @@ export default function BookingForm({
                 <option value="Passport">Passport</option>
                 <option value="Driving License">Driving License</option>
                 <option value="Voter ID">Voter ID</option>
+                <option value="PAN Card">PAN Card</option>
                 <option value="Other">Other</option>
               </select>
             </div>
@@ -361,6 +380,16 @@ export default function BookingForm({
                 className="w-full px-3 py-2 bg-brand-sand/30 border border-border-subtle rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand-forest min-h-touch"
               />
             </div>
+          </div>
+
+          {/* Upload ID Card Dropzone */}
+          <div className="sm:col-span-2 pt-1">
+            <label className="block text-sm font-medium text-ink mb-1.5">
+              Upload ID Card
+            </label>
+            <IdUploadDropzone
+              onFileSelected={(file) => setSelectedIdFile(file)}
+            />
           </div>
 
           <div className="sm:col-span-2">

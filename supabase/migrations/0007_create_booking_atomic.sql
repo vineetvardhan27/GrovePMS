@@ -79,11 +79,10 @@ BEGIN
     END IF;
 
     -- Step 3: Lock & Verify Target Room (Row Lock prevents concurrent modifications)
-    SELECT r.*, rc.name AS category_name, rc.base_rate AS category_base_rate
+    SELECT *
     INTO v_target_room
-    FROM public.rooms r
-    LEFT JOIN public.room_categories rc ON rc.id = r.category_id
-    WHERE r.id = p_room_id AND r.hotel_id = v_hotel_id
+    FROM public.rooms
+    WHERE id = p_room_id AND hotel_id = v_hotel_id
     FOR UPDATE;
 
     IF NOT FOUND THEN

@@ -1,10 +1,14 @@
 import { getGuestById } from '../../../../lib/guests/queries';
+import { getGuestDocuments } from '../../../../lib/guests/documents';
 import { getBookings } from '../../../../lib/bookings/queries';
+import { getCurrentStaff } from '../../../../lib/auth/session';
 import Link from 'next/link';
-import { ArrowLeft, User, Phone, Mail, MapPin, FileText, Calendar, CreditCard, BedDouble } from 'lucide-react';
+import { ArrowLeft, User, Phone, Mail, MapPin, FileText, Calendar, CreditCard, BedDouble, ShieldCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { formatCurrency } from '../../../../lib/utils/currency';
 import { formatDate } from '../../../../lib/utils/dates';
+import { maskIdNumber } from '../../../../lib/utils/idExtractor';
+import GuestDocumentCard from '../../../../components/guests/GuestDocumentCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,17 +16,19 @@ interface GuestDetailPageProps {
   params: { guestId: string };
 }
 
-
 export default async function GuestDetailPage({ params }: GuestDetailPageProps) {
-  const [guest, allBookings] = await Promise.all([
+  const [guest, allBookings, documents, staff] = await Promise.all([
     getGuestById(params.guestId),
     getBookings(),
+    getGuestDocuments(params.guestId),
+    getCurrentStaff(),
   ]);
 
   if (!guest) {
     notFound();
   }
 
+  const canManage = staff?.role === 'owner' || staff?.role === 'manager';
   const guestBookings = allBookings.filter((b) => b.guest_id === guest.id);
   const validBookings = guestBookings.filter((b) => b.booking_status !== 'cancelled');
   const totalStays = guest.total_stays ?? validBookings.length;
@@ -56,59 +62,72 @@ export default async function GuestDetailPage({ params }: GuestDetailPageProps) 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-brand-sand flex items-center justify-center text-brand-forest">
-              <User className="w-6 h-6" />
+        {/* Left Column: Profile Card & Identity Documents */}
+        <div className="space-y-6">
+          {/* Profile Card */}
+          <div className="bg-white rounded-2xl border border-border-subtle p-6 shadow-2xs space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-brand-sand flex items-center justify-center text-brand-forest">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="font-bold text-ink text-base">{guest.full_name}</h2>
+                <p className="text-xs text-ink-muted">Member since {formatDate(guest.created_at)}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-bold text-ink text-base">{guest.full_name}</h2>
-              <p className="text-xs text-ink-muted">Member since {formatDate(guest.created_at)}</p>
+
+            <div className="space-y-3 pt-3 border-t border-border-subtle text-xs">
+              <div className="flex items-center gap-2 text-ink">
+                <Phone className="w-4 h-4 text-ink-muted shrink-0" />
+                <span className="font-medium">{guest.phone}</span>
+              </div>
+
+              {guest.email && (
+                <div className="flex items-center gap-2 text-ink">
+                  <Mail className="w-4 h-4 text-ink-muted shrink-0" />
+                  <span>{guest.email}</span>
+                </div>
+              )}
+
+              {guest.address && (
+                <div className="flex items-center gap-2 text-ink">
+                  <MapPin className="w-4 h-4 text-ink-muted shrink-0" />
+                  <span>{guest.address}</span>
+                </div>
+              )}
+
+              {guest.id_type && (
+                <div className="flex items-center gap-2 text-ink">
+                  <FileText className="w-4 h-4 text-ink-muted shrink-0" />
+                  <span>
+                    {guest.id_type}: <strong className="font-mono">{maskIdNumber(guest.id_type, guest.id_number)}</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="pt-3 border-t border-border-subtle grid grid-cols-2 gap-3 text-center">
+              <div className="p-3 bg-brand-sand/40 rounded-xl">
+                <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Stays</p>
+                <p className="text-xl font-bold text-ink mt-0.5 tabular-nums">{totalStays}</p>
+              </div>
+              <div className="p-3 bg-brand-sand/40 rounded-xl">
+                <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Spent</p>
+                <p className="text-xl font-bold text-brand-forest mt-0.5 tabular-nums">{formatCurrency(totalSpent)}</p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3 pt-3 border-t border-border-subtle text-xs">
-            <div className="flex items-center gap-2 text-ink">
-              <Phone className="w-4 h-4 text-ink-muted shrink-0" />
-              <span className="font-medium">{guest.phone}</span>
-            </div>
-
-            {guest.email && (
-              <div className="flex items-center gap-2 text-ink">
-                <Mail className="w-4 h-4 text-ink-muted shrink-0" />
-                <span>{guest.email}</span>
-              </div>
-            )}
-
-            {guest.address && (
-              <div className="flex items-center gap-2 text-ink">
-                <MapPin className="w-4 h-4 text-ink-muted shrink-0" />
-                <span>{guest.address}</span>
-              </div>
-            )}
-
-            {guest.id_type && (
-              <div className="flex items-center gap-2 text-ink">
-                <FileText className="w-4 h-4 text-ink-muted shrink-0" />
-                <span>
-                  {guest.id_type}: <strong className="font-mono">{guest.id_number || 'On File'}</strong>
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div className="pt-3 border-t border-border-subtle grid grid-cols-2 gap-3 text-center">
-            <div className="p-3 bg-brand-sand/40 rounded-xl">
-              <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Stays</p>
-              <p className="text-xl font-bold text-ink mt-0.5 tabular-nums">{totalStays}</p>
-            </div>
-            <div className="p-3 bg-brand-sand/40 rounded-xl">
-              <p className="text-[11px] text-ink-muted uppercase tracking-wider font-semibold">Total Spent</p>
-              <p className="text-xl font-bold text-brand-forest mt-0.5 tabular-nums">{formatCurrency(totalSpent)}</p>
-            </div>
-          </div>
+          {/* Identity Documents Card */}
+          <GuestDocumentCard
+            guestId={guest.id}
+            guestName={guest.full_name}
+            initialDocuments={documents}
+            idType={guest.id_type}
+            idNumber={guest.id_number}
+            canManage={canManage}
+          />
         </div>
 
         {/* Stay & Booking History */}

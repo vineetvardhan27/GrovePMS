@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '../supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCurrentStaff } from '../auth/session';
 import {
   BookingStatus,
@@ -16,6 +17,17 @@ import {
 import { Guest } from '../guests/queries';
 import { RoomWithCategory } from '../rooms/queries';
 import { revalidatePath } from 'next/cache';
+
+function getAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Server configuration error: Service role key is missing.');
+  }
+  return createAdminClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export interface CreateBookingInput {
   room_id: string;
@@ -61,8 +73,8 @@ export async function checkDoubleBooking(
       return { is_available: true };
     }
 
-    const supabase = createClient();
-    let q = supabase
+    const admin = getAdminClient();
+    let q = admin
       .from('bookings')
       .select('id, booking_number, check_in_date, check_out_date, booking_status')
       .eq('hotel_id', activeHotelId)
@@ -107,7 +119,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
   }
 
   if (staff.role === 'housekeeping') {
-    return { error: 'You do not have permission to create reservations.' };
+    return { error: 'Housekeeping staff are not permitted to create reservations.' };
   }
 
   const hotelId = staff.hotel_id;
@@ -126,10 +138,10 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     return { error: 'Guest name and contact phone number are required.' };
   }
 
-  const supabase = createClient();
+  const admin = getAdminClient();
 
   // 3. Verify target room belongs to staff hotel
-  const { data: targetRoom, error: roomFetchErr } = (await supabase
+  const { data: targetRoom, error: roomFetchErr } = (await admin
     .from('rooms')
     .select('*, category:category_id(*)')
     .eq('id', input.room_id)
@@ -155,68 +167,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     };
   }
 
-  // Attempt Transactional RPC Booking Creation
-  try {
-    const { data: rpcResult, error: rpcErr } = await (supabase.rpc as any)('create_booking_transaction', {
-      p_room_id: input.room_id,
-      p_guest_name: input.guest_name.trim(),
-      p_guest_phone: input.guest_phone.trim(),
-      p_guest_email: input.guest_email?.trim() || null,
-      p_guest_id_type: input.guest_id_type || null,
-      p_guest_id_number: input.guest_id_number || null,
-      p_guest_address: input.guest_address?.trim() || null,
-      p_check_in_date: input.check_in_date,
-      p_check_out_date: input.check_out_date,
-      p_adults: Number(input.adults) || 1,
-      p_children: Number(input.children) || 0,
-      p_rate_per_night: Number(input.rate_per_night),
-      p_extra_charges: Number(input.extra_charges || 0),
-      p_advance_amount: Number(input.advance_amount || 0),
-      p_payment_mode: input.payment_mode || 'cash',
-      p_source: input.source || 'direct',
-      p_remarks: input.remarks?.trim() || null,
-    });
-
-    if (!rpcErr && rpcResult?.success && rpcResult?.booking_id) {
-      // Revalidate dashboard & module paths
-      revalidatePath('/bookings');
-      revalidatePath('/bookings/calendar');
-      revalidatePath('/rooms');
-      revalidatePath('/dashboard');
-      revalidatePath('/guests');
-      revalidatePath('/payments');
-      revalidatePath('/billing');
-
-      // Fetch the full rich booking entity for UI
-      const { data: createdBooking } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          guest:guest_id (*),
-          room:room_id (
-            *,
-            category:category_id (*)
-          ),
-          payments (*)
-        `)
-        .eq('id', rpcResult.booking_id)
-        .maybeSingle();
-
-      if (createdBooking) {
-        return { success: true, booking: createdBooking as any };
-      }
-      return { success: true };
-    }
-
-    if (rpcErr && !rpcErr.message.includes('Could not find the function')) {
-      console.error('RPC create_booking_transaction error:', rpcErr.message);
-      return { error: rpcErr.message };
-    }
-  } catch (err: any) {
-    console.warn('RPC invocation error, attempting direct transaction fallback:', err?.message || err);
-  }
-
-  // 5. Fallback: Find or create guest in Supabase
+  // 5. Find or create guest in Supabase
   let guestId: string = '';
   let guestData: Guest;
 
@@ -224,7 +175,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
   const cleanName = input.guest_name.trim();
 
   try {
-    const { data: existingGuest, error: guestFindErr } = (await supabase
+    const { data: existingGuest, error: guestFindErr } = (await admin
       .from('guests')
       .select('*')
       .eq('hotel_id', hotelId)
@@ -247,7 +198,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       if (input.guest_address?.trim() && !existingGuest.address) updateFields.address = input.guest_address.trim();
 
       if (Object.keys(updateFields).length > 1) {
-        await (supabase.from('guests') as any).update(updateFields).eq('id', guestId);
+        await (admin.from('guests') as any).update(updateFields).eq('id', guestId).eq('hotel_id', hotelId);
       }
     } else {
       guestId = crypto.randomUUID();
@@ -262,14 +213,14 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
         address: input.guest_address?.trim() || null,
       };
 
-      const { data: guestInserted, error: guestInsertErr } = await (supabase.from('guests') as any)
+      const { data: guestInserted, error: guestInsertErr } = await (admin.from('guests') as any)
         .insert(newGuestPayload)
         .select()
         .maybeSingle();
 
       if (guestInsertErr) {
         console.error('Error creating guest in Supabase:', guestInsertErr.message);
-        return { error: `Failed to create guest: ${guestInsertErr.message}` };
+        return { error: 'Unable to save guest details. Please try again.' };
       }
 
       guestData = guestInserted as Guest;
@@ -277,7 +228,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     }
   } catch (err: any) {
     console.error('Guest lookup/create exception:', err);
-    return { error: `Failed to lookup/create guest: ${err?.message || String(err)}` };
+    return { error: 'Unable to process guest record. Please try again.' };
   }
 
   // 6. Calculate stay financials
@@ -324,23 +275,23 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
 
   let bookingInserted: any = null;
   try {
-    const { data, error } = await (supabase.from('bookings') as any)
+    const { data, error } = await (admin.from('bookings') as any)
       .insert(bookingRecord)
       .select()
       .maybeSingle();
 
     if (error) {
       console.error('Error creating booking in Supabase:', error.message);
-      return { error: `Failed to create booking: ${error.message}` };
+      return { error: 'Unable to save reservation record. Please try again.' };
     }
 
     bookingInserted = data;
     if (!bookingInserted?.id) {
-      return { error: 'Database did not confirm booking creation.' };
+      return { error: 'Database did not confirm reservation creation.' };
     }
   } catch (err: any) {
     console.error('Booking insertion exception:', err);
-    return { error: `Failed to create booking: ${err?.message || String(err)}` };
+    return { error: 'Unable to complete reservation transaction. Please try again.' };
   }
 
   // 8. Record advance payment if present
@@ -359,7 +310,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
     };
 
     try {
-      const { data: paymentInserted, error: payErr } = await (supabase.from('payments') as any)
+      const { data: paymentInserted, error: payErr } = await (admin.from('payments') as any)
         .insert(paymentRecord)
         .select()
         .maybeSingle();
@@ -367,8 +318,8 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       if (payErr) {
         console.error('Error inserting advance payment in Supabase:', payErr.message);
         // Rollback booking
-        await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
-        return { error: `Failed to record advance payment: ${payErr.message}` };
+        await (admin.from('bookings') as any).delete().eq('id', bookingInserted.id);
+        return { error: 'Unable to record advance payment. Reservation rolled back.' };
       }
 
       if (paymentInserted) {
@@ -376,8 +327,8 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       }
     } catch (err: any) {
       console.error('Payment exception during booking creation:', err);
-      await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
-      return { error: `Failed to record advance payment: ${err?.message || String(err)}` };
+      await (admin.from('bookings') as any).delete().eq('id', bookingInserted.id);
+      return { error: 'Unable to record advance payment. Reservation rolled back.' };
     }
   }
 
@@ -393,7 +344,7 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
 
   if (updatedRoomStatus !== targetRoom.status) {
     try {
-      const { error: roomErr } = await (supabase.from('rooms') as any)
+      const { error: roomErr } = await (admin.from('rooms') as any)
         .update({ status: updatedRoomStatus, updated_at: new Date().toISOString() })
         .eq('id', input.room_id)
         .eq('hotel_id', hotelId);
@@ -401,15 +352,15 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
       if (roomErr) {
         console.error('Error updating room status in Supabase:', roomErr.message);
         // Rollback booking & payment
-        await (supabase.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
-        await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
-        return { error: 'Failed to update room status in database.' };
+        await (admin.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
+        await (admin.from('bookings') as any).delete().eq('id', bookingInserted.id);
+        return { error: 'Unable to update room status in database. Reservation rolled back.' };
       }
     } catch (err) {
       console.error('Room update exception:', err);
-      await (supabase.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
-      await (supabase.from('bookings') as any).delete().eq('id', bookingInserted.id);
-      return { error: 'Failed to update room status in database.' };
+      await (admin.from('payments') as any).delete().eq('booking_id', bookingInserted.id);
+      await (admin.from('bookings') as any).delete().eq('id', bookingInserted.id);
+      return { error: 'Unable to update room status in database. Reservation rolled back.' };
     }
   }
 

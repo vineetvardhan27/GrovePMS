@@ -28,6 +28,7 @@ import AddFoodModal from './AddFoodModal';
 import HotelInvoiceHeader from '../shared/HotelInvoiceHeader';
 import { checkOutAction } from '../../lib/checkinout/actions';
 import { deleteFoodChargeAction, FoodChargeRecord } from '../../lib/billing/food-actions';
+import { maskIdNumber } from '../../lib/utils/idExtractor';
 
 interface BillViewProps {
   initialBill: GeneratedBill;
@@ -510,7 +511,7 @@ export default function BillView({
               )}
               {initialBill.guest_id_type && initialBill.guest_id_number && (
                 <p className="text-ink-muted font-mono text-[11px]">
-                  <strong>ID Proof:</strong> {initialBill.guest_id_type} ({initialBill.guest_id_number})
+                  <strong>ID Proof:</strong> {initialBill.guest_id_type} ({maskIdNumber(initialBill.guest_id_type, initialBill.guest_id_number)})
                 </p>
               )}
             </div>
