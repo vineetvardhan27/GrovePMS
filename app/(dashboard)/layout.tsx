@@ -187,7 +187,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
         {/* Top header bar */}
-        <header className="print:hidden h-14 bg-white/90 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0">
+        <header className="print:hidden h-14 bg-white/90 backdrop-blur-sm border-b border-border-subtle flex items-center justify-between px-4 md:px-6 shrink-0 relative z-40">
           {/* Left: mobile hamburger + breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <MobileNavDrawer

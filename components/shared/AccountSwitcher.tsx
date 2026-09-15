@@ -175,10 +175,14 @@ export default function AccountSwitcher({
         <div
           role="dialog"
           aria-label="Account Menu Popover"
-          className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl border border-border-subtle shadow-modal z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+          className="absolute right-0 mt-2 bg-white rounded-xl border border-border-subtle shadow-modal z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col"
+          style={{
+            width: 'min(22rem, calc(100vw - 2rem))',
+            maxHeight: 'min(80vh, calc(100vh - 5rem))',
+          }}
         >
           {/* Header */}
-          <div className="px-4 py-3 bg-brand-sand/40 border-b border-border-subtle flex items-center justify-between">
+          <div className="px-4 py-3 bg-brand-sand/40 border-b border-border-subtle flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-brand-forest" />
               <h3 className="text-sm font-semibold text-brand-forest">
@@ -203,7 +207,7 @@ export default function AccountSwitcher({
             </div>
           )}
 
-          <div className="p-3 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="p-3 space-y-4 overflow-y-auto flex-1 min-h-0">
             {/* CURRENT ACTIVE ACCOUNT */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted px-2 mb-1.5">
@@ -307,7 +311,7 @@ export default function AccountSwitcher({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-4 py-3 bg-brand-sand/30 border-t border-border-subtle flex items-center justify-between gap-2">
+          <div className="px-4 py-3 bg-brand-sand/30 border-t border-border-subtle flex items-center justify-between gap-2 shrink-0">
             {canManageStaff ? (
               <button
                 type="button"
