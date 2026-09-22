@@ -24,7 +24,7 @@ export default function ReportsTabs({
   const [tab, setTab] = useState<'intelligence' | 'daily' | 'monthly'>(activeTab);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-4.5">
       {/* Tab Switcher */}
       <div className="flex items-center gap-1.5 bg-brand-sand/60 rounded-xl p-1 w-fit border border-border-subtle overflow-x-auto print:hidden">
         <button
@@ -71,7 +71,12 @@ export default function ReportsTabs({
       {tab === 'intelligence' && (
         <OwnerIntelligenceDashboard data={intelligenceData} />
       )}
-      {tab === 'daily' && <DailyReportView initialReport={dailyReport} />}
+      {tab === 'daily' && (
+        <DailyReportView
+          initialReport={dailyReport}
+          inHouseGuestsCount={intelligenceData.inHouseGuestsCount}
+        />
+      )}
       {tab === 'monthly' && <MonthlyReportView initialReport={monthlyReport} />}
     </div>
   );

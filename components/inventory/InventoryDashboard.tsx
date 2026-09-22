@@ -190,26 +190,26 @@ export default function InventoryDashboard({
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-4.5">
       {/* ── Page Header & Quick Action Buttons ── */}
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 pb-1 border-b border-border-subtle">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle">
         <div>
-          <h1 className="text-display font-serif text-brand-forest">
-            Hotel Inventory &amp; Asset Management
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight">
+            Inventory &amp; Assets
           </h1>
-          <p className="text-body text-ink-muted mt-0.5">
-            Track kitchen consumables, room linens, guest supplies, and hotel assets — with automated reorders, wastage tracking, and annual replacement planning
+          <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
+            Track stock, assets, usage, waste, and reorders.
           </p>
         </div>
 
         {/* Global Operational Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap shrink-0">
           {canReport && (
             <>
               <button
                 type="button"
                 onClick={() => handleOpenDamageFor()}
-                className="pms-btn-danger-outline h-9 px-3 text-xs gap-1.5 font-medium"
+                className="pms-btn-danger-outline h-8 px-2.5 sm:px-3 text-xs gap-1.5 font-medium shadow-2xs"
                 title="Report damaged or stained hotel assets"
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ export default function InventoryDashboard({
               <button
                 type="button"
                 onClick={() => handleOpenWasteFor()}
-                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium text-status-amber border-status-amber/30 hover:bg-status-amber/10"
+                className="pms-btn-secondary h-8 px-2.5 sm:px-3 text-xs gap-1.5 font-medium text-status-amber border-status-amber/30 hover:bg-status-amber/10 shadow-2xs"
                 title="Report spoiled or expired food wastage"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -229,7 +229,7 @@ export default function InventoryDashboard({
               <button
                 type="button"
                 onClick={() => handleOpenUsageFor()}
-                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium"
+                className="pms-btn-secondary h-8 px-2.5 sm:px-3 text-xs gap-1.5 font-medium shadow-2xs"
                 title="Record daily consumable / food usage"
               >
                 <MinusCircle className="w-3.5 h-3.5 text-brand-forest" />
@@ -243,7 +243,7 @@ export default function InventoryDashboard({
               <button
                 type="button"
                 onClick={() => handleOpenPurchaseFor()}
-                className="pms-btn-primary h-9 px-3.5 text-xs gap-1.5"
+                className="pms-btn-primary h-8 px-3 text-xs gap-1.5 font-medium shadow-2xs"
                 title="Record new purchase receipt"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export default function InventoryDashboard({
               <button
                 type="button"
                 onClick={handleCreateNewItem}
-                className="pms-btn-secondary h-9 px-3 text-xs gap-1.5 font-medium"
+                className="pms-btn-secondary h-8 px-2.5 sm:px-3 text-xs gap-1.5 font-medium shadow-2xs"
                 title="Define a new inventory or asset item"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -281,13 +281,7 @@ export default function InventoryDashboard({
         </div>
 
         {/* KPI 2: Low Stock */}
-        <div
-          className={`pms-card p-4 flex flex-col justify-between transition-colors ${
-            summary.low_stock_count > 0 || summary.out_of_stock_count > 0
-              ? 'border-l-4 border-l-status-amber bg-status-amber/5'
-              : ''
-          }`}
-        >
+        <div className="pms-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Low / Critical

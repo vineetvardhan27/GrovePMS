@@ -645,6 +645,16 @@ export async function getDailyReport(date: string, hotelIdParam?: string): Promi
   }
 }
 
+export interface MonthlyDailyMetric {
+  day: number;
+  date: string;
+  dateLabel: string;
+  revenue: number;
+  occupancyPercent: number;
+  adr: number;
+  collections: number;
+}
+
 export interface MonthlyReport {
   year: number;
   month: number;
@@ -661,6 +671,7 @@ export interface MonthlyReport {
   revpar: number;
   totalRooms: number;
   daysInMonth: number;
+  dailyTrend?: MonthlyDailyMetric[];
 }
 
 export async function getMonthlyReport(year: number, month: number, hotelIdParam?: string): Promise<MonthlyReport> {
@@ -714,7 +725,7 @@ export async function getMonthlyReport(year: number, month: number, hotelIdParam
 
     let pQuery = supabase
       .from('payments')
-      .select('amount, payment_type')
+      .select('amount, payment_type, created_at')
       .gte('created_at', `${startOfMonth}T00:00:00.000Z`)
       .lte('created_at', `${endOfMonth}T23:59:59.999Z`);
 
@@ -733,6 +744,43 @@ export async function getMonthlyReport(year: number, month: number, hotelIdParam
     const adr = roomNightsSold > 0 ? Math.round(totalRevenue / roomNightsSold) : 0;
     const revpar = Math.round(adr * (occupancyPercent / 100));
 
+    // Daily breakdown for monthly performance visualization
+    const shortMonth = new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'short' });
+    const paymentsByDate = new Map<string, number>();
+    (dbPayments || []).forEach((p: any) => {
+      if (p.created_at) {
+        const d = p.created_at.split('T')[0];
+        const amt = Number(p.amount) || 0;
+        const net = p.payment_type === 'refund' ? -amt : amt;
+        paymentsByDate.set(d, (paymentsByDate.get(d) || 0) + net);
+      }
+    });
+
+    const dailyTrend: MonthlyDailyMetric[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${prefix}-${String(d).padStart(2, '0')}`;
+      const activeOnNight = activeBookings.filter(
+        (b) => b.check_in_date <= dStr && b.check_out_date > dStr
+      );
+      const arrivalsOnDate = activeBookings.filter((b) => b.check_in_date === dStr);
+
+      const dayRevenue = arrivalsOnDate.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
+      const occupiedRooms = activeOnNight.length;
+      const dayOccPercent = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100 * 10) / 10 : 0;
+      const dayAdr = occupiedRooms > 0 ? Math.round(dayRevenue / occupiedRooms) : 0;
+      const dayCollections = Math.max(0, paymentsByDate.get(dStr) || 0);
+
+      dailyTrend.push({
+        day: d,
+        date: dStr,
+        dateLabel: `${d} ${shortMonth}`,
+        revenue: dayRevenue,
+        occupancyPercent: dayOccPercent,
+        adr: dayAdr,
+        collections: dayCollections,
+      });
+    }
+
     return {
       year,
       month,
@@ -749,6 +797,7 @@ export async function getMonthlyReport(year: number, month: number, hotelIdParam
       revpar,
       totalRooms,
       daysInMonth,
+      dailyTrend,
     };
   } catch (err) {
     console.error('Error fetching monthly report from Supabase:', err);

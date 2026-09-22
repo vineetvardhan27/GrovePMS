@@ -12,7 +12,6 @@ import BookEventModal from './BookEventModal';
 import EditHallModal from './EditHallModal';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
-import PageHeader from '../shared/PageHeader';
 import {
   PartyPopper,
   Building2,
@@ -134,187 +133,208 @@ export default function BanquetDashboard({
   ] as const;
 
   return (
-    <div className="space-y-6">
-      {/* ── Page Header ── */}
-      <PageHeader
-        title="Banquet Hall Management"
-        description="Comprehensive operational & billing management for conferences, receptions, and galas"
-        primaryAction={
-          canBook
-            ? { label: 'Book Banquet Event', onClick: () => setIsBookModalOpen(true), icon: PlusCircle }
-            : undefined
-        }
-        secondaryActions={
-          isOwnerOrManager
-            ? [{ label: 'Hall Settings', onClick: () => setIsEditHallModalOpen(true), icon: Settings }]
-            : []
-        }
-      />
+    <div className="space-y-4 sm:space-y-4.5">
+      {/* ── Page Header & Action Buttons ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight">
+            Banquet Hall
+          </h1>
+          <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
+            Manage events, bookings, billing, and collections.
+          </p>
+        </div>
 
-      {/* ── 1. Hall Resource Overview Card ── */}
-      <div className="pms-card overflow-hidden transition-all duration-150 hover:shadow-xs">
-        <div className="flex">
-          <div className="w-1 bg-brand-forest shrink-0" aria-hidden="true" />
-          <div className="flex-1 p-5 sm:p-6 space-y-4">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-              {/* Hall Identity */}
-              <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                <div className="w-10 h-10 bg-brand-forest text-white rounded-xl flex items-center justify-center shrink-0 shadow-2xs">
-                  <Building2 className="w-5 h-5" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h2 className="text-base font-serif font-bold text-brand-forest leading-tight">
-                      {hall.name}
-                    </h2>
-                    <StatusBadge variant={hallStatusVariant} label={hall.current_status} />
-                    {hall.capacity && (
-                      <span className="pms-badge pms-badge-neutral font-mono">
-                        <Users className="w-3 h-3" aria-hidden="true" />
-                        {hall.capacity} guests
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs sm:text-sm text-ink-muted leading-relaxed max-w-2xl">
-                    {hall.description || 'Luxury banquet & conference hall for property events.'}
-                  </p>
-                </div>
-              </div>
+        {/* Header Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap shrink-0">
+          {isOwnerOrManager && (
+            <button
+              type="button"
+              onClick={() => setIsEditHallModalOpen(true)}
+              className="pms-btn-secondary h-8 px-2.5 sm:px-3 text-xs gap-1.5 font-medium shadow-2xs"
+              title="Configure hall pricing, capacity, and amenities"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Hall Settings</span>
+            </button>
+          )}
 
-              {/* Refined Pricing Section */}
-              <div className="flex items-center gap-3 shrink-0 bg-brand-sand/60 rounded-xl p-3.5 border border-border-subtle self-start lg:self-center">
-                <div className="px-3 py-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block mb-0.5">
-                    Half Day Rate
-                  </span>
-                  <span className="text-base sm:text-lg font-bold font-mono text-brand-forest tabular-nums">
-                    {formatCurrency(hall.half_day_rate)}
-                  </span>
-                </div>
-                <div className="h-8 w-px bg-border-subtle" aria-hidden="true" />
-                <div className="px-3 py-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block mb-0.5">
-                    Full Day Rate
-                  </span>
-                  <span className="text-base sm:text-lg font-bold font-mono text-brand-forest tabular-nums">
-                    {formatCurrency(hall.full_day_rate)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Feature Chips */}
-            {hall.amenities && hall.amenities.length > 0 && (
-              <div className="pt-3.5 border-t border-border-subtle/70 flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted mr-1.5">
-                  Hall Amenities
-                </span>
-                {hall.amenities.map((amenity, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-brand-sand px-2.5 py-0.5 rounded-md text-[11px] text-ink font-medium border border-border-subtle"
-                  >
-                    {amenity}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+          {canBook && (
+            <button
+              type="button"
+              onClick={() => setIsBookModalOpen(true)}
+              className="pms-btn-primary h-8 px-3 text-xs gap-1.5 font-medium shadow-2xs"
+              title="Book a new banquet or convention event"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Book Banquet Event</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── 2. Operational & Financial Metrics Grid (Fixed Number Clipping) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        {/* Operational 1 */}
-        <div className="pms-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-ink-muted mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Upcoming</span>
-            <Calendar className="w-4 h-4 text-brand-forest/60" />
+      {/* ── 1. Hall Resource Overview Card (Product-Grade 2-Column Layout) ── */}
+      <div className="pms-card p-4 space-y-2.5 transition-all duration-150 hover:shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
+          {/* Left Column: Hall Identity & Concise Description */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-lg bg-brand-forest text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Building2 className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-serif font-bold text-brand-forest leading-tight truncate">
+                  {hall.name}
+                </h2>
+                <StatusBadge variant={hallStatusVariant} label={hall.current_status} />
+                {hall.capacity && (
+                  <span className="text-xs text-ink-muted font-mono font-medium">
+                    · {hall.capacity} guests
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-ink-muted truncate max-w-2xl mt-0.5">
+                {hall.description || 'Luxury banquet & conference hall for property events.'}
+              </p>
+            </div>
           </div>
-          <p className="text-2xl font-bold font-sans tabular-nums text-brand-forest">
+
+          {/* Right Column: Pricing (Clean Typography, No Heavy Nested Border) */}
+          <div className="flex items-center gap-4 sm:gap-6 shrink-0 self-start sm:self-center pl-0 sm:pl-4">
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block leading-none mb-1">
+                Half Day Rate
+              </span>
+              <span className="text-sm sm:text-base font-bold font-mono text-brand-forest tabular-nums">
+                {formatCurrency(hall.half_day_rate)}
+              </span>
+            </div>
+            <div className="h-7 w-px bg-border-subtle" aria-hidden="true" />
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block leading-none mb-1">
+                Full Day Rate
+              </span>
+              <span className="text-sm sm:text-base font-bold font-mono text-brand-forest tabular-nums">
+                {formatCurrency(hall.full_day_rate)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Row: Amenities (Curated Top 4 + Overflow Badge) */}
+        {hall.amenities && hall.amenities.length > 0 && (
+          <div className="pt-2 border-t border-border-subtle/60 flex items-center gap-2 overflow-hidden">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted shrink-0">
+              Amenities:
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap overflow-hidden">
+              {hall.amenities.slice(0, 4).map((amenity, idx) => (
+                <span
+                  key={idx}
+                  className="bg-brand-sand/80 px-2 py-0.5 rounded text-[11px] text-ink font-medium border border-border-subtle/80"
+                >
+                  {amenity}
+                </span>
+              ))}
+              {hall.amenities.length > 4 && (
+                <span
+                  className="bg-brand-sand/50 px-1.5 py-0.5 rounded text-[10.5px] text-ink-muted font-medium border border-border-subtle/50 cursor-default"
+                  title={hall.amenities.slice(4).join(', ')}
+                >
+                  +{hall.amenities.length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── 2. Operational & Financial Metrics Grid ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        {/* Operational 1 */}
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Upcoming</span>
+            <Calendar className="w-3.5 h-3.5 text-brand-forest/60" />
+          </div>
+          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-brand-forest">
             {summary.upcoming_events_count}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">On calendar</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">On calendar</p>
         </div>
 
         {/* Operational 2 */}
-        <div className="pms-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-ink-muted mb-2">
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">In Progress</span>
-            <Play className={`w-4 h-4 ${summary.in_progress_count > 0 ? 'text-status-green' : 'text-ink-muted/50'}`} />
+            <Play className={`w-3.5 h-3.5 ${summary.in_progress_count > 0 ? 'text-status-green' : 'text-ink-muted/50'}`} />
           </div>
           <p
-            className={`text-2xl font-bold font-sans tabular-nums ${
+            className={`text-xl sm:text-2xl font-bold font-sans tabular-nums ${
               summary.in_progress_count > 0 ? 'text-status-green' : 'text-brand-forest'
             }`}
           >
             {summary.in_progress_count}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">Active sessions</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Active sessions</p>
         </div>
 
         {/* Operational 3 */}
-        <div className="pms-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-ink-muted mb-2">
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Today's Events</span>
-            <Clock className={`w-4 h-4 ${summary.todays_events_count > 0 ? 'text-status-amber' : 'text-ink-muted/50'}`} />
+            <Clock className={`w-3.5 h-3.5 ${summary.todays_events_count > 0 ? 'text-status-amber' : 'text-ink-muted/50'}`} />
           </div>
           <p
-            className={`text-2xl font-bold font-sans tabular-nums ${
+            className={`text-xl sm:text-2xl font-bold font-sans tabular-nums ${
               summary.todays_events_count > 0 ? 'text-status-amber' : 'text-brand-forest'
             }`}
           >
             {summary.todays_events_count}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">Scheduled today</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Scheduled today</p>
         </div>
 
         {/* Financial 1: Advance Collected */}
-        <div className="pms-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-ink-muted mb-2">
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Advance Collected</span>
-            <CreditCard className="w-4 h-4 text-brand-forest/60" />
+            <CreditCard className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-brand-forest truncate">
+          <p className="text-base sm:text-lg font-bold font-sans tabular-nums text-brand-forest truncate">
             {formatCurrency(summary.total_advance_collected)}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">Deposits secured</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Deposits secured</p>
         </div>
 
-        {/* Financial 2: Outstanding Due (Subtle Amber Emphasis) */}
-        <div
-          className={`pms-card p-4 flex flex-col justify-between transition-colors ${
-            summary.total_outstanding_balance > 0
-              ? 'border-l-4 border-l-status-amber bg-status-amber/5'
-              : ''
-          }`}
-        >
-          <div className="flex items-center justify-between text-ink-muted mb-2">
+        {/* Financial 2: Outstanding Due */}
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Outstanding Due
             </span>
-            <AlertCircle className="w-4 h-4 text-status-amber" />
+            <AlertCircle className="w-3.5 h-3.5 text-status-amber" />
           </div>
           <p
-            className={`text-lg sm:text-xl font-bold font-sans tabular-nums truncate ${
+            className={`text-base sm:text-lg font-bold font-sans tabular-nums truncate ${
               summary.total_outstanding_balance > 0 ? 'text-status-amber' : 'text-status-green'
             }`}
           >
             {formatCurrency(summary.total_outstanding_balance)}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">Pending collection</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Pending collection</p>
         </div>
 
         {/* Financial 3: Projected Revenue */}
-        <div className="pms-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-ink-muted mb-2">
+        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+          <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Projected Revenue</span>
-            <Sparkles className="w-4 h-4 text-brand-forest/60" />
+            <Sparkles className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-brand-forest truncate">
+          <p className="text-base sm:text-lg font-bold font-sans tabular-nums text-brand-forest truncate">
             {formatCurrency(summary.total_estimated_revenue)}
           </p>
-          <p className="text-[11px] text-ink-muted mt-1 truncate">Upcoming folios</p>
+          <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Upcoming folios</p>
         </div>
       </div>
 

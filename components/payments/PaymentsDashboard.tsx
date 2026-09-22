@@ -249,14 +249,8 @@ export default function PaymentsDashboard({
           </p>
         </div>
 
-        {/* KPI 3: Outstanding Receivables (Amber Accent) */}
-        <div
-          className={`pms-card p-4 flex flex-col justify-between transition-colors ${
-            initialStats.total_outstanding_receivables > 0
-              ? 'border-l-4 border-l-status-amber bg-status-amber/5'
-              : 'border-l-4 border-l-status-green bg-status-green/5'
-          }`}
-        >
+        {/* KPI 3: Outstanding Receivables */}
+        <div className="pms-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Outstanding Due
