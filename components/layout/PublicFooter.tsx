@@ -79,6 +79,11 @@ export default function PublicFooter() {
                   Reports & Analytics
                 </Link>
               </li>
+              <li>
+                <Link href="/pricing" className="hover:text-brand-forest font-medium transition-colors">
+                  Pricing & Plans
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -204,6 +209,11 @@ export default function PublicFooter() {
               <li>
                 <Link href="/login" className="hover:text-brand-forest transition-colors">
                   Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="hover:text-brand-forest transition-colors">
+                  Pricing
                 </Link>
               </li>
               <li>

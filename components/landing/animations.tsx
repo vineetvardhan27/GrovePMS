@@ -51,6 +51,13 @@ export function useInView(options?: IntersectionObserverInit) {
       return;
     }
 
+    // Immediately trigger if element is already within the visible viewport window
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setInView(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -58,7 +65,7 @@ export function useInView(options?: IntersectionObserverInit) {
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px', ...options }
+      { threshold: 0.05, rootMargin: '0px 0px -20px 0px', ...options }
     );
 
     observer.observe(el);

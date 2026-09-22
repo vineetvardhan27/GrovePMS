@@ -71,6 +71,12 @@ export default function PublicHeader({
             Solutions
           </Link>
           <Link
+            href="/pricing"
+            className="text-sm font-medium text-ink-muted hover:text-brand-forest px-3.5 py-2 rounded-lg transition-colors duration-150"
+          >
+            Pricing
+          </Link>
+          <Link
             href="/security"
             className="text-sm font-medium text-ink-muted hover:text-brand-forest px-3.5 py-2 rounded-lg transition-colors duration-150"
           >
@@ -157,6 +163,13 @@ export default function PublicHeader({
               className="block text-sm font-medium text-ink-muted hover:text-brand-forest px-3 py-2.5 rounded-lg transition-colors"
             >
               Solutions
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-medium text-ink-muted hover:text-brand-forest px-3 py-2.5 rounded-lg transition-colors"
+            >
+              Pricing
             </Link>
             <Link
               href="/security"

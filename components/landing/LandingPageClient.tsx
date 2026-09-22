@@ -992,12 +992,9 @@ export default function LandingPageClient({
                 <StaggerItem key={mod.name} index={i}>
                   <FloatingCard
                     hoverY={-4}
-                    className="p-5 rounded-2xl bg-brand-sand/30 border border-border-subtle cursor-default group"
+                    className="p-5 rounded-2xl bg-brand-sand/30 border border-border-subtle cursor-default group flex flex-col items-start h-full"
                   >
-                    <div
-                      className="p-2.5 bg-brand-forest text-white rounded-xl w-fit transition-transform duration-200 group-hover:scale-105"
-                      style={{ opacity: 1 - i * 0.01 }}
-                    >
+                    <div className="w-10 h-10 bg-brand-forest text-white rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="font-serif font-bold text-base text-ink mt-3">{mod.name}</h3>
