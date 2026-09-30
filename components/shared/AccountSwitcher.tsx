@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users,
@@ -74,7 +74,6 @@ export default function AccountSwitcher({
   availableAccounts,
 }: AccountSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const [switchingToId, setSwitchingToId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -120,28 +119,27 @@ export default function AccountSwitcher({
   // Only Owner/Manager can manage staff
   const canManageStaff = currentRole === 'owner' || currentRole === 'manager';
 
-  const handleSwitch = (targetAccount: AvailableStaffAccount) => {
-    if (isPending || switchingToId) return;
+  const handleSwitch = async (targetAccount: AvailableStaffAccount) => {
+    if (switchingToId) return;
 
     setErrorMessage(null);
     setSwitchingToId(targetAccount.id);
 
-    startTransition(async () => {
-      try {
-        const result = await switchStaffAccountAction(targetAccount.id);
-        if (result.success) {
-          setIsOpen(false);
-          // Hard reload to refresh all route guards and server state
-          window.location.href = '/dashboard';
-        } else {
-          setErrorMessage(result.error || 'Failed to switch account.');
-          setSwitchingToId(null);
-        }
-      } catch (err: any) {
-        setErrorMessage(err?.message || 'An unexpected error occurred while switching.');
-        setSwitchingToId(null);
+    try {
+      const result = await switchStaffAccountAction(targetAccount.id);
+      if (result?.success || result === undefined) {
+        setIsOpen(false);
+        // Hard reload to refresh all route guards, cookies, and server state
+        window.location.href = '/dashboard';
+        return;
       }
-    });
+
+      setErrorMessage(result?.error || 'Failed to switch account.');
+      setSwitchingToId(null);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'An unexpected error occurred while switching.');
+      setSwitchingToId(null);
+    }
   };
 
   return (
@@ -260,7 +258,7 @@ export default function AccountSwitcher({
                       <button
                         key={account.id}
                         type="button"
-                        disabled={isPending}
+                        disabled={Boolean(switchingToId)}
                         onClick={() => handleSwitch(account)}
                         className="w-full text-left p-2.5 rounded-lg border border-border-subtle/80 hover:border-brand-forest/40 hover:bg-brand-sand/40 transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-60"
                       >

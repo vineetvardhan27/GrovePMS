@@ -3,6 +3,7 @@
 import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 import { SaveMenuItemInput, SaveMenuCategoryInput, MenuItem, MenuCategory } from './types';
 import { getMenuCategories, getMenuItems } from './queries';
 
@@ -61,6 +62,7 @@ export async function saveMenuItemAction(input: SaveMenuItemInput): Promise<{
       if (!tableErr && tableData) {
         revalidatePath('/settings/food-menu');
         revalidatePath('/billing');
+        invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
         return { success: true, item: tableData };
       }
     } catch {
@@ -107,6 +109,7 @@ export async function saveMenuItemAction(input: SaveMenuItemInput): Promise<{
 
     revalidatePath('/settings/food-menu');
     revalidatePath('/billing');
+    invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
     return { success: true, item: newItem };
   } catch (err: any) {
     console.error('saveMenuItemAction error:', err);
@@ -142,6 +145,7 @@ export async function toggleMenuItemStatusAction(itemId: string, isActive: boole
 
       if (!tableErr) {
         revalidatePath('/settings/food-menu');
+        invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
         return { success: true };
       }
     } catch {
@@ -165,6 +169,7 @@ export async function toggleMenuItemStatusAction(itemId: string, isActive: boole
     }
 
     revalidatePath('/settings/food-menu');
+    invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
     return { success: true };
   } catch (err: any) {
     console.error('toggleMenuItemStatusAction error:', err);
@@ -215,6 +220,7 @@ export async function saveMenuCategoryAction(input: SaveMenuCategoryInput): Prom
 
       if (!tableErr && tableData) {
         revalidatePath('/settings/food-menu');
+        invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
         return { success: true, category: tableData };
       }
     } catch {
@@ -253,6 +259,7 @@ export async function saveMenuCategoryAction(input: SaveMenuCategoryInput): Prom
     }
 
     revalidatePath('/settings/food-menu');
+    invalidateCacheByTags([CACHE_CONFIG.MENU.tag(staff.hotel_id), 'menu']);
     return { success: true, category: newCategory };
   } catch (err: any) {
     console.error('saveMenuCategoryAction error:', err);

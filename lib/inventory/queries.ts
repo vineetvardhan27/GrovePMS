@@ -7,6 +7,7 @@ import {
   AnnualReplacementPlanItem,
 } from './types';
 import { InventoryClassification } from '../types/database.types';
+import { getOrSetCache, CACHE_CONFIG } from '../cache/serverCache';
 
 export const INVENTORY_CLASSIFICATIONS: { id: InventoryClassification; label: string; iconName: string }[] = [
   { id: 'food_kitchen', label: 'Food / Kitchen', iconName: 'Utensils' },
@@ -508,45 +509,21 @@ export async function getInventoryItems(
     const activeHotelId = hotelId || staff?.hotel_id;
     const supabase = createClient();
 
-    // 1. Try public.inventory_items table
-    try {
-      let q = supabase.from('inventory_items').select('*').order('name', { ascending: true });
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
-      if (classification) {
-        q = q.eq('inventory_type', classification);
-      }
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((r) => enrichInventoryItem(r));
-      }
-    } catch {
-      // Fallback
+    // 1. Fetch from public.inventory_items table
+    let q = supabase.from('inventory_items').select('*').order('name', { ascending: true });
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
+    }
+    if (classification) {
+      q = q.eq('inventory_type', classification);
+    }
+    const { data, error } = await q;
+    if (!error && data && data.length > 0) {
+      return (data as any[]).map((r) => enrichInventoryItem(r));
     }
 
-    // 2. Fallback to hotel.settings.inventory_items
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedItems: InventoryItem[] = (hotel?.settings?.inventory_items as InventoryItem[]) || [];
-
-    // Merge default items with stored items for seed hotel, or use stored items for new tenants
-    const itemMap = new Map<string, InventoryItem>();
-    if (targetHotelId === 'a0000000-0000-0000-0000-000000000001') {
-      for (const defItem of DEFAULT_INVENTORY_ITEMS) {
-        itemMap.set(defItem.id, defItem);
-      }
-    }
-    for (const sItem of storedItems) {
-      itemMap.set(sItem.id, sItem);
-    }
-
-    const mergedList = Array.from(itemMap.values());
-    let items = mergedList.map((item) => enrichInventoryItem(item));
+    // Default items fallback if table is empty (e.g. initial demo)
+    let items = DEFAULT_INVENTORY_ITEMS.map((item) => enrichInventoryItem(item));
     if (classification) {
       items = items.filter((i) => i.inventory_type === classification);
     }
@@ -574,77 +551,63 @@ export async function getInventoryTransactions(
     const activeHotelId = hotelId || staff?.hotel_id;
     const supabase = createClient();
 
-    // 1. Try public.inventory_transactions table
-    try {
-      let q = supabase
-        .from('inventory_transactions')
-        .select(`
-          *,
-          item:item_id (
-            name,
-            category,
-            item_type,
-            inventory_type
-          ),
-          staff:recorded_by (
-            full_name
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+    // Fetch from public.inventory_transactions table (sole source of truth)
+    let q = supabase
+      .from('inventory_transactions')
+      .select(`
+        *,
+        item:item_id (
+          name,
+          category,
+          item_type,
+          inventory_type
+        ),
+        staff:recorded_by (
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
-      if (itemId) {
-        q = q.eq('item_id', itemId);
-      }
-
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((t) => ({
-          id: t.id,
-          hotel_id: t.hotel_id,
-          item_id: t.item_id,
-          item_name: t.item?.name || 'Item',
-          item_category: t.item?.category || 'General',
-          item_type: t.item?.item_type || 'consumable',
-          inventory_type: t.item?.inventory_type || 'food_kitchen',
-          transaction_type: t.transaction_type,
-          quantity: Number(t.quantity),
-          unit: t.unit,
-          unit_price: Number(t.unit_price || 0),
-          total_cost: Number(t.total_cost || 0),
-          supplier: t.supplier || null,
-          reason: t.reason || null,
-          room_number: t.room_number || null,
-          condition_state: t.condition_state || null,
-          notes: t.notes || null,
-          recorded_by: t.recorded_by || null,
-          recorder_name: t.staff?.full_name || 'Staff',
-          transaction_date: t.transaction_date,
-          created_at: t.created_at,
-        }));
-      }
-    } catch {
-      // Fallback
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
     }
-
-    // 2. Fallback to hotel.settings.inventory_transactions
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedTransactions: InventoryTransaction[] =
-      (hotel?.settings?.inventory_transactions as InventoryTransaction[]) || [];
-
-    let filtered = storedTransactions;
     if (itemId) {
-      filtered = filtered.filter((t) => t.item_id === itemId);
+      q = q.eq('item_id', itemId);
     }
-    return filtered.slice(0, limit);
+
+    const { data, error } = await q;
+    if (error) {
+      console.error('Error fetching inventory_transactions from table:', error.message);
+      return [];
+    }
+
+    if (data) {
+      return (data as any[]).map((t) => ({
+        id: t.id,
+        hotel_id: t.hotel_id,
+        item_id: t.item_id,
+        item_name: t.item?.name || 'Item',
+        item_category: t.item?.category || 'General',
+        item_type: t.item?.item_type || 'consumable',
+        inventory_type: t.item?.inventory_type || 'food_kitchen',
+        transaction_type: t.transaction_type,
+        quantity: Number(t.quantity),
+        unit: t.unit,
+        unit_price: Number(t.unit_price || 0),
+        total_cost: Number(t.total_cost || 0),
+        supplier: t.supplier || null,
+        reason: t.reason || null,
+        room_number: t.room_number || null,
+        condition_state: t.condition_state || null,
+        notes: t.notes || null,
+        recorded_by: t.recorded_by || null,
+        recorder_name: t.staff?.full_name || 'Staff',
+        transaction_date: t.transaction_date,
+        created_at: t.created_at,
+      }));
+    }
+    return [];
   } catch (err) {
     console.error('Error fetching inventory transactions:', err);
     return [];
@@ -714,68 +677,87 @@ export async function getInventorySummary(
   preloadedItems?: InventoryItem[],
   preloadedTransactions?: InventoryTransaction[]
 ): Promise<InventorySummary> {
-  const items = preloadedItems || (await getInventoryItems(hotelId));
-  const transactions = preloadedTransactions || (await getInventoryTransactions(hotelId, undefined, 200));
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-  let healthy = 0;
-  let low = 0;
-  let out = 0;
-  let valuation = 0;
-  let totalDamaged = 0;
-  let replacementCount = 0;
-  let estimatedReplacementCost = 0;
+  async function calculateSummary(hId: string, itemsOverride?: InventoryItem[], txOverride?: InventoryTransaction[]) {
+    const items = itemsOverride || (await getInventoryItems(hId));
+    const transactions = txOverride || (await getInventoryTransactions(hId, undefined, 200));
 
-  for (const item of items) {
-    if (item.stock_status === 'out_of_stock') out++;
-    else if (item.stock_status === 'low_stock') low++;
-    else healthy++;
+    let healthy = 0;
+    let low = 0;
+    let out = 0;
+    let valuation = 0;
+    let totalDamaged = 0;
+    let replacementCount = 0;
+    let estimatedReplacementCost = 0;
 
-    valuation += item.total_value || 0;
+    for (const item of items) {
+      if (item.stock_status === 'out_of_stock') out++;
+      else if (item.stock_status === 'low_stock') low++;
+      else healthy++;
 
-    if (item.item_type === 'reusable_asset') {
-      totalDamaged += item.damaged_stock || 0;
-      const needed = item.replacement_needed || 0;
-      if (needed > 0) {
-        replacementCount += needed;
-        estimatedReplacementCost += needed * (item.cost_per_unit || 0);
+      valuation += item.total_value || 0;
+
+      if (item.item_type === 'reusable_asset') {
+        totalDamaged += item.damaged_stock || 0;
+        const needed = item.replacement_needed || 0;
+        if (needed > 0) {
+          replacementCount += needed;
+          estimatedReplacementCost += needed * (item.cost_per_unit || 0);
+        }
       }
     }
+
+    const now = new Date();
+    const todayPrefix = now.toISOString().split('T')[0];
+    const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const purchasesMonth = transactions
+      .filter((t) => t.transaction_type === 'purchase')
+      .reduce((sum, t) => sum + (t.total_cost || 0), 0);
+
+    const usageCount = transactions.filter(
+      (t) => t.transaction_type === 'usage' || t.transaction_type === 'damaged' || t.transaction_type === 'waste'
+    ).length;
+
+    const todayWaste = transactions
+      .filter((t) => t.transaction_type === 'waste' && t.transaction_date === todayPrefix)
+      .reduce((sum, t) => sum + (t.total_cost || 0), 0);
+
+    const monthWaste = transactions
+      .filter((t) => t.transaction_type === 'waste' && t.transaction_date.startsWith(monthPrefix))
+      .reduce((sum, t) => sum + (t.total_cost || 0), 0);
+
+    return {
+      total_items: items.length,
+      healthy_count: healthy,
+      low_stock_count: low,
+      out_of_stock_count: out,
+      total_valuation: Math.round(valuation * 100) / 100,
+      total_purchases_month: Math.round(purchasesMonth * 100) / 100,
+      total_usage_month: usageCount,
+      total_damaged_assets: totalDamaged,
+      replacement_needed_count: replacementCount,
+      estimated_replacement_cost: Math.round(estimatedReplacementCost * 100) / 100,
+      today_waste_value: Math.round(todayWaste * 100) / 100,
+      month_waste_value: Math.round(monthWaste * 100) / 100,
+    };
   }
 
-  const now = new Date();
-  const todayPrefix = now.toISOString().split('T')[0];
-  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  if (!preloadedItems && !preloadedTransactions) {
+    const { data } = await getOrSetCache(
+      {
+        key: ['inventory-summary', activeHotelId],
+        tags: [CACHE_CONFIG.INVENTORY.tag(activeHotelId), 'inventory'],
+        ttlSeconds: CACHE_CONFIG.INVENTORY.ttl,
+      },
+      () => calculateSummary(activeHotelId)
+    );
+    return data;
+  }
 
-  const purchasesMonth = transactions
-    .filter((t) => t.transaction_type === 'purchase')
-    .reduce((sum, t) => sum + (t.total_cost || 0), 0);
-
-  const usageCount = transactions.filter(
-    (t) => t.transaction_type === 'usage' || t.transaction_type === 'damaged' || t.transaction_type === 'waste'
-  ).length;
-
-  const todayWaste = transactions
-    .filter((t) => t.transaction_type === 'waste' && t.transaction_date === todayPrefix)
-    .reduce((sum, t) => sum + (t.total_cost || 0), 0);
-
-  const monthWaste = transactions
-    .filter((t) => t.transaction_type === 'waste' && t.transaction_date.startsWith(monthPrefix))
-    .reduce((sum, t) => sum + (t.total_cost || 0), 0);
-
-  return {
-    total_items: items.length,
-    healthy_count: healthy,
-    low_stock_count: low,
-    out_of_stock_count: out,
-    total_valuation: Math.round(valuation * 100) / 100,
-    total_purchases_month: Math.round(purchasesMonth * 100) / 100,
-    total_usage_month: usageCount,
-    total_damaged_assets: totalDamaged,
-    replacement_needed_count: replacementCount,
-    estimated_replacement_cost: Math.round(estimatedReplacementCost * 100) / 100,
-    today_waste_value: Math.round(todayWaste * 100) / 100,
-    month_waste_value: Math.round(monthWaste * 100) / 100,
-  };
+  return calculateSummary(activeHotelId, preloadedItems, preloadedTransactions);
 }
 
 /**

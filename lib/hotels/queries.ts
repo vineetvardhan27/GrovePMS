@@ -64,41 +64,54 @@ const DEFAULT_HOTEL: Hotel = {
   },
 };
 
+import { getOrSetCache, CACHE_CONFIG } from '../cache/serverCache';
+
 let localHotelStore: Hotel = { ...DEFAULT_HOTEL };
 
 export const getHotel = serverCache(async function getHotel(hotelId?: string): Promise<Hotel> {
-  try {
-    const staff = await getCurrentStaff();
-    const activeHotelId = hotelId || staff?.hotel_id || DEFAULT_HOTEL.id;
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || DEFAULT_HOTEL.id;
 
-    const supabase = createClient();
-    const { data, error } = (await supabase
-      .from('hotels')
-      .select('*')
-      .eq('id', activeHotelId)
-      .single()) as { data: any; error: any };
+  const { data } = await getOrSetCache(
+    {
+      key: ['hotel-details', activeHotelId],
+      tags: [CACHE_CONFIG.HOTEL_SETTINGS.tag(activeHotelId), 'hotel-settings'],
+      ttlSeconds: CACHE_CONFIG.HOTEL_SETTINGS.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = (await supabase
+          .from('hotels')
+          .select('*')
+          .eq('id', activeHotelId)
+          .single()) as { data: any; error: any };
 
-    if (error) {
-      console.error('Error fetching hotel from Supabase:', error.message);
-    } else if (data) {
-      const rawSettings = (data.settings || {}) as any;
-      const normalizedSettings: HotelSettings = {
-        ...rawSettings,
-        gst_rate: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
-        gst_percentage: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
-        gst_enabled: rawSettings.gst_enabled !== false,
-        logo_url: data.logo_url || rawSettings.logo_url || null,
-      };
-      return {
-        ...data,
-        logo_url: data.logo_url || rawSettings.logo_url || null,
-        settings: normalizedSettings,
-      } as Hotel;
+        if (error) {
+          console.error('Error fetching hotel from Supabase:', error.message);
+        } else if (data) {
+          const rawSettings = (data.settings || {}) as any;
+          const normalizedSettings: HotelSettings = {
+            ...rawSettings,
+            gst_rate: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
+            gst_percentage: Number(rawSettings.gst_percentage || rawSettings.gst_rate || 12),
+            gst_enabled: rawSettings.gst_enabled !== false,
+            logo_url: data.logo_url || rawSettings.logo_url || null,
+          };
+          return {
+            ...data,
+            logo_url: data.logo_url || rawSettings.logo_url || null,
+            settings: normalizedSettings,
+          } as Hotel;
+        }
+      } catch (err) {
+        console.error('Failed to connect to Supabase for hotel:', err);
+      }
+      return localHotelStore;
     }
-  } catch (err) {
-    console.error('Failed to connect to Supabase for hotel:', err);
-  }
-  return localHotelStore;
+  );
+
+  return data;
 });
 
 export const getHotelSettings = serverCache(async function getHotelSettings(hotelId?: string): Promise<HotelSettings> {

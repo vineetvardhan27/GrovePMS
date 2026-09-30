@@ -17,6 +17,7 @@ import {
 } from './types';
 import { getBanquetBookings, getBanquetPayments } from '../banquet/queries';
 import { getInventorySummary, getWastageSummary } from '../inventory/queries';
+import { getOrSetCache, CACHE_CONFIG } from '../cache/serverCache';
 
 function todayStr(): string {
   return new Date().toISOString().split('T')[0];
@@ -104,314 +105,417 @@ export async function getHotelOwnerIntelligence(
   hotelIdParam?: string
 ): Promise<HotelOwnerIntelligence> {
   const staff = await getCurrentStaff();
-  const hotelId = hotelIdParam || staff?.hotel_id;
-  const supabase = createClient();
+  const hotelId = hotelIdParam || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
   const today = todayStr();
-  const { startDate, endDate, label: periodLabel } = getPeriodDates(period);
 
-  try {
-    // 1. Hotel info
-    let hotelName = 'Hotel Greenery View';
-    const targetHotelId = hotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('name, settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
+  const { data } = await getOrSetCache(
+    {
+      key: ['owner-intelligence', hotelId, period, today],
+      tags: [CACHE_CONFIG.REPORTS.tag(hotelId), 'reports'],
+      ttlSeconds: CACHE_CONFIG.REPORTS.ttl,
+    },
+    async () => {
+      const supabase = createClient();
+      const { startDate, endDate, label: periodLabel } = getPeriodDates(period);
 
-    if (hotelData?.name) hotelName = hotelData.name;
+      try {
+        // 1. Hotel info
+        let hotelName = 'Hotel Greenery View';
+        const targetHotelId = hotelId || 'a0000000-0000-0000-0000-000000000001';
+        const { data: hotelData } = await (supabase.from('hotels') as any)
+          .select('name')
+          .eq('id', targetHotelId)
+          .maybeSingle();
 
-    // 2. Fetch Rooms count
-    let roomsQuery = supabase.from('rooms').select('*');
-    if (hotelId) roomsQuery = roomsQuery.eq('hotel_id', hotelId);
-    const { data: dbRooms } = await roomsQuery;
-    const roomsList = dbRooms || [];
-    const totalRooms = roomsList.length > 0 ? roomsList.length : 19;
-    const occupiedRoomsToday = roomsList.filter((r: any) => r.status === 'occupied').length;
-    const occupancyPercentToday = totalRooms > 0 ? Math.round((occupiedRoomsToday / totalRooms) * 100 * 10) / 10 : 0;
+        if (hotelData?.name) hotelName = hotelData.name;
 
-    // 3. Fetch Bookings
-    let bookingsQuery = supabase
-      .from('bookings')
-      .select(`
-        *,
-        guest:guest_id (*),
-        room:room_id (
-          *,
-          category:category_id (*)
-        ),
-        payments:payments (*)
-      `);
-    if (hotelId) bookingsQuery = bookingsQuery.eq('hotel_id', hotelId);
-    const { data: dbBookings } = await bookingsQuery;
-    const allBookings = (dbBookings || []) as BookingWithDetails[];
+        // 2. Fetch Rooms count (only id, status needed)
+        let roomsQuery = supabase.from('rooms').select('id, status');
+        if (hotelId) roomsQuery = roomsQuery.eq('hotel_id', hotelId);
 
-    // 4. Fetch Room Payments
-    let paymentsQuery = supabase.from('payments').select('*');
-    if (hotelId) paymentsQuery = paymentsQuery.eq('hotel_id', hotelId);
-    const { data: dbPayments } = await paymentsQuery;
-    const allRoomPayments = dbPayments || [];
+        // ─── Filter Data for the Active Period at Database Level ───
+        const startIso = `${startDate}T00:00:00.000Z`;
+        const endIso = `${endDate}T23:59:59.999Z`;
+        const todayStartIso = `${today}T00:00:00.000Z`;
+        const todayEndIso = `${today}T23:59:59.999Z`;
 
-    // 5. Fetch Banquet Bookings & Payments
-    const banquetBookings = await getBanquetBookings(hotelId);
-    const banquetPayments = await getBanquetPayments(undefined, hotelId);
+        // 3. Room Bookings in Period (SQL date filtering)
+        let periodBookingsQuery = supabase
+          .from('bookings')
+          .select('id, total_amount, tax_amount, check_in_date, check_out_date, booking_status, created_at, food_charges')
+          .gte('check_in_date', startDate)
+          .lte('check_in_date', endDate);
+        if (hotelId) periodBookingsQuery = periodBookingsQuery.eq('hotel_id', hotelId);
 
-    // 6. Fetch Inventory & Wastage summaries
-    const [invSummary, wasteSummary] = await Promise.all([
-      getInventorySummary(hotelId),
-      getWastageSummary(hotelId),
-    ]);
+        // 4. Room Payments in Period (SQL date filtering)
+        let periodPaymentsQuery = supabase
+          .from('payments')
+          .select('amount, payment_mode, payment_type, created_at')
+          .gte('created_at', startIso)
+          .lte('created_at', endIso);
+        if (hotelId) periodPaymentsQuery = periodPaymentsQuery.eq('hotel_id', hotelId);
 
-    // ─── Filter Data for the Active Period ───
-    const startIso = `${startDate}T00:00:00.000Z`;
-    const endIso = `${endDate}T23:59:59.999Z`;
+        // 5. Today's Arrivals & Departures (SQL filtered)
+        let arrivalsTodayQuery = supabase
+          .from('bookings')
+          .select(`
+            *,
+            guest:guest_id (*),
+            room:room_id (
+              *,
+              category:category_id (*)
+            ),
+            payments:payments (*)
+          `)
+          .eq('check_in_date', today)
+          .in('booking_status', ['confirmed', 'checked_in']);
+        if (hotelId) arrivalsTodayQuery = arrivalsTodayQuery.eq('hotel_id', hotelId);
 
-    // A. Room Bookings in Period (by check-in date or created_at)
-    const periodBookings = allBookings.filter((b) => {
-      const d = b.check_in_date || b.created_at.split('T')[0];
-      return d >= startDate && d <= endDate;
-    });
+        let departuresTodayQuery = supabase
+          .from('bookings')
+          .select(`
+            *,
+            guest:guest_id (*),
+            room:room_id (
+              *,
+              category:category_id (*)
+            ),
+            payments:payments (*)
+          `)
+          .eq('check_out_date', today)
+          .eq('booking_status', 'checked_in');
+        if (hotelId) departuresTodayQuery = departuresTodayQuery.eq('hotel_id', hotelId);
 
-    const activePeriodBookings = periodBookings.filter((b) => b.booking_status !== 'cancelled');
-    const roomRevenuePeriod = activePeriodBookings.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
-    const roomTaxesPeriod = activePeriodBookings.reduce((sum, b) => sum + (Number((b as any).tax_amount) || 0), 0);
+        // 6. In-house count (SQL count only)
+        let inHouseCountQuery = supabase
+          .from('bookings')
+          .select('id', { count: 'exact', head: true })
+          .eq('booking_status', 'checked_in');
+        if (hotelId) inHouseCountQuery = inHouseCountQuery.eq('hotel_id', hotelId);
 
-    // Room nights in period
-    let roomNightsSold = 0;
-    activePeriodBookings.forEach((b) => {
-      const cin = new Date(b.check_in_date);
-      const cout = new Date(b.check_out_date);
-      const nights = Math.max(1, Math.round((cout.getTime() - cin.getTime()) / (1000 * 3600 * 24)));
-      roomNightsSold += nights;
-    });
+        // 7. Today's bookings revenue (SQL filtered)
+        let todayBookingsRevenueQuery = supabase
+          .from('bookings')
+          .select('total_amount')
+          .eq('check_in_date', today)
+          .neq('booking_status', 'cancelled');
+        if (hotelId) todayBookingsRevenueQuery = todayBookingsRevenueQuery.eq('hotel_id', hotelId);
 
-    const daysCount = Math.max(
-      1,
-      Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 3600 * 24)) + 1
-    );
-    const availableRoomNights = totalRooms * daysCount;
-    const periodOccupancyPercent =
-      availableRoomNights > 0 ? Math.round((roomNightsSold / availableRoomNights) * 100 * 10) / 10 : 0;
-    const adr = roomNightsSold > 0 ? Math.round(roomRevenuePeriod / roomNightsSold) : 0;
-    const revpar = Math.round(adr * (periodOccupancyPercent / 100));
+        // 8. Top outstanding room bookings (SQL filtered: unpaid/partially paid only)
+        let topOutstandingRoomQuery = supabase
+          .from('bookings')
+          .select(`
+            id,
+            booking_number,
+            total_amount,
+            advance_amount,
+            booking_status,
+            guest:guest_id (
+              full_name,
+              phone
+            ),
+            room:room_id (
+              room_number
+            ),
+            payments:payments (
+              amount
+            )
+          `)
+          .neq('booking_status', 'cancelled')
+          .neq('payment_status', 'fully_paid')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (hotelId) topOutstandingRoomQuery = topOutstandingRoomQuery.eq('hotel_id', hotelId);
 
-    // B. Room Payments in Period
-    const periodRoomPayments = allRoomPayments.filter(
-      (p: any) => p.created_at >= startIso && p.created_at <= endIso
-    );
-    let roomCollectedPeriod = 0;
-    let roomRefundsPeriod = 0;
-    periodRoomPayments.forEach((p: any) => {
-      const amt = Number(p.amount) || 0;
-      if (p.payment_type === 'refund') roomRefundsPeriod += amt;
-      else roomCollectedPeriod += amt;
-    });
+        // 9. Banquet queries (SQL date filtered)
+        const banquetPeriodBookingsPromise = getBanquetBookings(hotelId, undefined, startDate, endDate);
+        const banquetPeriodPaymentsPromise = getBanquetPayments(undefined, hotelId, startIso, endIso);
+        const banquetTodayEventsPromise = getBanquetBookings(hotelId, today);
 
-    // C. Banquet in Period
-    const periodBanquetBookings = banquetBookings.filter(
-      (b) => b.event_date >= startDate && b.event_date <= endDate
-    );
-    const activeBanquetBookings = periodBanquetBookings.filter((b) => b.booking_status !== 'cancelled');
-    const banquetBilledPeriod = activeBanquetBookings.reduce(
-      (sum, b) => sum + (Number(b.grand_total || b.estimated_total || b.rental_amount) || 0),
-      0
-    );
+        // 10. Inventory & Wastage summaries
+        const invSummaryPromise = getInventorySummary(hotelId);
+        const wasteSummaryPromise = getWastageSummary(hotelId);
 
-    const periodBanquetPayments = banquetPayments.filter(
-      (p) => p.created_at >= startIso && p.created_at <= endIso
-    );
-    const banquetCollectedPeriod = periodBanquetPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-    const banquetOutstandingPeriod = Math.max(0, banquetBilledPeriod - banquetCollectedPeriod);
+        // Execute all database-level queries concurrently
+        const [
+          roomsRes,
+          periodBookingsRes,
+          periodPaymentsRes,
+          arrivalsRes,
+          departuresRes,
+          inHouseCountRes,
+          todayBookingsRevRes,
+          topOutstandingRoomRes,
+          periodBanquetBookings,
+          periodBanquetPayments,
+          banquetEventsToday,
+          invSummary,
+          wasteSummary,
+        ] = await Promise.all([
+          roomsQuery,
+          periodBookingsQuery,
+          periodPaymentsQuery,
+          arrivalsTodayQuery,
+          departuresTodayQuery,
+          inHouseCountQuery,
+          todayBookingsRevenueQuery,
+          topOutstandingRoomQuery,
+          banquetPeriodBookingsPromise,
+          banquetPeriodPaymentsPromise,
+          banquetTodayEventsPromise,
+          invSummaryPromise,
+          wasteSummaryPromise,
+        ]);
 
-    // D. Food & Beverage in Period
-    // F&B charges billed to room folios or restaurant orders
-    const fbRoomCharges = allBookings
-      .filter((b) => b.check_in_date >= startDate && b.check_in_date <= endDate)
-      .reduce((sum, b) => {
-        // sum food charges if attached
-        return sum + (Number((b as any).food_charges) || 0);
-      }, 0);
+        const roomsList = roomsRes.data || [];
+        const totalRooms = roomsList.length > 0 ? roomsList.length : 19;
+        const occupiedRoomsToday = roomsList.filter((r: any) => r.status === 'occupied').length;
+        const occupancyPercentToday = totalRooms > 0 ? Math.round((occupiedRoomsToday / totalRooms) * 100 * 10) / 10 : 0;
 
-    const fbBilledPeriod = fbRoomCharges;
-    const fbCollectedPeriod = fbRoomCharges; // collected via room settlements
+        const periodBookings = (periodBookingsRes.data || []) as any[];
+        const activePeriodBookings = periodBookings.filter((b: any) => b.booking_status !== 'cancelled');
+        const roomRevenuePeriod = activePeriodBookings.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
+        const roomTaxesPeriod = activePeriodBookings.reduce((sum, b) => sum + (Number((b as any).tax_amount) || 0), 0);
 
-    // E. Total Financial Rollup
-    const totalBusinessValue = roomRevenuePeriod + banquetBilledPeriod + fbBilledPeriod;
-    const totalCollected = roomCollectedPeriod + banquetCollectedPeriod;
-    const outstandingDue = Math.max(0, totalBusinessValue - totalCollected);
-    const collectionRate = totalBusinessValue > 0 ? Math.round((totalCollected / totalBusinessValue) * 100 * 10) / 10 : 100;
+        // Room nights in period
+        let roomNightsSold = 0;
+        activePeriodBookings.forEach((b) => {
+          const cin = new Date(b.check_in_date);
+          const cout = new Date(b.check_out_date);
+          const nights = Math.max(1, Math.round((cout.getTime() - cin.getTime()) / (1000 * 3600 * 24)));
+          roomNightsSold += nights;
+        });
 
-    // F. Payment Modes Breakdown
-    const paymentModes: PaymentModeBreakdown = {
-      cash: 0,
-      upi: 0,
-      card: 0,
-      bank_transfer: 0,
-      other: 0,
-    };
+        const daysCount = Math.max(
+          1,
+          Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 3600 * 24)) + 1
+        );
+        const availableRoomNights = totalRooms * daysCount;
+        const periodOccupancyPercent =
+          availableRoomNights > 0 ? Math.round((roomNightsSold / availableRoomNights) * 100 * 10) / 10 : 0;
+        const adr = roomNightsSold > 0 ? Math.round(roomRevenuePeriod / roomNightsSold) : 0;
+        const revpar = Math.round(adr * (periodOccupancyPercent / 100));
 
-    periodRoomPayments.forEach((p: any) => {
-      const mode = (p.payment_mode || 'other') as PaymentMode;
-      const amt = Number(p.amount) || 0;
-      if (paymentModes[mode] !== undefined) {
-        paymentModes[mode] += p.payment_type === 'refund' ? -amt : amt;
-      }
-    });
+        // B. Room Payments in Period
+        const periodRoomPayments = periodPaymentsRes.data || [];
+        let roomCollectedPeriod = 0;
+        let roomRefundsPeriod = 0;
+        periodRoomPayments.forEach((p: any) => {
+          const amt = Number(p.amount) || 0;
+          if (p.payment_type === 'refund') roomRefundsPeriod += amt;
+          else roomCollectedPeriod += amt;
+        });
 
-    periodBanquetPayments.forEach((p) => {
-      const mode = (p.payment_mode || 'other') as PaymentMode;
-      const amt = Number(p.amount) || 0;
-      if (paymentModes[mode] !== undefined) {
-        paymentModes[mode] += amt;
-      }
-    });
+        // C. Banquet in Period
+        const activeBanquetBookings = periodBanquetBookings.filter((b) => b.booking_status !== 'cancelled');
+        const banquetBilledPeriod = activeBanquetBookings.reduce(
+          (sum, b) => sum + (Number(b.grand_total || b.estimated_total || b.rental_amount) || 0),
+          0
+        );
+        const banquetCollectedPeriod = periodBanquetPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const banquetOutstandingPeriod = Math.max(0, banquetBilledPeriod - banquetCollectedPeriod);
 
-    // Ensure non-negative
-    (Object.keys(paymentModes) as Array<keyof PaymentModeBreakdown>).forEach((k) => {
-      paymentModes[k] = Math.max(0, Math.round(paymentModes[k] * 100) / 100);
-    });
+        // D. Food & Beverage in Period (from period bookings)
+        const fbRoomCharges = periodBookings.reduce((sum, b) => {
+          return sum + (Number((b as any).food_charges) || 0);
+        }, 0);
+        const fbBilledPeriod = fbRoomCharges;
+        const fbCollectedPeriod = fbRoomCharges;
 
-    // G. Business Source Breakdown
-    const roomOutstanding = Math.max(0, roomRevenuePeriod - roomCollectedPeriod);
-    const sources: BusinessSourceBreakdown = {
-      rooms: {
-        billed: roomRevenuePeriod,
-        collected: roomCollectedPeriod,
-        outstanding: roomOutstanding,
-        count: activePeriodBookings.length,
-        share_pct: totalBusinessValue > 0 ? Math.round((roomRevenuePeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
-      },
-      banquet: {
-        billed: banquetBilledPeriod,
-        collected: banquetCollectedPeriod,
-        outstanding: banquetOutstandingPeriod,
-        count: activeBanquetBookings.length,
-        share_pct: totalBusinessValue > 0 ? Math.round((banquetBilledPeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
-      },
-      food_beverage: {
-        billed: fbBilledPeriod,
-        collected: fbCollectedPeriod,
-        outstanding: 0,
-        count: activePeriodBookings.length,
-        share_pct: totalBusinessValue > 0 ? Math.round((fbBilledPeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
-      },
-      other: {
-        billed: 0,
-        collected: 0,
-        outstanding: 0,
-        count: 0,
-        share_pct: 0,
-      },
-    };
+        // E. Total Financial Rollup
+        const totalBusinessValue = roomRevenuePeriod + banquetBilledPeriod + fbBilledPeriod;
+        const totalCollected = roomCollectedPeriod + banquetCollectedPeriod;
+        const outstandingDue = Math.max(0, totalBusinessValue - totalCollected);
+        const collectionRate = totalBusinessValue > 0 ? Math.round((totalCollected / totalBusinessValue) * 100 * 10) / 10 : 100;
 
-    // H. Today's Snapshot
-    const todayStartIso = `${today}T00:00:00.000Z`;
-    const todayEndIso = `${today}T23:59:59.999Z`;
+        // F. Payment Modes Breakdown
+        const paymentModes: PaymentModeBreakdown = {
+          cash: 0,
+          upi: 0,
+          card: 0,
+          bank_transfer: 0,
+          other: 0,
+        };
 
-    const arrivalsToday = allBookings.filter(
-      (b) => b.check_in_date === today && (b.booking_status === 'confirmed' || b.booking_status === 'checked_in')
-    );
-    const departuresToday = allBookings.filter(
-      (b) => b.check_out_date === today && b.booking_status === 'checked_in'
-    );
-    const inHouseGuestsCount = allBookings.filter((b) => b.booking_status === 'checked_in').length;
-    const banquetEventsToday = banquetBookings.filter((b) => b.event_date === today);
+        periodRoomPayments.forEach((p: any) => {
+          const mode = (p.payment_mode || 'other') as PaymentMode;
+          const amt = Number(p.amount) || 0;
+          if (paymentModes[mode] !== undefined) {
+            paymentModes[mode] += p.payment_type === 'refund' ? -amt : amt;
+          }
+        });
 
-    const todayRoomPayments = allRoomPayments.filter(
-      (p: any) => p.created_at >= todayStartIso && p.created_at <= todayEndIso
-    );
-    const todayBanquetPayments = banquetPayments.filter(
-      (p) => p.created_at >= todayStartIso && p.created_at <= todayEndIso
-    );
-    const todayCollections =
-      todayRoomPayments.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0) +
-      todayBanquetPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+        periodBanquetPayments.forEach((p) => {
+          const mode = (p.payment_mode || 'other') as PaymentMode;
+          const amt = Number(p.amount) || 0;
+          if (paymentModes[mode] !== undefined) {
+            paymentModes[mode] += amt;
+          }
+        });
 
-    const todayBookings = allBookings.filter((b) => b.check_in_date === today);
-    const todayRevenue = todayBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0);
-    const todayOutstanding = Math.max(0, todayRevenue - todayCollections);
+        (Object.keys(paymentModes) as Array<keyof PaymentModeBreakdown>).forEach((k) => {
+          paymentModes[k] = Math.max(0, Math.round(paymentModes[k] * 100) / 100);
+        });
 
-    // I. Actionable Receivables
-    const topOutstandingAccounts: OutstandingAccount[] = [];
+        // G. Business Source Breakdown
+        const roomOutstanding = Math.max(0, roomRevenuePeriod - roomCollectedPeriod);
+        const sources: BusinessSourceBreakdown = {
+          rooms: {
+            billed: roomRevenuePeriod,
+            collected: roomCollectedPeriod,
+            outstanding: roomOutstanding,
+            count: activePeriodBookings.length,
+            share_pct: totalBusinessValue > 0 ? Math.round((roomRevenuePeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
+          },
+          banquet: {
+            billed: banquetBilledPeriod,
+            collected: banquetCollectedPeriod,
+            outstanding: banquetOutstandingPeriod,
+            count: activeBanquetBookings.length,
+            share_pct: totalBusinessValue > 0 ? Math.round((banquetBilledPeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
+          },
+          food_beverage: {
+            billed: fbBilledPeriod,
+            collected: fbCollectedPeriod,
+            outstanding: 0,
+            count: activePeriodBookings.length,
+            share_pct: totalBusinessValue > 0 ? Math.round((fbBilledPeriod / totalBusinessValue) * 100 * 10) / 10 : 0,
+          },
+          other: {
+            billed: 0,
+            collected: 0,
+            outstanding: 0,
+            count: 0,
+            share_pct: 0,
+          },
+        };
 
-    allBookings.forEach((b) => {
-      if (b.booking_status !== 'cancelled') {
-        const billed = Number(b.total_amount) || 0;
-        const paid = (b.payments || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
-        const bal = Math.max(0, billed - paid);
-        if (bal > 0) {
-          topOutstandingAccounts.push({
-            id: b.id,
-            source: 'room',
-            customerName: b.guest?.full_name || 'Guest',
-            phone: b.guest?.phone,
-            reference: b.booking_number,
-            resourceName: b.room?.room_number ? `Room ${b.room.room_number}` : 'Room Accommodation',
-            billedAmount: billed,
-            paidAmount: paid,
-            balanceDue: bal,
-            url: `/bookings/${b.id}`,
+        // H. Today's Snapshot
+        const arrivalsToday = (arrivalsRes.data || []) as BookingWithDetails[];
+        const departuresToday = (departuresRes.data || []) as BookingWithDetails[];
+        const inHouseGuestsCount = inHouseCountRes.count || 0;
+
+        let todayCollections = 0;
+        if (startDate === today && endDate === today) {
+          todayCollections = roomCollectedPeriod + banquetCollectedPeriod;
+        } else {
+          let todayRoomPayQuery = supabase
+            .from('payments')
+            .select('amount, payment_type')
+            .gte('created_at', todayStartIso)
+            .lte('created_at', todayEndIso);
+          if (hotelId) todayRoomPayQuery = todayRoomPayQuery.eq('hotel_id', hotelId);
+
+          const [todayRoomRes, todayBanquetPays] = await Promise.all([
+            todayRoomPayQuery,
+            getBanquetPayments(undefined, hotelId, todayStartIso, todayEndIso),
+          ]);
+
+          const roomTodaySum = (todayRoomRes.data || []).reduce((s: number, p: any) => {
+            const amt = Number(p.amount) || 0;
+            return p.payment_type === 'refund' ? s - amt : s + amt;
+          }, 0);
+          const banquetTodaySum = todayBanquetPays.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+          todayCollections = Math.max(0, roomTodaySum + banquetTodaySum);
+        }
+
+        const todayRevenue = (todayBookingsRevRes.data || []).reduce((s: number, b: any) => s + (Number(b.total_amount) || 0), 0);
+        const todayOutstanding = Math.max(0, todayRevenue - todayCollections);
+
+        // I. Actionable Receivables
+        const topOutstandingAccounts: OutstandingAccount[] = [];
+
+        (topOutstandingRoomRes.data || []).forEach((b: any) => {
+          const billed = Number(b.total_amount) || 0;
+          const paid = (b.payments || []).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0) || Number(b.advance_amount) || 0;
+          const bal = Math.max(0, billed - paid);
+          if (bal > 0) {
+            topOutstandingAccounts.push({
+              id: b.id,
+              source: 'room',
+              customerName: b.guest?.full_name || 'Guest',
+              phone: b.guest?.phone,
+              reference: b.booking_number,
+              resourceName: b.room?.room_number ? `Room ${b.room.room_number}` : 'Room Accommodation',
+              billedAmount: billed,
+              paidAmount: paid,
+              balanceDue: bal,
+              url: `/billing/${b.id}`,
+            });
+          }
+        });
+
+        // Query banquet outstanding accounts
+        let outstandingBanquetQuery = (supabase.from('banquet_bookings') as any)
+          .select('id, booking_number, customer_name, customer_phone, event_name, event_type, grand_total, estimated_total, rental_amount, total_paid, advance_paid, balance_due, booking_status')
+          .neq('booking_status', 'cancelled')
+          .gt('balance_due', 0)
+          .order('balance_due', { ascending: false })
+          .limit(10);
+        if (hotelId) outstandingBanquetQuery = outstandingBanquetQuery.eq('hotel_id', hotelId);
+        const { data: dbBanquetOutstanding } = await outstandingBanquetQuery;
+
+        (dbBanquetOutstanding || []).forEach((bb: any) => {
+          const billed = Number(bb.grand_total || bb.estimated_total || bb.rental_amount) || 0;
+          const paid = Number(bb.total_paid || bb.advance_paid) || 0;
+          const bal = Math.max(0, Number(bb.balance_due ?? (billed - paid)));
+          if (bal > 0) {
+            topOutstandingAccounts.push({
+              id: bb.id,
+              source: 'banquet',
+              customerName: bb.customer_name || 'Event Client',
+              phone: bb.customer_phone,
+              reference: bb.booking_number,
+              resourceName: `${bb.event_name || 'Banquet Event'} · ${bb.event_type}`,
+              billedAmount: billed,
+              paidAmount: paid,
+              balanceDue: bal,
+              url: `/banquet/${bb.id}`,
+            });
+          }
+        });
+
+        topOutstandingAccounts.sort((a, b) => b.balanceDue - a.balanceDue);
+
+        // J. Needs Attention Alerts
+        const needsAttention: NeedsAttentionAlert[] = [];
+
+        // Financial alerts
+        const totalOut = topOutstandingAccounts.reduce((s, a) => s + a.balanceDue, 0);
+        if (totalOut > 10000) {
+          needsAttention.push({
+            id: 'fin-outstanding-high',
+            category: 'finance',
+            severity: 'high',
+            title: `₹${totalOut.toLocaleString('en-IN')} Uncollected Outstanding Balances`,
+            description: `${topOutstandingAccounts.length} guest and event accounts have unpaid balances pending collection.`,
+            actionLabel: 'Review Outstanding Receivables',
+            actionUrl: '#outstanding-receivables',
+            amount: totalOut,
           });
         }
-      }
-    });
 
-    banquetBookings.forEach((bb) => {
-      if (bb.booking_status !== 'cancelled') {
-        const billed = Number(bb.grand_total || bb.estimated_total || bb.rental_amount) || 0;
-        const paid = Number(bb.total_paid || bb.advance_paid) || 0;
-        const bal = Math.max(0, Number(bb.balance_due ?? (billed - paid)));
-        if (bal > 0) {
-          topOutstandingAccounts.push({
-            id: bb.id,
-            source: 'banquet',
-            customerName: bb.customer_name || 'Event Client',
-            phone: bb.customer_phone,
-            reference: bb.booking_number,
-            resourceName: `${bb.event_name || 'Banquet Event'} · ${bb.event_type}`,
-            billedAmount: billed,
-            paidAmount: paid,
-            balanceDue: bal,
-            url: `/banquet/${bb.id}`,
+        // Banquet alerts: query upcoming banquet with pending balances
+        let upcomingBanquetQuery = (supabase.from('banquet_bookings') as any)
+          .select('id')
+          .gte('event_date', today)
+          .neq('booking_status', 'cancelled')
+          .gt('balance_due', 0);
+        if (hotelId) upcomingBanquetQuery = upcomingBanquetQuery.eq('hotel_id', hotelId);
+        const { data: upcomingBanquetRows } = await upcomingBanquetQuery;
+        const upcomingUnpaidBanquetCount = (upcomingBanquetRows || []).length;
+
+        if (upcomingUnpaidBanquetCount > 0) {
+          needsAttention.push({
+            id: 'banquet-upcoming-advance',
+            category: 'banquet',
+            severity: 'medium',
+            title: `${upcomingUnpaidBanquetCount} Upcoming Events with Pending Balances`,
+            description: 'Upcoming banquet events require advance collection or final settlement before event date.',
+            actionLabel: 'Open Banquet Events',
+            actionUrl: '/banquet',
           });
         }
-      }
-    });
-
-    topOutstandingAccounts.sort((a, b) => b.balanceDue - a.balanceDue);
-
-    // J. Needs Attention Alerts
-    const needsAttention: NeedsAttentionAlert[] = [];
-
-    // Financial alerts
-    const totalOut = topOutstandingAccounts.reduce((s, a) => s + a.balanceDue, 0);
-    if (totalOut > 10000) {
-      needsAttention.push({
-        id: 'fin-outstanding-high',
-        category: 'finance',
-        severity: 'high',
-        title: `₹${totalOut.toLocaleString('en-IN')} Uncollected Outstanding Balances`,
-        description: `${topOutstandingAccounts.length} guest and event accounts have unpaid balances pending collection.`,
-        actionLabel: 'Review Outstanding Receivables',
-        actionUrl: '#outstanding-receivables',
-        amount: totalOut,
-      });
-    }
-
-    // Banquet alerts
-    const upcomingUnpaidBanquet = banquetBookings.filter(
-      (b) => b.event_date >= today && b.booking_status !== 'cancelled' && (Number(b.balance_due || 0) > 0 || b.payment_status === 'unpaid')
-    );
-    if (upcomingUnpaidBanquet.length > 0) {
-      needsAttention.push({
-        id: 'banquet-upcoming-advance',
-        category: 'banquet',
-        severity: 'medium',
-        title: `${upcomingUnpaidBanquet.length} Upcoming Events with Pending Balances`,
-        description: 'Upcoming banquet events require advance collection or final settlement before event date.',
-        actionLabel: 'Open Banquet Events',
-        actionUrl: '/banquet',
-      });
-    }
 
     // Inventory alerts
     if ((invSummary.low_stock_count || 0) > 0 || (invSummary.out_of_stock_count || 0) > 0) {
@@ -529,6 +633,10 @@ export async function getHotelOwnerIntelligence(
     console.error('getHotelOwnerIntelligence error:', err);
     throw err;
   }
+    }
+  );
+
+  return data;
 }
 
 // ─── Existing Daily & Monthly Reports (Preserved & Enhanced) ─────────────────
@@ -548,101 +656,112 @@ export interface DailyReport {
 export async function getDailyReport(date: string, hotelIdParam?: string): Promise<DailyReport> {
   const targetDate = date || todayStr();
   const staff = await getCurrentStaff();
-  const hotelId = hotelIdParam || staff?.hotel_id;
+  const hotelId = hotelIdParam || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-  try {
-    const supabase = createClient();
-    const startIso = `${targetDate}T00:00:00.000Z`;
-    const endIso = `${targetDate}T23:59:59.999Z`;
+  const { data } = await getOrSetCache(
+    {
+      key: ['daily-report', hotelId, targetDate],
+      tags: [CACHE_CONFIG.REPORTS.tag(hotelId), 'reports'],
+      ttlSeconds: CACHE_CONFIG.REPORTS.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
+        const startIso = `${targetDate}T00:00:00.000Z`;
+        const endIso = `${targetDate}T23:59:59.999Z`;
 
-    let payQuery = supabase
-      .from('payments')
-      .select('*')
-      .gte('created_at', startIso)
-      .lte('created_at', endIso);
+        let payQuery = supabase
+          .from('payments')
+          .select('*')
+          .gte('created_at', startIso)
+          .lte('created_at', endIso);
 
-    if (hotelId) payQuery = payQuery.eq('hotel_id', hotelId);
-    const { data: dbPayments } = await payQuery;
+        if (hotelId) payQuery = payQuery.eq('hotel_id', hotelId);
+        const { data: dbPayments } = await payQuery;
 
-    const payments = dbPayments || [];
-    const collection = payments.reduce((sum: number, p: any) => {
-      const amt = Number(p.amount) || 0;
-      return p.payment_type === 'refund' ? sum - amt : sum + amt;
-    }, 0);
+        const payments = dbPayments || [];
+        const collection = payments.reduce((sum: number, p: any) => {
+          const amt = Number(p.amount) || 0;
+          return p.payment_type === 'refund' ? sum - amt : sum + amt;
+        }, 0);
 
-    const collectionByMode: Record<PaymentMode, number> = {
-      cash: 0,
-      upi: 0,
-      card: 0,
-      bank_transfer: 0,
-      other: 0,
-    };
-    payments.forEach((p: any) => {
-      const mode = (p.payment_mode || 'other') as PaymentMode;
-      const amt = Number(p.amount) || 0;
-      if (collectionByMode[mode] !== undefined) {
-        collectionByMode[mode] += p.payment_type === 'refund' ? -amt : amt;
+        const collectionByMode: Record<PaymentMode, number> = {
+          cash: 0,
+          upi: 0,
+          card: 0,
+          bank_transfer: 0,
+          other: 0,
+        };
+        payments.forEach((p: any) => {
+          const mode = (p.payment_mode || 'other') as PaymentMode;
+          const amt = Number(p.amount) || 0;
+          if (collectionByMode[mode] !== undefined) {
+            collectionByMode[mode] += p.payment_type === 'refund' ? -amt : amt;
+          }
+        });
+
+        let bookQuery = supabase
+          .from('bookings')
+          .select(`
+            *,
+            guest:guest_id (*),
+            room:room_id (
+              *,
+              category:category_id (*)
+            ),
+            payments:payments (*)
+          `)
+          .or(`check_in_date.eq.${targetDate},check_out_date.eq.${targetDate}`);
+
+        if (hotelId) bookQuery = bookQuery.eq('hotel_id', hotelId);
+        const { data: dbBookings } = await bookQuery;
+
+        const bookings = (dbBookings || []) as BookingWithDetails[];
+        const arrivals = bookings.filter((b) => b.check_in_date === targetDate);
+        const departures = bookings.filter((b) => b.check_out_date === targetDate);
+        const checkedOut = departures.filter((b) => b.booking_status === 'checked_out');
+
+        let pendingBalance = 0;
+        let pendingCount = 0;
+        arrivals.forEach((b) => {
+          const paymentsList = b.payments || [];
+          const paid = paymentsList.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+          const bal = Math.max(0, Number(b.total_amount) - paid);
+          if (bal > 0) {
+            pendingBalance += bal;
+            pendingCount++;
+          }
+        });
+
+        return {
+          date: targetDate,
+          collection: Math.max(0, collection),
+          collectionByMode,
+          transactionCount: payments.length,
+          arrivals,
+          departures,
+          checkedOut,
+          pendingBalance,
+          pendingCount,
+        };
+      } catch (err) {
+        console.error('Error fetching daily report from Supabase:', err);
+        return {
+          date: targetDate,
+          collection: 0,
+          collectionByMode: { cash: 0, upi: 0, card: 0, bank_transfer: 0, other: 0 },
+          transactionCount: 0,
+          arrivals: [],
+          departures: [],
+          checkedOut: [],
+          pendingBalance: 0,
+          pendingCount: 0,
+        };
       }
-    });
+    }
+  );
 
-    let bookQuery = supabase
-      .from('bookings')
-      .select(`
-        *,
-        guest:guest_id (*),
-        room:room_id (
-          *,
-          category:category_id (*)
-        ),
-        payments:payments (*)
-      `)
-      .or(`check_in_date.eq.${targetDate},check_out_date.eq.${targetDate}`);
-
-    if (hotelId) bookQuery = bookQuery.eq('hotel_id', hotelId);
-    const { data: dbBookings } = await bookQuery;
-
-    const bookings = (dbBookings || []) as BookingWithDetails[];
-    const arrivals = bookings.filter((b) => b.check_in_date === targetDate);
-    const departures = bookings.filter((b) => b.check_out_date === targetDate);
-    const checkedOut = departures.filter((b) => b.booking_status === 'checked_out');
-
-    let pendingBalance = 0;
-    let pendingCount = 0;
-    arrivals.forEach((b) => {
-      const paymentsList = b.payments || [];
-      const paid = paymentsList.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
-      const bal = Math.max(0, Number(b.total_amount) - paid);
-      if (bal > 0) {
-        pendingBalance += bal;
-        pendingCount++;
-      }
-    });
-
-    return {
-      date: targetDate,
-      collection: Math.max(0, collection),
-      collectionByMode,
-      transactionCount: payments.length,
-      arrivals,
-      departures,
-      checkedOut,
-      pendingBalance,
-      pendingCount,
-    };
-  } catch (err) {
-    console.error('Error fetching daily report from Supabase:', err);
-    return {
-      date: targetDate,
-      collection: 0,
-      collectionByMode: { cash: 0, upi: 0, card: 0, bank_transfer: 0, other: 0 },
-      transactionCount: 0,
-      arrivals: [],
-      departures: [],
-      checkedOut: [],
-      pendingBalance: 0,
-      pendingCount: 0,
-    };
-  }
+  return data;
 }
 
 export interface MonthlyDailyMetric {
@@ -679,13 +798,20 @@ export async function getMonthlyReport(year: number, month: number, hotelIdParam
   const prefix = `${year}-${paddedMonth}`;
   const daysInMonth = new Date(year, month, 0).getDate();
   const staff = await getCurrentStaff();
-  const hotelId = hotelIdParam || staff?.hotel_id;
+  const hotelId = hotelIdParam || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-  try {
-    const supabase = createClient();
+  const { data } = await getOrSetCache(
+    {
+      key: ['monthly-report', hotelId, prefix],
+      tags: [CACHE_CONFIG.REPORTS.tag(hotelId), 'reports'],
+      ttlSeconds: CACHE_CONFIG.REPORTS.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
 
-    let roomsQuery = supabase.from('rooms').select('id');
-    if (hotelId) roomsQuery = roomsQuery.eq('hotel_id', hotelId);
+        let roomsQuery = supabase.from('rooms').select('id');
+        if (hotelId) roomsQuery = roomsQuery.eq('hotel_id', hotelId);
     const { data: dbRooms } = await roomsQuery;
     const totalRooms = dbRooms && dbRooms.length > 0 ? dbRooms.length : 19;
 
@@ -819,6 +945,10 @@ export async function getMonthlyReport(year: number, month: number, hotelIdParam
       daysInMonth,
     };
   }
+    }
+  );
+
+  return data;
 }
 
 // ─── Dashboard Stats (For main dashboard page) ──────────────────────────────
@@ -847,16 +977,23 @@ export interface DashboardStats {
 export async function getDashboardStats(): Promise<DashboardStats> {
   const today = todayStr();
   const staff = await getCurrentStaff();
-  const hotelId = staff?.hotel_id;
+  const hotelId = staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-  try {
-    const supabase = createClient();
-    const todayStart = `${today}T00:00:00.000Z`;
-    const todayEnd = `${today}T23:59:59.999Z`;
+  const { data } = await getOrSetCache(
+    {
+      key: ['dashboard-stats', hotelId, today],
+      tags: [CACHE_CONFIG.DASHBOARD_STATS.tag(hotelId), 'dashboard-stats'],
+      ttlSeconds: CACHE_CONFIG.DASHBOARD_STATS.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
+        const todayStart = `${today}T00:00:00.000Z`;
+        const todayEnd = `${today}T23:59:59.999Z`;
 
-    // 1. Rooms status query
-    let roomQuery = supabase.from('rooms').select('status, housekeeping_status');
-    if (hotelId) roomQuery = roomQuery.eq('hotel_id', hotelId);
+        // 1. Rooms status query
+        let roomQuery = supabase.from('rooms').select('status, housekeeping_status');
+        if (hotelId) roomQuery = roomQuery.eq('hotel_id', hotelId);
 
     // 2. Active bookings query (filtered for confirmed & checked_in)
     let activeBookingQuery = supabase
@@ -976,4 +1113,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       cleaningNeeded: 0,
     };
   }
+    }
+  );
+
+  return data;
 }

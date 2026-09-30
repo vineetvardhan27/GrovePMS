@@ -38,6 +38,7 @@ import {
   Package,
   ShieldAlert,
 } from 'lucide-react';
+import AnimatedKpiValue from '../shared/AnimatedKpiValue';
 
 interface OwnerIntelligenceDashboardProps {
   data: HotelOwnerIntelligence;
@@ -130,15 +131,18 @@ export default function OwnerIntelligenceDashboard({ data }: OwnerIntelligenceDa
       {/* ── 1. Top Executive KPIs (5 Uniformly Aligned Cards) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
         {/* Total Business Generated */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]"
+          style={{ animationDelay: '0ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
               Business Value
             </span>
             <Building2 className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-brand-forest truncate">
-            {formatCurrency(data.totalBusinessValue)}
+          <p className="text-xl sm:text-2xl font-bold font-serif tabular-nums text-brand-forest truncate">
+            <AnimatedKpiValue value={data.totalBusinessValue} prefix="₹" />
           </p>
           <div className="flex items-center gap-1 mt-0.5 text-[10.5px] text-ink-muted truncate">
             <span className="text-status-green font-semibold inline-flex items-center">
@@ -149,31 +153,37 @@ export default function OwnerIntelligenceDashboard({ data }: OwnerIntelligenceDa
         </div>
 
         {/* Total Actual Collected */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]"
+          style={{ animationDelay: '60ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-green">
               Actual Collected
             </span>
             <DollarSign className="w-3.5 h-3.5 text-status-green" />
           </div>
-          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-status-green truncate">
-            {formatCurrency(data.totalCollected)}
+          <p className="text-xl sm:text-2xl font-bold font-serif tabular-nums text-status-green truncate">
+            <AnimatedKpiValue value={data.totalCollected} prefix="₹" />
           </p>
           <p className="text-[10.5px] text-ink-muted mt-0.5 truncate">
-            {data.collectionRate}% collection rate
+            <AnimatedKpiValue value={data.collectionRate} suffix="%" /> collection rate
           </p>
         </div>
 
         {/* Outstanding Balance */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]"
+          style={{ animationDelay: '120ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Outstanding Due
             </span>
             <AlertTriangle className="w-3.5 h-3.5 text-status-amber" />
           </div>
-          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-status-amber truncate">
-            {formatCurrency(data.outstandingDue)}
+          <p className="text-xl sm:text-2xl font-bold font-serif tabular-nums text-status-amber truncate">
+            <AnimatedKpiValue value={data.outstandingDue} prefix="₹" />
           </p>
           <p className="text-[10.5px] text-ink-muted mt-0.5 truncate">
             {data.topOutstandingAccounts.length} open receivables
@@ -181,15 +191,18 @@ export default function OwnerIntelligenceDashboard({ data }: OwnerIntelligenceDa
         </div>
 
         {/* Room Occupancy */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]"
+          style={{ animationDelay: '180ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
               Period Occupancy
             </span>
             <BedDouble className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-brand-forest">
-            {data.roomPerformance.periodOccupancyPercent}%
+          <p className="text-xl sm:text-2xl font-bold font-serif tabular-nums text-brand-forest">
+            <AnimatedKpiValue value={data.roomPerformance.periodOccupancyPercent} suffix="%" />
           </p>
           <p className="text-[10.5px] text-ink-muted mt-0.5 truncate">
             Today: {data.roomPerformance.occupancyPercentToday}% ({data.roomPerformance.occupiedRoomsToday}/{data.roomPerformance.totalRooms} rooms)
@@ -197,15 +210,18 @@ export default function OwnerIntelligenceDashboard({ data }: OwnerIntelligenceDa
         </div>
 
         {/* ADR / RevPAR */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px]"
+          style={{ animationDelay: '240ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
               ADR / RevPAR
             </span>
             <PieChart className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-brand-forest truncate">
-            {formatCurrency(data.roomPerformance.adr)}{' '}
+          <p className="text-lg sm:text-xl font-bold font-serif tabular-nums text-brand-forest truncate">
+            <AnimatedKpiValue value={data.roomPerformance.adr} prefix="₹" />{' '}
             <span className="text-xs font-normal text-ink-muted">/ {formatCurrency(data.roomPerformance.revpar)}</span>
           </p>
           <p className="text-[10.5px] text-ink-muted mt-0.5 truncate">

@@ -8,6 +8,7 @@ import {
   Calendar,
   Clock,
 } from 'lucide-react';
+import AnimatedKpiValue from '../shared/AnimatedKpiValue';
 
 interface PropertyStatusCardsProps {
   stats: {
@@ -16,48 +17,6 @@ interface PropertyStatusCardsProps {
     reserved: number;
     arrivingToday: number;
   };
-}
-
-function AnimatedNumber({ value }: { value: number }) {
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    // Check for reduced motion preference
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplayValue(value);
-      return;
-    }
-
-    if (value === 0) {
-      setDisplayValue(0);
-      return;
-    }
-
-    let start = 0;
-    const duration = 600; // ms
-    const startTime = performance.now();
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(start + (value - start) * easeProgress);
-
-      setDisplayValue(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setDisplayValue(value);
-      }
-    };
-
-    const animFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animFrame);
-  }, [value]);
-
-  return <span>{displayValue}</span>;
 }
 
 export default function PropertyStatusCards({ stats }: PropertyStatusCardsProps) {
@@ -309,13 +268,14 @@ export default function PropertyStatusCards({ stats }: PropertyStatusCardsProps)
         Current Property Status
       </h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-        {cards.map((card) => {
+        {cards.map((card, index) => {
           const Icon = card.icon;
           return (
             <Link
               key={card.label}
               href={card.href}
-              className="relative overflow-hidden bg-white rounded-xl border border-border-subtle p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-ink-muted/30 transition-all duration-200 group cursor-pointer flex flex-col justify-between min-h-[124px] sm:min-h-[136px]"
+              style={{ animationDelay: `${index * 60}ms` }}
+              className="relative overflow-hidden bg-white rounded-xl border border-border-subtle p-4 sm:p-5 shadow-card hover:shadow-md hover:border-ink-muted/30 transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-pointer flex flex-col justify-between min-h-[124px] sm:min-h-[136px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1"
             >
               {/* Top Row: Label & Status Icon */}
               <div className="flex items-start justify-between gap-2 z-10">
@@ -331,8 +291,8 @@ export default function PropertyStatusCards({ stats }: PropertyStatusCardsProps)
 
               {/* Middle Row: Large Tabular Number */}
               <div className="my-1 z-10">
-                <p className={`text-2xl sm:text-3xl lg:text-[32px] font-bold font-sans tabular-nums leading-none ${card.textColor}`}>
-                  <AnimatedNumber value={card.value} />
+                <p className={`text-2xl sm:text-3xl lg:text-[32px] font-bold font-serif tabular-nums leading-none ${card.textColor}`}>
+                  <AnimatedKpiValue value={card.value} type="number" />
                 </p>
               </div>
 

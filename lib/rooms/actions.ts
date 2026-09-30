@@ -5,6 +5,7 @@ import { getCurrentStaff } from '../auth/session';
 import { RoomStatus, HousekeepingStatus } from '../types/database.types';
 import { RoomCategory } from './queries';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 
 export async function updateRoomStatusAction(
   roomId: string,
@@ -43,6 +44,12 @@ export async function updateRoomStatusAction(
 
     revalidatePath('/rooms');
     revalidatePath('/dashboard');
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.DASHBOARD_STATS.tag(staff.hotel_id),
+      CACHE_CONFIG.ROOMS_CONFIG.tag(staff.hotel_id),
+      'dashboard-stats',
+    ]);
 
     return { success: true, roomId, newStatus, housekeeping_status: hkStatus };
   } catch (err: any) {
@@ -89,6 +96,12 @@ export async function saveRoomCategoryAction(category: Partial<RoomCategory>) {
     revalidatePath('/rooms');
     revalidatePath('/dashboard');
 
+    invalidateCacheByTags([
+      CACHE_CONFIG.ROOM_CATEGORIES.tag(staff.hotel_id),
+      CACHE_CONFIG.ROOMS_CONFIG.tag(staff.hotel_id),
+      'room-categories',
+    ]);
+
     return { success: true, category: categoryData };
   } catch (err: any) {
     console.error('Failed to save room category:', err);
@@ -131,6 +144,12 @@ export async function saveRoomRateOverrideAction(
     revalidatePath('/settings/room-categories');
     revalidatePath('/rooms');
     revalidatePath('/dashboard');
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.ROOM_CATEGORIES.tag(staff.hotel_id),
+      CACHE_CONFIG.ROOMS_CONFIG.tag(staff.hotel_id),
+      'room-categories',
+    ]);
 
     return { success: true, room: updatedRoom };
   } catch (err: any) {

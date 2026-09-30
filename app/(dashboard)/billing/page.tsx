@@ -2,9 +2,10 @@ import { getBookings } from '../../../lib/bookings/queries';
 import { getAllFoodCharges } from '../../../lib/billing/food-actions';
 import { getHotelSettings } from '../../../lib/hotels/queries';
 import Link from 'next/link';
-import { FileText, CheckCircle2, Clock, CreditCard, Building, Utensils } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, CreditCard, Building, Utensils, Receipt } from 'lucide-react';
 import { formatCurrency } from '../../../lib/utils/currency';
 import { formatDate } from '../../../lib/utils/dates';
+import PageHeader from '../../../components/shared/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,14 +31,13 @@ export default async function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-display text-brand-forest">Billing</h1>
-        <p className="text-body text-ink-muted">
-          Generate guest invoices, manage food charges, record payments, and process checkouts
-        </p>
-      </div>
+      <PageHeader
+        title="Billing & Folios"
+        description="Generate guest invoices, manage food charges, record payments, and process checkouts"
+        icon={Receipt}
+      />
 
-      <div className="bg-white rounded-2xl border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-xl border border-border-subtle shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-sand-dark/60 border-b border-border-subtle text-ink font-semibold uppercase tracking-wider">

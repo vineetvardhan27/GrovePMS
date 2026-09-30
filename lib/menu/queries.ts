@@ -1,6 +1,7 @@
 import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { MenuCategory, MenuItem } from './types';
+import { getOrSetCache, CACHE_CONFIG } from '../cache/serverCache';
 
 export const DEFAULT_MENU_CATEGORIES: MenuCategory[] = [
   { id: 'e0000000-0000-0000-0000-000000000001', name: 'Breakfast', display_order: 1, is_active: true },
@@ -162,105 +163,128 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
  * Fetch all menu categories for the current hotel
  */
 export async function getMenuCategories(hotelId?: string): Promise<MenuCategory[]> {
-  try {
-    const staff = await getCurrentStaff();
-    const activeHotelId = hotelId || staff?.hotel_id;
-    const supabase = createClient();
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-    // 1. Try public.menu_categories table
-    const { data: tableData, error: tableErr } = await (supabase.from('menu_categories') as any)
-      .select('*')
-      .order('display_order', { ascending: true })
-      .order('name', { ascending: true });
+  const { data } = await getOrSetCache(
+    {
+      key: ['menu-categories', activeHotelId],
+      tags: [CACHE_CONFIG.MENU.tag(activeHotelId), 'menu'],
+      ttlSeconds: CACHE_CONFIG.MENU.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
 
-    if (!tableErr && tableData && tableData.length > 0) {
-      return tableData as MenuCategory[];
+        // 1. Try public.menu_categories table
+        const { data: tableData, error: tableErr } = await (supabase.from('menu_categories') as any)
+          .select('*')
+          .order('display_order', { ascending: true })
+          .order('name', { ascending: true });
+
+        if (!tableErr && tableData && tableData.length > 0) {
+          return tableData as MenuCategory[];
+        }
+
+        // 2. Fallback to hotel.settings.menu_categories in Supabase
+        let query = (supabase.from('hotels') as any).select('id, settings');
+        if (activeHotelId) query = query.eq('id', activeHotelId);
+        const { data: hotelData } = await query.limit(1).maybeSingle();
+
+        if (hotelData?.settings?.menu_categories && Array.isArray(hotelData.settings.menu_categories)) {
+          return hotelData.settings.menu_categories.sort(
+            (a: MenuCategory, b: MenuCategory) => (a.display_order || 0) - (b.display_order || 0)
+          );
+        }
+      } catch (err) {
+        console.error('getMenuCategories error:', err);
+      }
+
+      return DEFAULT_MENU_CATEGORIES;
     }
+  );
 
-    // 2. Fallback to hotel.settings.menu_categories in Supabase
-    let query = (supabase.from('hotels') as any).select('id, settings');
-    if (activeHotelId) query = query.eq('id', activeHotelId);
-    const { data: hotelData } = await query.limit(1).maybeSingle();
-
-    if (hotelData?.settings?.menu_categories && Array.isArray(hotelData.settings.menu_categories)) {
-      return hotelData.settings.menu_categories.sort(
-        (a: MenuCategory, b: MenuCategory) => (a.display_order || 0) - (b.display_order || 0)
-      );
-    }
-  } catch (err) {
-    console.error('getMenuCategories error:', err);
-  }
-
-  return DEFAULT_MENU_CATEGORIES;
+  return data;
 }
 
 /**
  * Fetch all menu items with joined category for the current hotel
  */
 export async function getMenuItems(hotelId?: string, includeInactive: boolean = true): Promise<MenuItem[]> {
-  let resolvedHotelId = hotelId;
-  try {
-    const staff = await getCurrentStaff();
-    const activeHotelId = hotelId || staff?.hotel_id;
-    resolvedHotelId = activeHotelId;
-    const supabase = createClient();
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-    const categories = await getMenuCategories(activeHotelId);
-    const catMap = new Map<string, MenuCategory>(categories.map((c) => [c.id, c]));
+  const { data } = await getOrSetCache(
+    {
+      key: ['menu-items', activeHotelId, String(includeInactive)],
+      tags: [CACHE_CONFIG.MENU.tag(activeHotelId), 'menu'],
+      ttlSeconds: CACHE_CONFIG.MENU.ttl,
+    },
+    async () => {
+      let resolvedHotelId = activeHotelId;
+      try {
+        const supabase = createClient();
 
-    // 1. Try public.menu_items table
-    let itemQuery = (supabase.from('menu_items') as any)
-      .select('*, category:category_id(*)')
-      .order('name', { ascending: true });
+        const categories = await getMenuCategories(activeHotelId);
+        const catMap = new Map<string, MenuCategory>(categories.map((c) => [c.id, c]));
 
-    if (!includeInactive) {
-      itemQuery = itemQuery.eq('is_active', true);
-    }
+        // 1. Try public.menu_items table
+        let itemQuery = (supabase.from('menu_items') as any)
+          .select('*, category:category_id(*)')
+          .order('name', { ascending: true });
 
-    const { data: tableItems, error: tableErr } = await itemQuery;
+        if (!includeInactive) {
+          itemQuery = itemQuery.eq('is_active', true);
+        }
 
-    if (!tableErr && tableItems && tableItems.length > 0) {
-      return tableItems.map((item: any) => ({
-        ...item,
-        category: item.category || catMap.get(item.category_id),
-      })) as MenuItem[];
-    }
+        const { data: tableItems, error: tableErr } = await itemQuery;
 
-    // 2. Fallback to hotel.settings.menu_items in Supabase
-    let query = (supabase.from('hotels') as any).select('id, settings');
-    if (activeHotelId) query = query.eq('id', activeHotelId);
-    const { data: hotelData } = await query.limit(1).maybeSingle();
+        if (!tableErr && tableItems && tableItems.length > 0) {
+          return tableItems.map((item: any) => ({
+            ...item,
+            category: item.category || catMap.get(item.category_id),
+          })) as MenuItem[];
+        }
 
-    if (hotelData?.settings?.menu_items && Array.isArray(hotelData.settings.menu_items)) {
-      let items: MenuItem[] = hotelData.settings.menu_items;
-      if (!includeInactive) {
-        items = items.filter((i) => i.is_active);
+        // 2. Fallback to hotel.settings.menu_items in Supabase
+        let query = (supabase.from('hotels') as any).select('id, settings');
+        if (activeHotelId) query = query.eq('id', activeHotelId);
+        const { data: hotelData } = await query.limit(1).maybeSingle();
+
+        if (hotelData?.settings?.menu_items && Array.isArray(hotelData.settings.menu_items)) {
+          let items: MenuItem[] = hotelData.settings.menu_items;
+          if (!includeInactive) {
+            items = items.filter((i) => i.is_active);
+          }
+          return items.map((item) => ({
+            ...item,
+            category: catMap.get(item.category_id) || {
+              id: item.category_id,
+              name: 'Other',
+              display_order: 99,
+              is_active: true,
+            },
+          })).sort((a, b) => a.name.localeCompare(b.name));
+        }
+      } catch (err) {
+        console.error('getMenuItems error:', err);
       }
+
+      if (resolvedHotelId && resolvedHotelId !== 'a0000000-0000-0000-0000-000000000001') {
+        return [];
+      }
+
+      const categories = DEFAULT_MENU_CATEGORIES;
+      const catMap = new Map<string, MenuCategory>(categories.map((c) => [c.id, c]));
+
+      let items = DEFAULT_MENU_ITEMS;
+      if (!includeInactive) items = items.filter((i) => i.is_active);
       return items.map((item) => ({
         ...item,
-        category: catMap.get(item.category_id) || {
-          id: item.category_id,
-          name: 'Other',
-          display_order: 99,
-          is_active: true,
-        },
+        category: catMap.get(item.category_id) || categories[0],
       })).sort((a, b) => a.name.localeCompare(b.name));
     }
-  } catch (err) {
-    console.error('getMenuItems error:', err);
-  }
+  );
 
-  if (resolvedHotelId && resolvedHotelId !== 'a0000000-0000-0000-0000-000000000001') {
-    return [];
-  }
-
-  const categories = DEFAULT_MENU_CATEGORIES;
-  const catMap = new Map<string, MenuCategory>(categories.map((c) => [c.id, c]));
-
-  let items = DEFAULT_MENU_ITEMS;
-  if (!includeInactive) items = items.filter((i) => i.is_active);
-  return items.map((item) => ({
-    ...item,
-    category: catMap.get(item.category_id) || categories[0],
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  return data;
 }

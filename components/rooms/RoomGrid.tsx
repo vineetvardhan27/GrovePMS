@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   BedDouble,
   Search,
@@ -47,50 +47,56 @@ export default function RoomGrid({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [groupByFloor, setGroupByFloor] = useState<boolean>(true);
 
-  // Realtime update handler
-  const handleRoomUpdated = (
-    roomId: string,
-    newStatus: RoomStatus,
-    newHousekeepingStatus?: HousekeepingStatus
-  ) => {
-    setRooms((prev) =>
-      prev.map((r) =>
-        r.id === roomId
+  // Stable realtime update handler
+  const handleRoomUpdated = useCallback(
+    (
+      roomId: string,
+      newStatus: RoomStatus,
+      newHousekeepingStatus?: HousekeepingStatus
+    ) => {
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.id === roomId
+            ? {
+                ...r,
+                status: newStatus,
+                housekeeping_status:
+                  newHousekeepingStatus ||
+                  (newStatus === 'cleaning' ? 'dirty' : r.housekeeping_status),
+              }
+            : r
+        )
+      );
+
+      // If currently open in drawer, update selected room too
+      setSelectedRoom((prev) =>
+        prev && prev.id === roomId
           ? {
-              ...r,
+              ...prev,
               status: newStatus,
               housekeeping_status:
                 newHousekeepingStatus ||
-                (newStatus === 'cleaning' ? 'dirty' : r.housekeeping_status),
+                (newStatus === 'cleaning' ? 'dirty' : prev.housekeeping_status),
             }
-          : r
-      )
-    );
-
-    // If currently open in drawer, update selected room too
-    setSelectedRoom((prev) =>
-      prev && prev.id === roomId
-        ? {
-            ...prev,
-            status: newStatus,
-            housekeeping_status:
-              newHousekeepingStatus ||
-              (newStatus === 'cleaning' ? 'dirty' : prev.housekeeping_status),
-          }
-        : prev
-    );
-  };
+          : prev
+      );
+    },
+    []
+  );
 
   // Status changer from drawer
-  const handleUpdateStatus = async (
-    roomId: string,
-    newStatus: RoomStatus,
-    newHousekeepingStatus?: HousekeepingStatus
-  ) => {
-    handleRoomUpdated(roomId, newStatus, newHousekeepingStatus);
-    broadcastRoomChange(roomId, newStatus, newHousekeepingStatus);
-    await updateRoomStatusAction(roomId, newStatus, newHousekeepingStatus);
-  };
+  const handleUpdateStatus = useCallback(
+    async (
+      roomId: string,
+      newStatus: RoomStatus,
+      newHousekeepingStatus?: HousekeepingStatus
+    ) => {
+      handleRoomUpdated(roomId, newStatus, newHousekeepingStatus);
+      broadcastRoomChange(roomId, newStatus, newHousekeepingStatus);
+      await updateRoomStatusAction(roomId, newStatus, newHousekeepingStatus);
+    },
+    [handleRoomUpdated]
+  );
 
   // Status counts for filter chips
   const statusCounts = useMemo(() => {

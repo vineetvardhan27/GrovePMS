@@ -299,87 +299,69 @@ export async function createBanquetBookingAction(input: CreateBanquetBookingInpu
       updated_at: nowIso,
     };
 
-    // 4. Persist to Postgres tables
-    try {
-      await (supabase.from('banquet_bookings') as any).insert({
-        id: bookingRecord.id,
-        hotel_id: bookingRecord.hotel_id,
-        banquet_hall_id: bookingRecord.banquet_hall_id,
-        booking_number: bookingRecord.booking_number,
-        event_name: bookingRecord.event_name,
-        customer_name: bookingRecord.customer_name,
-        customer_phone: bookingRecord.customer_phone,
-        customer_email: bookingRecord.customer_email,
-        customer_address: bookingRecord.customer_address,
-        customer_gstin: bookingRecord.customer_gstin,
-        payment_status: bookingRecord.payment_status,
-        invoice_number: bookingRecord.invoice_number,
-        invoice_date: bookingRecord.invoice_date,
-        event_date: bookingRecord.event_date,
-        start_time: bookingRecord.start_time,
-        end_time: bookingRecord.end_time,
-        guest_count: bookingRecord.guest_count,
-        event_type: bookingRecord.event_type,
-        booking_status: bookingRecord.booking_status,
-        rental_amount: bookingRecord.rental_amount,
-        catering_required: bookingRecord.catering_required,
-        catering_notes: bookingRecord.catering_notes,
-        estimated_total: bookingRecord.estimated_total,
-        advance_paid: bookingRecord.advance_paid,
-        subtotal: bookingRecord.subtotal,
-        tax_amount: bookingRecord.tax_amount,
-        grand_total: bookingRecord.grand_total,
-        total_paid: bookingRecord.total_paid,
-        balance_due: bookingRecord.balance_due,
-        tax_treatment: bookingRecord.tax_treatment,
-        remarks: bookingRecord.remarks,
-        recorded_by: bookingRecord.recorded_by,
-        created_at: nowIso,
-        updated_at: nowIso,
-      });
+    // 4. Persist directly to PostgreSQL relational tables
+    const { error: bErr } = await (supabase.from('banquet_bookings') as any).insert({
+      id: bookingRecord.id,
+      hotel_id: bookingRecord.hotel_id,
+      banquet_hall_id: bookingRecord.banquet_hall_id,
+      booking_number: bookingRecord.booking_number,
+      event_name: bookingRecord.event_name,
+      customer_name: bookingRecord.customer_name,
+      customer_phone: bookingRecord.customer_phone,
+      customer_email: bookingRecord.customer_email,
+      customer_address: bookingRecord.customer_address,
+      customer_gstin: bookingRecord.customer_gstin,
+      payment_status: bookingRecord.payment_status,
+      invoice_number: bookingRecord.invoice_number,
+      invoice_date: bookingRecord.invoice_date,
+      event_date: bookingRecord.event_date,
+      start_time: bookingRecord.start_time,
+      end_time: bookingRecord.end_time,
+      guest_count: bookingRecord.guest_count,
+      event_type: bookingRecord.event_type,
+      booking_status: bookingRecord.booking_status,
+      rental_amount: bookingRecord.rental_amount,
+      catering_required: bookingRecord.catering_required,
+      catering_notes: bookingRecord.catering_notes,
+      estimated_total: bookingRecord.estimated_total,
+      advance_paid: bookingRecord.advance_paid,
+      subtotal: bookingRecord.subtotal,
+      tax_amount: bookingRecord.tax_amount,
+      grand_total: bookingRecord.grand_total,
+      total_paid: bookingRecord.total_paid,
+      balance_due: bookingRecord.balance_due,
+      tax_treatment: bookingRecord.tax_treatment,
+      remarks: bookingRecord.remarks,
+      recorded_by: bookingRecord.recorded_by,
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
 
-      for (const ch of charges) {
-        await (supabase.from('banquet_charges') as any).insert(ch);
-      }
-
-      for (const pm of payments) {
-        await (supabase.from('banquet_payments') as any).insert({
-          id: pm.id,
-          hotel_id: staff.hotel_id,
-          banquet_booking_id: bookingId,
-          amount: pm.amount,
-          payment_mode: pm.payment_mode,
-          payment_type: pm.payment_type,
-          reference_number: pm.reference_number,
-          notes: pm.notes,
-          recorded_by: staff.id,
-          created_at: nowIso,
-        });
-      }
-    } catch {
-      // Fallback
+    if (bErr) {
+      console.error('Error inserting banquet_booking:', bErr);
+      return { error: `Failed to create banquet booking: ${bErr.message}` };
     }
 
-    // 5. Fallback update to settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
+    for (const ch of charges) {
+      const { error: chErr } = await (supabase.from('banquet_charges') as any).insert(ch);
+      if (chErr) console.error('Error inserting banquet_charge:', chErr);
+    }
 
-    const existingBookings: BanquetBooking[] = (hotelData?.settings?.banquet_bookings as BanquetBooking[]) || [];
-    const existingCharges: BanquetCharge[] = (hotelData?.settings?.banquet_charges as BanquetCharge[]) || [];
-    const existingPayments: BanquetPayment[] = (hotelData?.settings?.banquet_payments as BanquetPayment[]) || [];
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          banquet_bookings: [bookingRecord, ...existingBookings],
-          banquet_charges: [...charges, ...existingCharges],
-          banquet_payments: [...payments, ...existingPayments],
-        },
-      })
-      .eq('id', staff.hotel_id);
+    for (const pm of payments) {
+      const { error: pmErr } = await (supabase.from('banquet_payments') as any).insert({
+        id: pm.id,
+        hotel_id: staff.hotel_id,
+        banquet_booking_id: bookingId,
+        amount: pm.amount,
+        payment_mode: pm.payment_mode,
+        payment_type: pm.payment_type,
+        reference_number: pm.reference_number,
+        notes: pm.notes,
+        recorded_by: staff.id,
+        created_at: nowIso,
+      });
+      if (pmErr) console.error('Error inserting banquet_payment:', pmErr);
+    }
 
     revalidatePath('/banquet');
     revalidatePath(`/banquet/${bookingId}`);
@@ -441,69 +423,46 @@ export async function addBanquetChargeAction(input: AddBanquetChargeInput): Prom
 
     const supabase = createClient();
 
-    // 1. Insert into DB
-    try {
-      await (supabase.from('banquet_charges') as any).insert(chargeRecord);
-    } catch {
-      // Fallback
+    // 1. Insert into banquet_charges table
+    const { error: chErr } = await (supabase.from('banquet_charges') as any).insert(chargeRecord);
+    if (chErr) {
+      console.error('Error inserting banquet_charge:', chErr);
+      return { error: `Failed to add charge: ${chErr.message}` };
     }
 
-    // 2. Update hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
+    // 2. Recalculate booking total from relational tables
+    const [bookingCharges, bookingPayments] = await Promise.all([
+      getBanquetCharges(input.banquet_booking_id, staff.hotel_id),
+      getBanquetPayments(input.banquet_booking_id, staff.hotel_id),
+    ]);
+
+    const { data: targetBooking } = await (supabase.from('banquet_bookings') as any)
+      .select('rental_amount, tax_treatment')
+      .eq('id', input.banquet_booking_id)
       .single();
 
-    const existingCharges: BanquetCharge[] = (hotelData?.settings?.banquet_charges as BanquetCharge[]) || [];
-    const updatedCharges = [...existingCharges, chargeRecord];
-
-    // Recalculate booking total
-    const existingBookings: BanquetBooking[] = (hotelData?.settings?.banquet_bookings as BanquetBooking[]) || [];
-    const targetBooking = existingBookings.find((b) => b.id === input.banquet_booking_id);
-    const bookingPayments = ((hotelData?.settings?.banquet_payments as BanquetPayment[]) || []).filter(
-      (p) => p.banquet_booking_id === input.banquet_booking_id
+    const totals = calculateBanquetFolioTotals(
+      bookingCharges,
+      bookingPayments,
+      targetBooking?.rental_amount || 0,
+      targetBooking?.tax_treatment || 'gst'
     );
 
-    const bookingCharges = updatedCharges.filter((c) => c.banquet_booking_id === input.banquet_booking_id);
-    const totals = calculateBanquetFolioTotals(bookingCharges, bookingPayments, targetBooking?.rental_amount || 0);
-
-    const updatedBookings = existingBookings.map((b) =>
-      b.id === input.banquet_booking_id
-        ? {
-            ...b,
-            subtotal: totals.subtotal,
-            tax_amount: totals.tax_amount,
-            grand_total: totals.grand_total,
-            balance_due: totals.balance_due,
-            payment_status: totals.payment_status,
-            updated_at: nowIso,
-          }
-        : b
-    );
-
-    await (supabase.from('hotels') as any)
+    // 3. Update banquet_bookings table with new totals
+    const { error: bUpdErr } = await (supabase.from('banquet_bookings') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          banquet_charges: updatedCharges,
-          banquet_bookings: updatedBookings,
-        },
+        subtotal: totals.subtotal,
+        tax_amount: totals.tax_amount,
+        grand_total: totals.grand_total,
+        balance_due: totals.balance_due,
+        payment_status: totals.payment_status,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', input.banquet_booking_id)
+      .eq('hotel_id', staff.hotel_id);
 
-    try {
-      await (supabase.from('banquet_bookings') as any)
-        .update({
-          subtotal: totals.subtotal,
-          tax_amount: totals.tax_amount,
-          grand_total: totals.grand_total,
-          balance_due: totals.balance_due,
-          payment_status: totals.payment_status,
-          updated_at: nowIso,
-        })
-        .eq('id', input.banquet_booking_id);
-    } catch {
-      // Fallback
+    if (bUpdErr) {
+      console.error('Error updating banquet_booking totals:', bUpdErr);
     }
 
     revalidatePath('/banquet');
@@ -529,70 +488,48 @@ export async function deleteBanquetChargeAction(
     const supabase = createClient();
     const nowIso = new Date().toISOString();
 
-    try {
-      await (supabase.from('banquet_charges') as any).delete().eq('id', chargeId);
-    } catch {
-      // Fallback
+    const { error: delErr } = await (supabase.from('banquet_charges') as any)
+      .delete()
+      .eq('id', chargeId)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (delErr) {
+      console.error('Error deleting banquet_charge:', delErr);
+      return { error: `Failed to delete banquet charge: ${delErr.message}` };
     }
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
+    // Recalculate totals from relational tables
+    const [remainingCharges, bookingPayments] = await Promise.all([
+      getBanquetCharges(bookingId, staff.hotel_id),
+      getBanquetPayments(bookingId, staff.hotel_id),
+    ]);
+
+    const { data: targetBooking } = await (supabase.from('banquet_bookings') as any)
+      .select('rental_amount, tax_treatment')
+      .eq('id', bookingId)
       .single();
 
-    const existingCharges: BanquetCharge[] = (hotelData?.settings?.banquet_charges as BanquetCharge[]) || [];
-    const updatedCharges = existingCharges.filter((c) => c.id !== chargeId);
-
-    const existingBookings: BanquetBooking[] = (hotelData?.settings?.banquet_bookings as BanquetBooking[]) || [];
-    const targetBooking = existingBookings.find((b) => b.id === bookingId);
-    const bookingPayments = ((hotelData?.settings?.banquet_payments as BanquetPayment[]) || []).filter(
-      (p) => p.banquet_booking_id === bookingId
-    );
-
-    const remainingBookingCharges = updatedCharges.filter((c) => c.banquet_booking_id === bookingId);
     const totals = calculateBanquetFolioTotals(
-      remainingBookingCharges,
+      remainingCharges,
       bookingPayments,
-      targetBooking?.rental_amount || 0
+      targetBooking?.rental_amount || 0,
+      targetBooking?.tax_treatment || 'gst'
     );
 
-    const updatedBookings = existingBookings.map((b) =>
-      b.id === bookingId
-        ? {
-            ...b,
-            subtotal: totals.subtotal,
-            tax_amount: totals.tax_amount,
-            grand_total: totals.grand_total,
-            balance_due: totals.balance_due,
-            payment_status: totals.payment_status,
-            updated_at: nowIso,
-          }
-        : b
-    );
-
-    await (supabase.from('hotels') as any)
+    const { error: updErr } = await (supabase.from('banquet_bookings') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          banquet_charges: updatedCharges,
-          banquet_bookings: updatedBookings,
-        },
+        subtotal: totals.subtotal,
+        tax_amount: totals.tax_amount,
+        grand_total: totals.grand_total,
+        balance_due: totals.balance_due,
+        payment_status: totals.payment_status,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', bookingId)
+      .eq('hotel_id', staff.hotel_id);
 
-    try {
-      await (supabase.from('banquet_bookings') as any)
-        .update({
-          subtotal: totals.subtotal,
-          tax_amount: totals.tax_amount,
-          grand_total: totals.grand_total,
-          balance_due: totals.balance_due,
-          payment_status: totals.payment_status,
-          updated_at: nowIso,
-        })
-        .eq('id', bookingId);
-    } catch {
-      // Fallback
+    if (updErr) {
+      console.error('Error updating banquet_booking totals on charge delete:', updErr);
     }
 
     revalidatePath('/banquet');
@@ -638,73 +575,54 @@ export async function recordBanquetPaymentAction(input: RecordBanquetPaymentInpu
 
     const supabase = createClient();
 
-    try {
-      await (supabase.from('banquet_payments') as any).insert({
-        id: paymentRecord.id,
-        hotel_id: staff.hotel_id,
-        banquet_booking_id: paymentRecord.banquet_booking_id,
-        amount: paymentRecord.amount,
-        payment_mode: paymentRecord.payment_mode,
-        payment_type: paymentRecord.payment_type,
-        reference_number: paymentRecord.reference_number,
-        notes: paymentRecord.notes,
-        recorded_by: staff.id,
-        created_at: nowIso,
-      });
-    } catch {
-      // Fallback
+    const { error: pmErr } = await (supabase.from('banquet_payments') as any).insert({
+      id: paymentRecord.id,
+      hotel_id: staff.hotel_id,
+      banquet_booking_id: paymentRecord.banquet_booking_id,
+      amount: paymentRecord.amount,
+      payment_mode: paymentRecord.payment_mode,
+      payment_type: paymentRecord.payment_type,
+      reference_number: paymentRecord.reference_number,
+      notes: paymentRecord.notes,
+      recorded_by: staff.id,
+      created_at: nowIso,
+    });
+
+    if (pmErr) {
+      console.error('Error inserting banquet_payment:', pmErr);
+      return { error: `Failed to record payment: ${pmErr.message}` };
     }
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
+    // Recalculate totals from relational tables
+    const [bookingCharges, updatedPayments] = await Promise.all([
+      getBanquetCharges(input.banquet_booking_id, staff.hotel_id),
+      getBanquetPayments(input.banquet_booking_id, staff.hotel_id),
+    ]);
+
+    const { data: targetBooking } = await (supabase.from('banquet_bookings') as any)
+      .select('rental_amount, tax_treatment')
+      .eq('id', input.banquet_booking_id)
       .single();
 
-    const existingPayments: BanquetPayment[] = (hotelData?.settings?.banquet_payments as BanquetPayment[]) || [];
-    const updatedPayments = [...existingPayments, paymentRecord];
-
-    const existingCharges: BanquetCharge[] = (hotelData?.settings?.banquet_charges as BanquetCharge[]) || [];
-    const bookingCharges = existingCharges.filter((c) => c.banquet_booking_id === input.banquet_booking_id);
-
-    const existingBookings: BanquetBooking[] = (hotelData?.settings?.banquet_bookings as BanquetBooking[]) || [];
-    const targetBooking = existingBookings.find((b) => b.id === input.banquet_booking_id);
-
-    const bookingPayments = updatedPayments.filter((p) => p.banquet_booking_id === input.banquet_booking_id);
-    const totals = calculateBanquetFolioTotals(bookingCharges, bookingPayments, targetBooking?.rental_amount || 0);
-
-    const updatedBookings = existingBookings.map((b) =>
-      b.id === input.banquet_booking_id
-        ? {
-            ...b,
-            total_paid: totals.total_paid,
-            balance_due: totals.balance_due,
-            payment_status: totals.payment_status,
-            updated_at: nowIso,
-          }
-        : b
+    const totals = calculateBanquetFolioTotals(
+      bookingCharges,
+      updatedPayments,
+      targetBooking?.rental_amount || 0,
+      targetBooking?.tax_treatment || 'gst'
     );
 
-    await (supabase.from('hotels') as any)
+    const { error: bUpdErr } = await (supabase.from('banquet_bookings') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          banquet_payments: updatedPayments,
-          banquet_bookings: updatedBookings,
-        },
+        total_paid: totals.total_paid,
+        balance_due: totals.balance_due,
+        payment_status: totals.payment_status,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', input.banquet_booking_id)
+      .eq('hotel_id', staff.hotel_id);
 
-    try {
-      await (supabase.from('banquet_bookings') as any)
-        .update({
-          total_paid: totals.total_paid,
-          balance_due: totals.balance_due,
-          payment_status: totals.payment_status,
-          updated_at: nowIso,
-        })
-        .eq('id', input.banquet_booking_id);
-    } catch {
-      // Fallback
+    if (bUpdErr) {
+      console.error('Error updating banquet_booking payment totals:', bUpdErr);
     }
 
     revalidatePath('/banquet');
@@ -735,36 +653,18 @@ export async function updateBanquetBookingStatusAction(
     const supabase = createClient();
     const nowIso = new Date().toISOString();
 
-    try {
-      await (supabase.from('banquet_bookings') as any)
-        .update({
-          booking_status: input.booking_status,
-          updated_at: nowIso,
-        })
-        .eq('id', input.booking_id)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
-    }
-
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingBookings: BanquetBooking[] = (hotelData?.settings?.banquet_bookings as BanquetBooking[]) || [];
-    const updatedBookings = existingBookings.map((b) =>
-      b.id === input.booking_id ? { ...b, booking_status: input.booking_status, updated_at: nowIso } : b
-    );
-
-    await (supabase.from('hotels') as any)
+    const { error: bErr } = await (supabase.from('banquet_bookings') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          banquet_bookings: updatedBookings,
-        },
+        booking_status: input.booking_status,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', input.booking_id)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (bErr) {
+      console.error('Error updating banquet_booking status:', bErr);
+      return { error: `Failed to update booking status: ${bErr.message}` };
+    }
 
     revalidatePath('/banquet');
     revalidatePath(`/banquet/${input.booking_id}`);

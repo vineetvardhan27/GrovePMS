@@ -2,9 +2,9 @@
 
 import { createClient as createServerSupabaseClient } from '../supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
 import { StaffRole } from '../types/database.types';
 import { SWITCH_ALLOWED_ROLES, canSwitchToAccount } from './switchAccountHelpers';
+import { StaffProfile } from './types';
 
 export interface AvailableStaffAccount {
   id: string;
@@ -22,47 +22,83 @@ export interface AvailableStaffAccount {
  * - Strictly scoped to caller's hotel_id (server-side, not frontend-filtered).
  * - Applies role hierarchy: caller role determines which target roles are visible.
  * - Reception and Housekeeping only receive their own record.
+ * - If callerStaff context is provided, reuses already-resolved staff identity
+ *   avoiding redundant getUser() and staff queries.
  */
-export async function getAvailableStaffAccounts(knownHotelId?: string): Promise<AvailableStaffAccount[]> {
+export async function getAvailableStaffAccounts(
+  knownHotelId?: string,
+  callerStaff?: StaffProfile | null
+): Promise<AvailableStaffAccount[]> {
   try {
     const supabase = createServerSupabaseClient();
 
-    // 1. Resolve caller's authenticated identity
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser();
+    let callerStaffId: string;
+    let resolvedHotelId: string;
+    let callerRole: StaffRole;
+    let callerEmail: string | undefined;
+    let callerFullName: string | undefined;
+    let callerIsActive: boolean = true;
 
-    if (userErr || !user) return [];
+    if (callerStaff?.id && callerStaff?.hotel_id && callerStaff?.role) {
+      // Fast path: Reuse caller context already resolved by getStaffResolution()
+      callerStaffId = callerStaff.id;
+      resolvedHotelId = callerStaff.hotel_id;
+      callerRole = callerStaff.role;
+      callerEmail = callerStaff.email;
+      callerFullName = callerStaff.full_name;
+      callerIsActive = callerStaff.is_active;
+    } else {
+      // 1. Resolve caller's authenticated identity
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
 
-    // 2. Get caller's active staff record (hotel_id + role)
-    const { data: callerStaff, error: callerErr } = (await supabase
-      .from('staff')
-      .select('id, hotel_id, role, is_active')
-      .eq('id', user.id)
-      .eq('is_active', true)
-      .maybeSingle()) as {
-      data: { id: string; hotel_id: string; role: StaffRole; is_active: boolean } | null;
-      error: any;
-    };
+      if (userErr || !user) return [];
 
-    if (callerErr || !callerStaff?.hotel_id) return [];
+      // 2. Get caller's active staff record (hotel_id + role)
+      const { data: staffRecord, error: callerErr } = (await supabase
+        .from('staff')
+        .select('id, email, full_name, hotel_id, role, is_active')
+        .eq('id', user.id)
+        .eq('is_active', true)
+        .maybeSingle()) as {
+        data: { id: string; email: string; full_name: string; hotel_id: string; role: StaffRole; is_active: boolean } | null;
+        error: any;
+      };
 
-    const hotelId = knownHotelId || callerStaff.hotel_id;
-    // Safety: always use the *authenticated* hotel_id — never trust a passed parameter
-    // if it differs from the actual staff record.
-    const resolvedHotelId = callerStaff.hotel_id;
+      if (callerErr || !staffRecord?.hotel_id) return [];
+
+      callerStaffId = staffRecord.id;
+      resolvedHotelId = staffRecord.hotel_id;
+      callerRole = staffRecord.role;
+      callerEmail = staffRecord.email;
+      callerFullName = staffRecord.full_name;
+      callerIsActive = staffRecord.is_active;
+    }
 
     // 3. Determine which roles this caller may switch into
-    const allowedRoles = SWITCH_ALLOWED_ROLES[callerStaff.role] ?? [];
+    const allowedRoles = SWITCH_ALLOWED_ROLES[callerRole] ?? [];
 
     // Reception and Housekeeping can only see themselves — no switcher needed
     if (allowedRoles.length <= 1) {
-      // Return only the caller's own record
+      if (callerEmail && callerFullName) {
+        return [
+          {
+            id: callerStaffId,
+            email: callerEmail,
+            full_name: callerFullName,
+            role: callerRole,
+            is_active: callerIsActive,
+            hotel_id: resolvedHotelId,
+          },
+        ];
+      }
+      // Fallback query if caller details are missing
       const { data: self } = (await supabase
         .from('staff')
         .select('id, email, full_name, role, is_active, hotel_id')
-        .eq('id', callerStaff.id)
+        .eq('id', callerStaffId)
         .maybeSingle()) as { data: AvailableStaffAccount | null };
       return self ? [self] : [];
     }
@@ -226,9 +262,6 @@ export async function switchStaffAccountAction(targetStaffId: string): Promise<S
       console.error('verifyOtp error during account switch:', verifyErr?.message);
       return { success: false, error: 'Failed to transition active session cookies.' };
     }
-
-    // 7. Invalidate server component cache for full reload
-    revalidatePath('/', 'layout');
 
     return {
       success: true,

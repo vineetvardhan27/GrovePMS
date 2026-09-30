@@ -63,49 +63,30 @@ export async function getAllFoodCharges(hotelId?: string): Promise<FoodChargeRec
     const activeHotelId = hotelId || staff?.hotel_id;
     const supabase = createClient();
 
-    // 1. Try public.food_charges
-    try {
-      let q = supabase.from('food_charges').select('*').order('created_at', { ascending: false });
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((r) => ({
-          ...r,
-          quantity: Number(r.quantity),
-          unit_price_snapshot: Number(r.unit_price_snapshot),
-          taxable_amount: Number(r.taxable_amount),
-          gst_rate: Number(r.gst_rate || 0),
-          gst_amount: Number(r.gst_amount || 0),
-          total_amount: Number(r.total_amount),
-        }));
-      }
-    } catch {
-      // Fallback
+    let q = supabase.from('food_charges').select('*').order('created_at', { ascending: false });
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
     }
-
-    // 2. Fallback to hotel.settings
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedCharges: FoodChargeRecord[] = (hotel?.settings?.food_charges as FoodChargeRecord[]) || [];
-    return storedCharges.map((c) => ({
-      ...c,
-      quantity: Number(c.quantity),
-      unit_price_snapshot: Number(c.unit_price_snapshot),
-      taxable_amount: Number(c.taxable_amount),
-      gst_rate: Number(c.gst_rate || 0),
-      gst_amount: Number(c.gst_amount || 0),
-      total_amount: Number(c.total_amount),
-    }));
+    const { data, error } = await q;
+    if (error) {
+      console.error('Error fetching food charges from database:', error.message);
+      return [];
+    }
+    if (data) {
+      return (data as any[]).map((r) => ({
+        ...r,
+        quantity: Number(r.quantity),
+        unit_price_snapshot: Number(r.unit_price_snapshot),
+        taxable_amount: Number(r.taxable_amount),
+        gst_rate: Number(r.gst_rate || 0),
+        gst_amount: Number(r.gst_amount || 0),
+        total_amount: Number(r.total_amount),
+      }));
+    }
   } catch (err) {
     console.error('Error fetching all food charges:', err);
-    return [];
   }
+  return [];
 }
 
 /**
@@ -116,57 +97,36 @@ export async function getFoodCharges(bookingId: string): Promise<FoodChargeRecor
     const staff = await getCurrentStaff();
     const supabase = createClient();
 
-    // 1. Try public.food_charges table
-    try {
-      let q = supabase
-        .from('food_charges')
-        .select('*')
-        .eq('booking_id', bookingId)
-        .order('created_at', { ascending: true });
+    let q = supabase
+      .from('food_charges')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .order('created_at', { ascending: true });
 
-      if (staff?.hotel_id) {
-        q = q.eq('hotel_id', staff.hotel_id);
-      }
-
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((r) => ({
-          ...r,
-          quantity: Number(r.quantity),
-          unit_price_snapshot: Number(r.unit_price_snapshot),
-          taxable_amount: Number(r.taxable_amount),
-          gst_rate: Number(r.gst_rate || 0),
-          gst_amount: Number(r.gst_amount || 0),
-          total_amount: Number(r.total_amount),
-        }));
-      }
-    } catch {
-      // Table fallback
+    if (staff?.hotel_id) {
+      q = q.eq('hotel_id', staff.hotel_id);
     }
 
-    // 2. Fallback to hotel.settings.food_charges
-    const hotelId = staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', hotelId)
-      .maybeSingle();
-
-    const storedCharges: FoodChargeRecord[] = (hotel?.settings?.food_charges as FoodChargeRecord[]) || [];
-    return storedCharges
-      .filter((c) => c.booking_id === bookingId)
-      .map((c) => ({
-        ...c,
-        quantity: Number(c.quantity),
-        unit_price_snapshot: Number(c.unit_price_snapshot),
-        taxable_amount: Number(c.taxable_amount),
-        gst_rate: Number(c.gst_rate || 0),
-        gst_amount: Number(c.gst_amount || 0),
-        total_amount: Number(c.total_amount),
+    const { data, error } = await q;
+    if (error) {
+      console.error(`Error fetching food charges for booking ${bookingId}:`, error.message);
+      return [];
+    }
+    if (data) {
+      return (data as any[]).map((r) => ({
+        ...r,
+        quantity: Number(r.quantity),
+        unit_price_snapshot: Number(r.unit_price_snapshot),
+        taxable_amount: Number(r.taxable_amount),
+        gst_rate: Number(r.gst_rate || 0),
+        gst_amount: Number(r.gst_amount || 0),
+        total_amount: Number(r.total_amount),
       }));
+    }
   } catch (err) {
     console.error(`Error fetching food charges for booking ${bookingId}:`, err);
-    return [];
   }
+  return [];
 }
 
 /**
@@ -289,56 +249,34 @@ export async function addFoodChargeAction(input: AddFoodChargeInput): Promise<{
       updated_at: nowIso,
     };
 
-    // 6. Persist to public.food_charges table with fallback
-    let persisted = false;
-    try {
-      const { error: insertErr } = await (supabase.from('food_charges') as any).insert({
-        id: chargeRecord.id,
-        hotel_id: chargeRecord.hotel_id,
-        booking_id: chargeRecord.booking_id,
-        room_id: chargeRecord.room_id,
-        guest_id: chargeRecord.guest_id,
-        menu_item_id: chargeRecord.menu_item_id,
-        item_name_snapshot: chargeRecord.item_name_snapshot,
-        category_snapshot: chargeRecord.category_snapshot,
-        service_type: chargeRecord.service_type,
-        quantity: chargeRecord.quantity,
-        unit_price_snapshot: chargeRecord.unit_price_snapshot,
-        tax_treatment: chargeRecord.tax_treatment,
-        taxable_amount: chargeRecord.taxable_amount,
-        gst_rate: chargeRecord.gst_rate,
-        gst_amount: chargeRecord.gst_amount,
-        total_amount: chargeRecord.total_amount,
-        remarks: chargeRecord.remarks,
-        recorded_by: chargeRecord.recorded_by,
-        created_at: chargeRecord.created_at,
-        updated_at: chargeRecord.updated_at,
-      });
+    // 6. Persist to public.food_charges table
+    const { error: insertErr } = await (supabase.from('food_charges') as any).insert({
+      id: chargeRecord.id,
+      hotel_id: chargeRecord.hotel_id,
+      booking_id: chargeRecord.booking_id,
+      room_id: chargeRecord.room_id,
+      guest_id: chargeRecord.guest_id,
+      menu_item_id: chargeRecord.menu_item_id,
+      item_name_snapshot: chargeRecord.item_name_snapshot,
+      category_snapshot: chargeRecord.category_snapshot,
+      service_type: chargeRecord.service_type,
+      quantity: chargeRecord.quantity,
+      unit_price_snapshot: chargeRecord.unit_price_snapshot,
+      tax_treatment: chargeRecord.tax_treatment,
+      taxable_amount: chargeRecord.taxable_amount,
+      gst_rate: chargeRecord.gst_rate,
+      gst_amount: chargeRecord.gst_amount,
+      total_amount: chargeRecord.total_amount,
+      remarks: chargeRecord.remarks,
+      recorded_by: chargeRecord.recorded_by,
+      created_at: chargeRecord.created_at,
+      updated_at: chargeRecord.updated_at,
+    });
 
-      if (!insertErr) {
-        persisted = true;
-      }
-    } catch {
-      // Table fallback
+    if (insertErr) {
+      console.error('Error inserting food charge into database:', insertErr);
+      return { error: `Failed to insert food charge: ${insertErr.message}` };
     }
-
-    // Fallback store in hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingCharges: FoodChargeRecord[] = (hotelData?.settings?.food_charges as FoodChargeRecord[]) || [];
-    const updatedCharges = [...existingCharges, chargeRecord];
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          food_charges: updatedCharges,
-        },
-      })
-      .eq('id', staff.hotel_id);
 
     revalidatePath(`/billing/${input.booking_id}`);
     revalidatePath('/billing');
@@ -467,30 +405,12 @@ export async function addMultipleFoodChargesAction(input: AddMultipleFoodCharges
       return { error: 'No valid items could be added to the folio.' };
     }
 
-    // 1. Try public.food_charges table
-    try {
-      await (supabase.from('food_charges') as any).insert(createdCharges);
-    } catch {
-      // Table fallback
+    // 1. Persist to public.food_charges table
+    const { error: insertErr } = await (supabase.from('food_charges') as any).insert(createdCharges);
+    if (insertErr) {
+      console.error('Error inserting food charges into database:', insertErr);
+      return { error: `Failed to add food charges: ${insertErr.message}` };
     }
-
-    // 2. Fallback store in hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingCharges: FoodChargeRecord[] = (hotelData?.settings?.food_charges as FoodChargeRecord[]) || [];
-    const updatedCharges = [...existingCharges, ...createdCharges];
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          food_charges: updatedCharges,
-        },
-      })
-      .eq('id', staff.hotel_id);
 
     revalidatePath(`/billing/${input.booking_id}`);
     revalidatePath('/billing');
@@ -536,32 +456,15 @@ export async function deleteFoodChargeAction(
     }
 
     // 1. Delete from public.food_charges
-    try {
-      await (supabase.from('food_charges') as any)
-        .delete()
-        .eq('id', chargeId)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Ignore
+    const { error: deleteErr } = await (supabase.from('food_charges') as any)
+      .delete()
+      .eq('id', chargeId)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (deleteErr) {
+      console.error('Error deleting food charge from database:', deleteErr);
+      return { error: `Failed to remove food charge: ${deleteErr.message}` };
     }
-
-    // 2. Delete from hotel.settings.food_charges
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingCharges: FoodChargeRecord[] = (hotelData?.settings?.food_charges as FoodChargeRecord[]) || [];
-    const updatedCharges = existingCharges.filter((c) => c.id !== chargeId);
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          food_charges: updatedCharges,
-        },
-      })
-      .eq('id', staff.hotel_id);
 
     revalidatePath(`/billing/${bookingId}`);
     revalidatePath('/billing');

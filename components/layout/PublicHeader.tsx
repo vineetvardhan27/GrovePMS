@@ -5,19 +5,50 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, ArrowRight } from 'lucide-react';
 
+import { createClient } from '@/lib/supabase/client';
+
 const PRODUCT_NAME = 'Grove';
 const PRODUCT_TAGLINE = 'Hospitality OS';
 
 export default function PublicHeader({
-  staffName,
-  staffRole,
+  staffName: initialStaffName,
+  staffRole: initialStaffRole,
 }: {
   staffName?: string;
   staffRole?: string;
 }) {
-  const isAuthenticated = Boolean(staffName);
+  const [sessionStaff, setSessionStaff] = useState<{ name: string; role?: string } | null>(
+    initialStaffName ? { name: initialStaffName, role: initialStaffRole } : null
+  );
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialStaffName) return;
+    if (typeof document !== 'undefined' && (document.cookie.includes('-auth-token') || document.cookie.includes('sb-'))) {
+      const supabase = createClient();
+      supabase.auth.getUser().then(async ({ data: { user } }) => {
+        if (user) {
+          const { data: staffData } = (await supabase
+            .from('staff')
+            .select('full_name, role')
+            .eq('id', user.id)
+            .maybeSingle()) as { data: { full_name?: string; role?: string } | null };
+
+          if (staffData?.full_name) {
+            setSessionStaff({ name: staffData.full_name, role: staffData.role });
+          } else {
+            const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Staff';
+            setSessionStaff({ name: fallbackName, role: 'Staff' });
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [initialStaffName]);
+
+  const staffName = sessionStaff?.name || initialStaffName;
+  const staffRole = sessionStaff?.role || initialStaffRole;
+  const isAuthenticated = Boolean(staffName);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);

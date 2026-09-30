@@ -5,6 +5,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCurrentStaff } from '../auth/session';
 import { HotelSettings } from './queries';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 
 const BUCKET_NAME = 'hotel-logos';
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
@@ -119,7 +120,6 @@ export async function updateHotelSettingsAction(
     };
 
     // 2. Build update payload for hotels table
-    // Note: logo_url is housed inside settings JSONB; it is not a direct column on hotels
     const updatePayload: Record<string, any> = {
       settings: {
         ...updatedSettings,
@@ -128,6 +128,9 @@ export async function updateHotelSettingsAction(
       updated_at: new Date().toISOString(),
     };
 
+    if (settings.logo_url !== undefined) {
+      updatePayload.logo_url = settings.logo_url ? String(settings.logo_url).trim() : null;
+    }
     if (settings.address !== undefined && updatedSettings.address) {
       updatePayload.address = updatedSettings.address;
     }
@@ -155,6 +158,8 @@ export async function updateHotelSettingsAction(
     revalidatePath('/banquet');
     revalidatePath('/reports');
     revalidatePath('/', 'layout');
+
+    invalidateCacheByTags([CACHE_CONFIG.HOTEL_SETTINGS.tag(targetHotelId), 'hotel-settings']);
 
     return { success: true, settings: updatedSettings };
   } catch (err: any) {
@@ -249,9 +254,10 @@ export async function uploadHotelLogoAction(
       updated_at: new Date().toISOString(),
     };
 
-    // Update hotels table settings
+    // Update hotels table: synchronize both dedicated logo_url column and settings JSONB
     const { error: updateDbError } = await (admin.from('hotels') as any)
       .update({
+        logo_url: logoUrl,
         settings: updatedSettings,
         updated_at: new Date().toISOString(),
       })
@@ -270,6 +276,8 @@ export async function uploadHotelLogoAction(
     revalidatePath('/banquet');
     revalidatePath('/reports');
     revalidatePath('/', 'layout');
+
+    invalidateCacheByTags([CACHE_CONFIG.HOTEL_SETTINGS.tag(staff.hotel_id), 'hotel-settings']);
 
     return { success: true, logoUrl };
   } catch (err: any) {
@@ -308,9 +316,10 @@ export async function deleteHotelLogoAction(): Promise<{ success: boolean; error
       updated_at: new Date().toISOString(),
     };
 
-    // Update hotels table: set settings.logo_url = null
+    // Update hotels table: clear both dedicated logo_url column and settings JSONB
     const { error: updateDbError } = await (admin.from('hotels') as any)
       .update({
+        logo_url: null,
         settings: updatedSettings,
         updated_at: new Date().toISOString(),
       })
@@ -329,6 +338,8 @@ export async function deleteHotelLogoAction(): Promise<{ success: boolean; error
     revalidatePath('/banquet');
     revalidatePath('/reports');
     revalidatePath('/', 'layout');
+
+    invalidateCacheByTags([CACHE_CONFIG.HOTEL_SETTINGS.tag(staff.hotel_id), 'hotel-settings']);
 
     return { success: true };
   } catch (err: any) {

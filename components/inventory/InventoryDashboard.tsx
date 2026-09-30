@@ -49,6 +49,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import AnimatedKpiValue from '../shared/AnimatedKpiValue';
 
 interface InventoryDashboardProps {
   items: InventoryItem[];
@@ -194,7 +195,8 @@ export default function InventoryDashboard({
       {/* ── Page Header & Quick Action Buttons ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle">
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight flex items-center gap-2.5">
+            <Package className="w-5 h-5 text-brand-forest" />
             Inventory &amp; Assets
           </h1>
           <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
@@ -267,13 +269,16 @@ export default function InventoryDashboard({
       {/* ── 1. Top-Level Operational & Financial KPIs (6 Zero-Clip Cards) ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {/* KPI 1: Tracked Items */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '0ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider">Tracked Items</span>
             <Boxes className="w-4 h-4 text-brand-forest/60" />
           </div>
-          <p className="text-2xl font-bold font-sans tabular-nums text-brand-forest">
-            {summary.total_items}
+          <p className="text-2xl font-bold font-serif tabular-nums text-brand-forest">
+            <AnimatedKpiValue value={summary.total_items} />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">
             {summary.healthy_count} healthy stock
@@ -281,7 +286,10 @@ export default function InventoryDashboard({
         </div>
 
         {/* KPI 2: Low Stock */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '50ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Low / Critical
@@ -289,67 +297,79 @@ export default function InventoryDashboard({
             <AlertTriangle className="w-4 h-4 text-status-amber" />
           </div>
           <p
-            className={`text-2xl font-bold font-sans tabular-nums ${
+            className={`text-2xl font-bold font-serif tabular-nums ${
               summary.low_stock_count > 0 || summary.out_of_stock_count > 0
                 ? 'text-status-amber'
                 : 'text-brand-forest'
             }`}
           >
-            {summary.low_stock_count + summary.out_of_stock_count}
+            <AnimatedKpiValue value={summary.low_stock_count + summary.out_of_stock_count} />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">Below min threshold</p>
         </div>
 
         {/* KPI 3: Damaged Assets */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '100ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider">Damaged Assets</span>
             <ShieldAlert className="w-4 h-4 text-status-red/60" />
           </div>
           <p
-            className={`text-2xl font-bold font-sans tabular-nums ${
+            className={`text-2xl font-bold font-serif tabular-nums ${
               (summary.total_damaged_assets || 0) > 0 ? 'text-status-red' : 'text-brand-forest'
             }`}
           >
-            {summary.total_damaged_assets || 0}
+            <AnimatedKpiValue value={summary.total_damaged_assets || 0} />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">Linen &amp; appliances</p>
         </div>
 
         {/* KPI 4: Replacements Needed */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '150ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider">Replacements</span>
             <Calendar className="w-4 h-4 text-brand-forest/60" />
           </div>
-          <p className="text-2xl font-bold font-sans tabular-nums text-brand-forest">
-            {summary.replacement_needed_count || 0}
+          <p className="text-2xl font-bold font-serif tabular-nums text-brand-forest">
+            <AnimatedKpiValue value={summary.replacement_needed_count || 0} />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">Target procurement</p>
         </div>
 
         {/* KPI 5: Stock Valuation */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '200ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider">Stock Valuation</span>
             <Truck className="w-4 h-4 text-brand-forest/60" />
           </div>
-          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-brand-forest truncate">
-            {formatCurrency(summary.total_valuation)}
+          <p className="text-lg sm:text-xl font-bold font-serif tabular-nums text-brand-forest truncate">
+            <AnimatedKpiValue value={summary.total_valuation} prefix="₹" />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">Pantry &amp; asset inventory</p>
         </div>
 
         {/* KPI 6: Monthly Wastage */}
-        <div className="pms-card p-4 flex flex-col justify-between">
+        <div
+          className="pms-stat-card pms-card-entrance p-4 flex flex-col justify-between"
+          style={{ animationDelay: '250ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Monthly Waste
             </span>
             <Trash2 className="w-4 h-4 text-status-amber" />
           </div>
-          <p className="text-lg sm:text-xl font-bold font-sans tabular-nums text-status-amber truncate">
-            {formatCurrency(summary.month_waste_value || 0)}
+          <p className="text-lg sm:text-xl font-bold font-serif tabular-nums text-status-amber truncate">
+            <AnimatedKpiValue value={summary.month_waste_value || 0} prefix="₹" />
           </p>
           <p className="text-[11px] text-ink-muted mt-1 truncate">Food spoilage loss</p>
         </div>

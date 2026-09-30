@@ -4,6 +4,7 @@ import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { PaymentMode, PaymentStatus } from '../types/database.types';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 
 /**
  * Check In Action: confirmed → checked_in, room → occupied
@@ -73,6 +74,13 @@ export async function checkInAction(bookingId: string): Promise<{ success?: bool
     revalidatePath('/rooms');
     revalidatePath('/dashboard');
     revalidatePath(`/billing/${bookingId}`);
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.DASHBOARD_STATS.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'dashboard-stats',
+      'reports',
+    ]);
 
     return { success: true };
   } catch (err: any) {
@@ -149,6 +157,13 @@ export async function checkOutAction(bookingId: string): Promise<{ success?: boo
     revalidatePath('/dashboard');
     revalidatePath(`/billing/${bookingId}`);
     revalidatePath('/billing');
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.DASHBOARD_STATS.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'dashboard-stats',
+      'reports',
+    ]);
 
     return { success: true };
   } catch (err: any) {
@@ -259,6 +274,13 @@ export async function recordPaymentAction(
     revalidatePath('/bookings');
     revalidatePath('/dashboard');
     revalidatePath('/reports');
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.DASHBOARD_STATS.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'dashboard-stats',
+      'reports',
+    ]);
 
     return { success: true, updatedPaymentStatus: paymentStatus };
   } catch (err: any) {

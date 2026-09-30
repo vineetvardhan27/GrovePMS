@@ -104,10 +104,10 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
     <button
       type="button"
       onClick={() => onClick(room)}
-      className={`relative w-full text-left p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[120px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-forest ${
+      className={`relative w-full text-left p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[120px] shadow-2xs hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-brand-forest ${
         config.bgClass
       } ${config.borderClass} ${
-        isSelected ? 'ring-2 ring-brand-forest ring-offset-2 scale-[1.02]' : ''
+        isSelected ? 'ring-2 ring-brand-forest ring-offset-2 scale-[1.01]' : ''
       }`}
       aria-label={`Room ${room.room_number}, ${room.category.name}, status is ${config.label}`}
     >

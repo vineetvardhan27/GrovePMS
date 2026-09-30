@@ -4,6 +4,7 @@ import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { getHotelSettings } from '../hotels/queries';
 import { getMenuItems, getMenuCategories } from '../menu/queries';
+import { getFBBillById } from './queries';
 import {
   CreateFBBillInput,
   FBBillRecord,
@@ -391,8 +392,7 @@ export async function createFBBillAction(input: CreateFBBillInput): Promise<{
 
     billRecord.audit_logs = [auditRecord];
 
-    // 8. Database Persistence (Tables with Fallback to hotel.settings)
-    let persistedInTable = false;
+    // 8. Database Persistence (Relational Tables Only)
     try {
       // Insert Bill
       const { error: bInsertErr } = await (supabase.from('fb_bills') as any).insert({
@@ -433,9 +433,14 @@ export async function createFBBillAction(input: CreateFBBillInput): Promise<{
         updated_at: billRecord.updated_at,
       });
 
-      if (!bInsertErr) {
-        // Insert Orders
-        await (supabase.from('fb_orders') as any).insert(
+      if (bInsertErr) {
+        console.error('Failed to insert fb_bill into table:', bInsertErr);
+        return { error: `Failed to save F&B bill: ${bInsertErr.message}` };
+      }
+
+      // Insert Orders
+      if (createdOrders.length > 0) {
+        const { error: ordErr } = await (supabase.from('fb_orders') as any).insert(
           createdOrders.map((o) => ({
             id: o.id,
             bill_id: o.bill_id,
@@ -449,9 +454,12 @@ export async function createFBBillAction(input: CreateFBBillInput): Promise<{
             updated_at: o.updated_at,
           }))
         );
+        if (ordErr) console.error('Error inserting orders:', ordErr);
+      }
 
-        // Insert Order Items
-        await (supabase.from('fb_order_items') as any).insert(
+      // Insert Order Items
+      if (createdOrderItems.length > 0) {
+        const { error: itemsErr } = await (supabase.from('fb_order_items') as any).insert(
           createdOrderItems.map((i) => ({
             id: i.id,
             order_id: i.order_id,
@@ -476,70 +484,48 @@ export async function createFBBillAction(input: CreateFBBillInput): Promise<{
             updated_at: i.updated_at,
           }))
         );
-
-        // Insert Payments
-        if (createdPayments.length > 0) {
-          await (supabase.from('fb_payments') as any).insert(
-            createdPayments.map((p) => ({
-              id: p.id,
-              bill_id: p.bill_id,
-              hotel_id: p.hotel_id,
-              amount: p.amount,
-              payment_mode: p.payment_mode,
-              payment_type: p.payment_type,
-              reference_number: p.reference_number,
-              notes: p.notes,
-              recorded_by: p.recorded_by,
-              created_at: p.created_at,
-            }))
-          );
-        }
-
-        // Insert Audit Log
-        await (supabase.from('fb_audit_logs') as any).insert({
-          id: auditRecord.id,
-          hotel_id: auditRecord.hotel_id,
-          bill_id: auditRecord.bill_id,
-          action: auditRecord.action,
-          user_id: auditRecord.user_id,
-          details: auditRecord.details,
-          created_at: auditRecord.created_at,
-        });
-
-        // Insert into food_charges for room folio integration if charged to room
-        if (folioFoodChargeInserts.length > 0) {
-          await (supabase.from('food_charges') as any).insert(folioFoodChargeInserts);
-        }
-
-        persistedInTable = true;
+        if (itemsErr) console.error('Error inserting order items:', itemsErr);
       }
-    } catch (e) {
-      console.warn('Table insert failed, using hotel.settings fallback:', e);
+
+      // Insert Payments
+      if (createdPayments.length > 0) {
+        const { error: payErr } = await (supabase.from('fb_payments') as any).insert(
+          createdPayments.map((p) => ({
+            id: p.id,
+            bill_id: p.bill_id,
+            hotel_id: p.hotel_id,
+            amount: p.amount,
+            payment_mode: p.payment_mode,
+            payment_type: p.payment_type,
+            reference_number: p.reference_number,
+            notes: p.notes,
+            recorded_by: p.recorded_by,
+            created_at: p.created_at,
+          }))
+        );
+        if (payErr) console.error('Error inserting payments:', payErr);
+      }
+
+      // Insert Audit Log
+      await (supabase.from('fb_audit_logs') as any).insert({
+        id: auditRecord.id,
+        hotel_id: auditRecord.hotel_id,
+        bill_id: auditRecord.bill_id,
+        action: auditRecord.action,
+        user_id: auditRecord.user_id,
+        details: auditRecord.details,
+        created_at: auditRecord.created_at,
+      });
+
+      // Insert into food_charges for room folio integration if charged to room
+      if (folioFoodChargeInserts.length > 0) {
+        const { error: fcErr } = await (supabase.from('food_charges') as any).insert(folioFoodChargeInserts);
+        if (fcErr) console.error('Error inserting folio food charges:', fcErr);
+      }
+    } catch (e: any) {
+      console.error('Table insert failed for fb_bill:', e);
+      return { error: `Failed to save F&B bill: ${e?.message || String(e)}` };
     }
-
-    // Always update hotel.settings for reliable instant fallback
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', hotelId)
-      .single();
-
-    const existingBills: FBBillRecord[] = (hotelData?.settings?.fb_bills as FBBillRecord[]) || [];
-    const updatedBills = [billRecord, ...existingBills];
-
-    let updatedFoodCharges = (hotelData?.settings?.food_charges as any[]) || [];
-    if (folioFoodChargeInserts.length > 0) {
-      updatedFoodCharges = [...updatedFoodCharges, ...folioFoodChargeInserts];
-    }
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          fb_bills: updatedBills,
-          food_charges: updatedFoodCharges,
-        },
-      })
-      .eq('id', hotelId);
 
     // Revalidate relevant routes
     revalidatePath('/food-beverage');
@@ -587,13 +573,7 @@ export async function addOrderToExistingBillAction(
     const settings = await getHotelSettings(hotelId);
     const effectiveGstRate = Number(settings.gst_percentage ?? settings.gst_rate ?? 5);
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', hotelId)
-      .single();
-
-    const existingBills: FBBillRecord[] = (hotelData?.settings?.fb_bills as FBBillRecord[]) || [];
-    const bill = existingBills.find((b) => b.id === billId);
+    const bill = await getFBBillById(billId, hotelId);
     if (!bill) return { error: 'Bill not found.' };
 
     if (bill.bill_status === 'void' || bill.bill_status === 'cancelled') {
@@ -664,8 +644,31 @@ export async function addOrderToExistingBillAction(
     const updatedGrandTotal = Math.round((updatedTaxable + updatedGst) * 100) / 100;
     const updatedBalanceDue = Math.max(0, updatedGrandTotal - bill.total_paid);
 
-    const updatedBill: FBBillRecord = {
-      ...bill,
+    // Update relational database tables
+    const { error: ordErr } = await (supabase.from('fb_orders') as any).insert({
+      id: newOrder.id,
+      bill_id: newOrder.bill_id,
+      hotel_id: newOrder.hotel_id,
+      order_number: newOrder.order_number,
+      meal_type: newOrder.meal_type,
+      status: newOrder.status,
+      special_instructions: newOrder.special_instructions,
+      order_time: newOrder.order_time,
+      created_at: newOrder.created_at,
+      updated_at: newOrder.updated_at,
+    });
+    if (ordErr) {
+      console.error('Error inserting fb_order:', ordErr);
+      return { error: `Failed to add order: ${ordErr.message}` };
+    }
+
+    const { error: itemsErr } = await (supabase.from('fb_order_items') as any).insert(newOrderItems);
+    if (itemsErr) {
+      console.error('Error inserting fb_order_items:', itemsErr);
+      return { error: `Failed to add order items: ${itemsErr.message}` };
+    }
+
+    const { error: billUpdateErr } = await (supabase.from('fb_bills') as any).update({
       subtotal: updatedSubtotal,
       taxable_amount: updatedTaxable,
       cgst_amount: Math.round((updatedGst / 2) * 100) / 100,
@@ -673,27 +676,13 @@ export async function addOrderToExistingBillAction(
       gst_amount: updatedGst,
       grand_total: updatedGrandTotal,
       balance_due: updatedBalanceDue,
-      orders: [...(bill.orders || []), newOrder],
-      items: [...(bill.items || []), ...newOrderItems],
       updated_at: nowIso,
-    };
+    }).eq('id', billId).eq('hotel_id', hotelId);
 
-    // Update database
-    try {
-      await (supabase.from('fb_orders') as any).insert(newOrder);
-      await (supabase.from('fb_order_items') as any).insert(newOrderItems);
-      await (supabase.from('fb_bills') as any).update(updatedBill).eq('id', billId);
-    } catch {}
-
-    const updatedBillsList = existingBills.map((b) => (b.id === billId ? updatedBill : b));
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          fb_bills: updatedBillsList,
-        },
-      })
-      .eq('id', hotelId);
+    if (billUpdateErr) {
+      console.error('Error updating fb_bills totals:', billUpdateErr);
+      return { error: `Failed to update bill totals: ${billUpdateErr.message}` };
+    }
 
     revalidatePath('/food-beverage');
     revalidatePath(`/food-beverage/${billId}`);
@@ -717,41 +706,14 @@ export async function updateOrderStatusAction(
     const supabase = createClient();
     const hotelId = staff.hotel_id;
 
-    try {
-      await (supabase.from('fb_orders') as any)
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', orderId)
-        .eq('hotel_id', hotelId);
-    } catch {}
+    const { error } = await (supabase.from('fb_orders') as any)
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', orderId)
+      .eq('hotel_id', hotelId);
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', hotelId)
-      .single();
-
-    const existingBills: FBBillRecord[] = (hotelData?.settings?.fb_bills as FBBillRecord[]) || [];
-    let updated = false;
-
-    const updatedBills = existingBills.map((bill) => {
-      const orders = (bill.orders || []).map((o) => {
-        if (o.id === orderId) {
-          updated = true;
-          return { ...o, status: newStatus, updated_at: new Date().toISOString() };
-        }
-        return o;
-      });
-      return { ...bill, orders };
-    });
-
-    if (updated) {
-      await (supabase.from('hotels') as any)
-        .update({
-          settings: {
-            ...(hotelData?.settings || {}),
-            fb_bills: updatedBills,
-          },
-        })
-        .eq('id', hotelId);
+    if (error) {
+      console.error('Error updating order status in table:', error);
+      return { error: `Failed to update order status: ${error.message}` };
     }
 
     revalidatePath('/food-beverage/kitchen');
@@ -785,13 +747,7 @@ export async function recordFBPaymentAction(input: {
     const supabase = createClient();
     const hotelId = staff.hotel_id;
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', hotelId)
-      .single();
-
-    const existingBills: FBBillRecord[] = (hotelData?.settings?.fb_bills as FBBillRecord[]) || [];
-    const bill = existingBills.find((b) => b.id === input.billId);
+    const bill = await getFBBillById(input.billId, hotelId);
     if (!bill) return { error: 'F&B Bill not found.' };
 
     const paymentRecord: FBPaymentRecord = {
@@ -812,34 +768,23 @@ export async function recordFBPaymentAction(input: {
     const newBalance = Math.max(0, Math.round((bill.grand_total - newTotalPaid) * 100) / 100);
     const newPaymentStatus = newBalance <= 0 ? 'paid' : 'partially_paid';
 
-    const updatedBill: FBBillRecord = {
-      ...bill,
+    const { error: pErr } = await (supabase.from('fb_payments') as any).insert(paymentRecord);
+    if (pErr) {
+      console.error('Error inserting fb_payment:', pErr);
+      return { error: `Failed to record payment: ${pErr.message}` };
+    }
+
+    const { error: bErr } = await (supabase.from('fb_bills') as any).update({
       total_paid: newTotalPaid,
       balance_due: newBalance,
       payment_status: newPaymentStatus,
-      payments: [...(bill.payments || []), paymentRecord],
       updated_at: new Date().toISOString(),
-    };
+    }).eq('id', input.billId).eq('hotel_id', hotelId);
 
-    try {
-      await (supabase.from('fb_payments') as any).insert(paymentRecord);
-      await (supabase.from('fb_bills') as any).update({
-        total_paid: newTotalPaid,
-        balance_due: newBalance,
-        payment_status: newPaymentStatus,
-        updated_at: new Date().toISOString(),
-      }).eq('id', input.billId);
-    } catch {}
-
-    const updatedBillsList = existingBills.map((b) => (b.id === input.billId ? updatedBill : b));
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          fb_bills: updatedBillsList,
-        },
-      })
-      .eq('id', hotelId);
+    if (bErr) {
+      console.error('Error updating bill payment status in table:', bErr);
+      return { error: `Failed to update bill balance: ${bErr.message}` };
+    }
 
     revalidatePath('/food-beverage');
     revalidatePath(`/food-beverage/${input.billId}`);
@@ -871,13 +816,7 @@ export async function voidFBBillAction(
     const supabase = createClient();
     const hotelId = staff.hotel_id;
 
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', hotelId)
-      .single();
-
-    const existingBills: FBBillRecord[] = (hotelData?.settings?.fb_bills as FBBillRecord[]) || [];
-    const bill = existingBills.find((b) => b.id === billId);
+    const bill = await getFBBillById(billId, hotelId);
     if (!bill) return { error: 'Bill not found.' };
 
     const auditLog: FBAuditLogRecord = {
@@ -895,48 +834,35 @@ export async function voidFBBillAction(
       created_at: new Date().toISOString(),
     };
 
-    const updatedBill: FBBillRecord = {
-      ...bill,
-      bill_status: 'void',
-      remarks: `[VOIDED: ${reason.trim()}] ${bill.remarks || ''}`.trim(),
-      audit_logs: [...(bill.audit_logs || []), auditLog],
-      updated_at: new Date().toISOString(),
-    };
-
-    // If this bill was charged to room, remove charges from food_charges
+    // If this bill was charged to room, remove charges from food_charges table
     if (bill.booking_id) {
-      try {
-        await (supabase.from('food_charges') as any)
-          .delete()
-          .like('remarks', `%[F&B Bill #${bill.bill_number}]%`);
-      } catch {}
-
-      const existingFolioCharges = (hotelData?.settings?.food_charges as any[]) || [];
-      const filteredFolioCharges = existingFolioCharges.filter(
-        (c) => !(c.remarks && c.remarks.includes(`[F&B Bill #${bill.bill_number}]`))
-      );
-
-      hotelData.settings.food_charges = filteredFolioCharges;
+      const { error: fcErr } = await (supabase.from('food_charges') as any)
+        .delete()
+        .like('remarks', `%[F&B Bill #${bill.bill_number}]%`);
+      if (fcErr) console.error('Error deleting folio food charges on void:', fcErr);
     }
 
-    try {
-      await (supabase.from('fb_bills') as any).update({
-        bill_status: 'void',
-        remarks: updatedBill.remarks,
-        updated_at: new Date().toISOString(),
-      }).eq('id', billId);
-    } catch {}
+    await (supabase.from('fb_audit_logs') as any).insert({
+      id: auditLog.id,
+      hotel_id: auditLog.hotel_id,
+      bill_id: auditLog.bill_id,
+      action: auditLog.action,
+      user_id: auditLog.user_id,
+      details: auditLog.details,
+      created_at: auditLog.created_at,
+    });
 
-    const updatedBillsList = existingBills.map((b) => (b.id === billId ? updatedBill : b));
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          fb_bills: updatedBillsList,
-          food_charges: hotelData?.settings?.food_charges,
-        },
-      })
-      .eq('id', hotelId);
+    const updatedRemarks = `[VOIDED: ${reason.trim()}] ${bill.remarks || ''}`.trim();
+    const { error: vErr } = await (supabase.from('fb_bills') as any).update({
+      bill_status: 'void',
+      remarks: updatedRemarks,
+      updated_at: new Date().toISOString(),
+    }).eq('id', billId).eq('hotel_id', hotelId);
+
+    if (vErr) {
+      console.error('Error voiding bill in table:', vErr);
+      return { error: `Failed to void bill: ${vErr.message}` };
+    }
 
     revalidatePath('/food-beverage');
     revalidatePath('/food-beverage/bills');

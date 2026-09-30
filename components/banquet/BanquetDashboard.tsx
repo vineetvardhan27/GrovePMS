@@ -37,6 +37,7 @@ import {
   TrendingUp,
   ArrowUpRight,
 } from 'lucide-react';
+import AnimatedKpiValue from '../shared/AnimatedKpiValue';
 
 interface BanquetDashboardProps {
   hall: BanquetHall;
@@ -137,7 +138,8 @@ export default function BanquetDashboard({
       {/* ── Page Header & Action Buttons ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle">
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-brand-forest tracking-tight leading-tight flex items-center gap-2.5">
+            <PartyPopper className="w-5 h-5 text-brand-forest" />
             Banquet Hall
           </h1>
           <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
@@ -205,7 +207,7 @@ export default function BanquetDashboard({
               <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block leading-none mb-1">
                 Half Day Rate
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-brand-forest tabular-nums">
+              <span className="text-sm sm:text-base font-bold font-serif text-brand-forest tabular-nums">
                 {formatCurrency(hall.half_day_rate)}
               </span>
             </div>
@@ -214,7 +216,7 @@ export default function BanquetDashboard({
               <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block leading-none mb-1">
                 Full Day Rate
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-brand-forest tabular-nums">
+              <span className="text-sm sm:text-base font-bold font-serif text-brand-forest tabular-nums">
                 {formatCurrency(hall.full_day_rate)}
               </span>
             </div>
@@ -252,63 +254,78 @@ export default function BanquetDashboard({
       {/* ── 2. Operational & Financial Metrics Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         {/* Operational 1 */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '0ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Upcoming</span>
             <Calendar className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-xl sm:text-2xl font-bold font-sans tabular-nums text-brand-forest">
-            {summary.upcoming_events_count}
+          <p className="text-xl sm:text-2xl font-bold font-serif tabular-nums text-brand-forest">
+            <AnimatedKpiValue value={summary.upcoming_events_count} />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">On calendar</p>
         </div>
 
         {/* Operational 2 */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '50ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">In Progress</span>
             <Play className={`w-3.5 h-3.5 ${summary.in_progress_count > 0 ? 'text-status-green' : 'text-ink-muted/50'}`} />
           </div>
           <p
-            className={`text-xl sm:text-2xl font-bold font-sans tabular-nums ${
+            className={`text-xl sm:text-2xl font-bold font-serif tabular-nums ${
               summary.in_progress_count > 0 ? 'text-status-green' : 'text-brand-forest'
             }`}
           >
-            {summary.in_progress_count}
+            <AnimatedKpiValue value={summary.in_progress_count} />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Active sessions</p>
         </div>
 
         {/* Operational 3 */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '100ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Today's Events</span>
             <Clock className={`w-3.5 h-3.5 ${summary.todays_events_count > 0 ? 'text-status-amber' : 'text-ink-muted/50'}`} />
           </div>
           <p
-            className={`text-xl sm:text-2xl font-bold font-sans tabular-nums ${
+            className={`text-xl sm:text-2xl font-bold font-serif tabular-nums ${
               summary.todays_events_count > 0 ? 'text-status-amber' : 'text-brand-forest'
             }`}
           >
-            {summary.todays_events_count}
+            <AnimatedKpiValue value={summary.todays_events_count} />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Scheduled today</p>
         </div>
 
         {/* Financial 1: Advance Collected */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '150ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Advance Collected</span>
             <CreditCard className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-base sm:text-lg font-bold font-sans tabular-nums text-brand-forest truncate">
-            {formatCurrency(summary.total_advance_collected)}
+          <p className="text-base sm:text-lg font-bold font-serif tabular-nums text-brand-forest truncate">
+            <AnimatedKpiValue value={summary.total_advance_collected} prefix="₹" />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Deposits secured</p>
         </div>
 
         {/* Financial 2: Outstanding Due */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '200ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
               Outstanding Due
@@ -316,23 +333,26 @@ export default function BanquetDashboard({
             <AlertCircle className="w-3.5 h-3.5 text-status-amber" />
           </div>
           <p
-            className={`text-base sm:text-lg font-bold font-sans tabular-nums truncate ${
+            className={`text-base sm:text-lg font-bold font-serif tabular-nums truncate ${
               summary.total_outstanding_balance > 0 ? 'text-status-amber' : 'text-status-green'
             }`}
           >
-            {formatCurrency(summary.total_outstanding_balance)}
+            <AnimatedKpiValue value={summary.total_outstanding_balance} prefix="₹" />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Pending collection</p>
         </div>
 
         {/* Financial 3: Projected Revenue */}
-        <div className="pms-card p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]">
+        <div
+          className="pms-stat-card pms-card-entrance p-3 sm:p-3.5 flex flex-col justify-between min-h-[92px]"
+          style={{ animationDelay: '250ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider">Projected Revenue</span>
             <Sparkles className="w-3.5 h-3.5 text-brand-forest/60" />
           </div>
-          <p className="text-base sm:text-lg font-bold font-sans tabular-nums text-brand-forest truncate">
-            {formatCurrency(summary.total_estimated_revenue)}
+          <p className="text-base sm:text-lg font-bold font-serif tabular-nums text-brand-forest truncate">
+            <AnimatedKpiValue value={summary.total_estimated_revenue} prefix="₹" />
           </p>
           <p className="text-[10px] sm:text-[11px] text-ink-muted mt-0.5 truncate">Upcoming folios</p>
         </div>

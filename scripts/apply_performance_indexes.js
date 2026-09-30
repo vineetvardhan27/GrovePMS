@@ -36,6 +36,12 @@ async function applyIndexes() {
     'CREATE INDEX IF NOT EXISTS idx_fb_bills_hotel_mode ON public.fb_bills(hotel_id, billing_mode);',
     'CREATE INDEX IF NOT EXISTS idx_fb_bills_room_num ON public.fb_bills(room_number_snapshot);',
     'CREATE INDEX IF NOT EXISTS idx_fb_bills_customer_phone ON public.fb_bills(customer_phone);',
+    // Migration 0024: Query Performance Indexes
+    'CREATE INDEX IF NOT EXISTS idx_bookings_guest_hotel ON public.bookings(guest_id, hotel_id);',
+    'CREATE INDEX IF NOT EXISTS idx_payments_booking_created ON public.payments(booking_id, created_at DESC);',
+    'CREATE INDEX IF NOT EXISTS idx_food_charges_hotel_booking ON public.food_charges(hotel_id, booking_id);',
+    'CREATE INDEX IF NOT EXISTS idx_fb_bills_hotel_created ON public.fb_bills(hotel_id, created_at DESC);',
+    'CREATE INDEX IF NOT EXISTS idx_inventory_tx_hotel_created ON public.inventory_transactions(hotel_id, created_at DESC);',
   ];
 
   for (const sql of indexStatements) {

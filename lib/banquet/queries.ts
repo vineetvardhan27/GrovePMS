@@ -108,59 +108,47 @@ export async function getBanquetCharges(
     const staff = await getCurrentStaff();
     const activeHotelId = hotelIdParam || staff?.hotel_id;
     const supabase = createClient();
-    try {
-      let q = (supabase.from('banquet_charges') as any)
-        .select('*')
-        .order('created_at', { ascending: true });
+    let q = (supabase.from('banquet_charges') as any)
+      .select('*')
+      .order('created_at', { ascending: true });
 
-      if (bookingId) {
-        q = q.eq('banquet_booking_id', bookingId);
-      }
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
-
-      const { data, error } = await q;
-
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((c) => ({
-          id: c.id,
-          hotel_id: c.hotel_id,
-          banquet_booking_id: c.banquet_booking_id,
-          category: c.category,
-          description: c.description,
-          sac_code: c.sac_code || '996311',
-          quantity: Number(c.quantity || 1),
-          unit_price: Number(c.unit_price || 0),
-          discount: Number(c.discount || 0),
-          tax_treatment: c.tax_treatment || 'gst',
-          tax_rate: Number(c.tax_rate ?? 18),
-          taxable_amount: Number(c.taxable_amount || 0),
-          tax_amount: Number(c.tax_amount || 0),
-          total_amount: Number(c.total_amount || 0),
-          notes: c.notes,
-          recorded_by: c.recorded_by,
-          created_at: c.created_at,
-          updated_at: c.updated_at,
-        }));
-      }
-    } catch {
-      // Fallback
-    }
-
-    // Fallback to hotel.settings.banquet_charges or matching default
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedCharges: BanquetCharge[] = (hotel?.settings?.banquet_charges as BanquetCharge[]) || [];
     if (bookingId) {
-      return storedCharges.filter((c) => c.banquet_booking_id === bookingId);
+      q = q.eq('banquet_booking_id', bookingId);
+    }
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
     }
 
-    return storedCharges;
+    const { data, error } = await q;
+
+    if (error) {
+      console.error('Error fetching banquet_charges from table:', error.message);
+      return [];
+    }
+
+    if (data) {
+      return (data as any[]).map((c) => ({
+        id: c.id,
+        hotel_id: c.hotel_id,
+        banquet_booking_id: c.banquet_booking_id,
+        category: c.category,
+        description: c.description,
+        sac_code: c.sac_code || '996311',
+        quantity: Number(c.quantity || 1),
+        unit_price: Number(c.unit_price || 0),
+        discount: Number(c.discount || 0),
+        tax_treatment: c.tax_treatment || 'gst',
+        tax_rate: Number(c.tax_rate ?? 18),
+        taxable_amount: Number(c.taxable_amount || 0),
+        tax_amount: Number(c.tax_amount || 0),
+        total_amount: Number(c.total_amount || 0),
+        notes: c.notes,
+        recorded_by: c.recorded_by,
+        created_at: c.created_at,
+        updated_at: c.updated_at,
+      }));
+    }
+    return [];
   } catch (err) {
     console.error('getBanquetCharges error:', err);
     return [];
@@ -172,62 +160,60 @@ export async function getBanquetCharges(
  */
 export async function getBanquetPayments(
   bookingId?: string,
-  hotelIdParam?: string
+  hotelIdParam?: string,
+  startIso?: string,
+  endIso?: string
 ): Promise<BanquetPayment[]> {
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelIdParam || staff?.hotel_id;
     const supabase = createClient();
-    try {
-      let q = (supabase.from('banquet_payments') as any)
-        .select(`
-          *,
-          staff:recorded_by (
-            full_name
-          )
-        `)
-        .order('created_at', { ascending: false });
 
-      if (bookingId) {
-        q = q.eq('banquet_booking_id', bookingId);
-      }
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
+    let q = (supabase.from('banquet_payments') as any)
+      .select(`
+        *,
+        staff:recorded_by (
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false });
 
-      const { data, error } = await q;
-
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((p) => ({
-          id: p.id,
-          hotel_id: p.hotel_id,
-          banquet_booking_id: p.banquet_booking_id,
-          amount: Number(p.amount || 0),
-          payment_mode: p.payment_mode,
-          payment_type: p.payment_type || 'partial',
-          reference_number: p.reference_number,
-          notes: p.notes,
-          recorded_by: p.recorded_by,
-          recorder_name: p.staff?.full_name || 'Staff',
-          created_at: p.created_at,
-        }));
-      }
-    } catch {
-      // Fallback
-    }
-
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedPayments: BanquetPayment[] = (hotel?.settings?.banquet_payments as BanquetPayment[]) || [];
     if (bookingId) {
-      return storedPayments.filter((p) => p.banquet_booking_id === bookingId);
+      q = q.eq('banquet_booking_id', bookingId);
+    }
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
+    }
+    if (startIso) {
+      q = q.gte('created_at', startIso);
+    }
+    if (endIso) {
+      q = q.lte('created_at', endIso);
     }
 
-    return storedPayments;
+    const { data, error } = await q;
+
+    if (error) {
+      console.error('Error fetching banquet_payments from table:', error.message);
+      return [];
+    }
+
+    if (data) {
+      return (data as any[]).map((p) => ({
+        id: p.id,
+        hotel_id: p.hotel_id,
+        banquet_booking_id: p.banquet_booking_id,
+        amount: Number(p.amount || 0),
+        payment_mode: p.payment_mode,
+        payment_type: p.payment_type || 'partial',
+        reference_number: p.reference_number,
+        notes: p.notes,
+        recorded_by: p.recorded_by,
+        recorder_name: p.staff?.full_name || 'Staff',
+        created_at: p.created_at,
+      }));
+    }
+    return [];
   } catch (err) {
     console.error('getBanquetPayments error:', err);
     return [];
@@ -296,56 +282,42 @@ export function calculateBanquetFolioTotals(
  */
 export async function getBanquetBookings(
   hotelId?: string,
-  filterDate?: string
+  filterDate?: string,
+  filterStartDate?: string,
+  filterEndDate?: string
 ): Promise<BanquetBooking[]> {
   try {
     const staff = await getCurrentStaff();
     const activeHotelId = hotelId || staff?.hotel_id;
     const supabase = createClient();
 
-    let rawBookings: any[] = [];
+    let q = supabase
+      .from('banquet_bookings')
+      .select(`
+        *,
+        staff:recorded_by (
+          full_name
+        )
+      `)
+      .order('event_date', { ascending: true })
+      .order('start_time', { ascending: true });
 
-    try {
-      let q = supabase
-        .from('banquet_bookings')
-        .select(`
-          *,
-          staff:recorded_by (
-            full_name
-          )
-        `)
-        .order('event_date', { ascending: true })
-        .order('start_time', { ascending: true });
-
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
-      if (filterDate) {
-        q = q.eq('event_date', filterDate);
-      }
-
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        rawBookings = data;
-      }
-    } catch {
-      // Fallback
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
+    }
+    if (filterDate) {
+      q = q.eq('event_date', filterDate);
+    } else if (filterStartDate && filterEndDate) {
+      q = q.gte('event_date', filterStartDate).lte('event_date', filterEndDate);
     }
 
-    if (rawBookings.length === 0) {
-      const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-      const { data: hotel } = await (supabase.from('hotels') as any)
-        .select('settings')
-        .eq('id', targetHotelId)
-        .maybeSingle();
-
-      const storedBookings: BanquetBooking[] =
-        (hotel?.settings?.banquet_bookings as BanquetBooking[]) || [];
-      rawBookings = storedBookings;
-      if (filterDate) {
-        rawBookings = rawBookings.filter((b) => b.event_date === filterDate);
-      }
+    const { data, error } = await q;
+    if (error) {
+      console.error('Error fetching banquet_bookings from table:', error.message);
+      return [];
     }
+
+    const rawBookings: any[] = data || [];
 
     // Attach charges, payments, and dynamically calculated balances via batch lookups
     const [allCharges, allPayments] = await Promise.all([

@@ -30,16 +30,34 @@ const AuthContext = createContext<AuthContextType>({
   refreshStaff: async () => {},
 });
 
+function hasClientAuthCookie(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.includes('-auth-token') || document.cookie.includes('sb-');
+}
+
 export function AuthProvider({
   children,
   initialStaff = null,
+  initialUser = null,
 }: {
   children: React.ReactNode;
   initialStaff?: StaffProfile | null;
+  initialUser?: User | null;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(initialUser);
   const [staff, setStaff] = useState<StaffProfile | null>(initialStaff);
   const [isLoading, setIsLoading] = useState<boolean>(!initialStaff);
+
+  // Synchronize state if server-rendered initialStaff prop changes (e.g. after server action revalidation / account switch)
+  const [prevStaffId, setPrevStaffId] = useState<string | null>(initialStaff?.id ?? null);
+  if (initialStaff && initialStaff.id !== prevStaffId) {
+    setPrevStaffId(initialStaff.id);
+    setStaff(initialStaff);
+    if (initialUser) {
+      setUser(initialUser);
+    }
+    setIsLoading(false);
+  }
 
   const supabase = createClient();
 
@@ -58,6 +76,7 @@ export function AuthProvider({
             id,
             name,
             slug,
+            logo_url,
             settings
           )
         `)
@@ -82,6 +101,7 @@ export function AuthProvider({
               id,
               name,
               slug,
+              logo_url,
               settings
             )
           `)
@@ -95,8 +115,7 @@ export function AuthProvider({
 
       if (staffData && staffData.is_active && staffData.hotel_id) {
         const hotelData = staffData.hotel as any;
-        const hotelSettings = hotelData?.settings || null;
-        const hotelLogoUrl = hotelSettings?.logo_url || hotelData?.logo_url || null;
+        const hotelLogoUrl = hotelData?.logo_url || hotelData?.settings?.logo_url || null;
 
         setStaff({
           id: staffData.id,
@@ -107,7 +126,6 @@ export function AuthProvider({
           hotel_name: hotelData?.name || 'Hotel Greenery View',
           hotel_slug: hotelData?.slug || 'hotel-greenery-view',
           hotel_logo_url: hotelLogoUrl,
-          hotel_settings: hotelSettings,
           is_active: staffData.is_active,
         });
       } else {
@@ -135,16 +153,58 @@ export function AuthProvider({
   }, [supabase, fetchStaffProfile]);
 
   useEffect(() => {
-    // Initial fetch
-    refreshStaff();
+    // If initialStaff was already provided by the server, skip redundant initial client fetch
+    if (!initialStaff) {
+      if (hasClientAuthCookie()) {
+        refreshStaff();
+      } else {
+        setIsLoading(false);
+      }
+    }
 
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes for real-time reactivity
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
 
+      // On INITIAL_SESSION: If initialStaff was provided and matches session user, skip duplicate fetch
+      if (event === 'INITIAL_SESSION') {
+        if (currentUser) {
+          setUser(currentUser);
+          if (initialStaff && initialStaff.id === currentUser.id) {
+            setIsLoading(false);
+            return;
+          }
+          await fetchStaffProfile(currentUser.id, currentUser.email);
+        } else if (!initialStaff) {
+          setUser(null);
+          setStaff(null);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // On TOKEN_REFRESHED: Tokens refreshed in background, user identity is unchanged
+      if (event === 'TOKEN_REFRESHED') {
+        if (currentUser) {
+          setUser(currentUser);
+          if (staff && staff.id === currentUser.id) {
+            return;
+          }
+        }
+      }
+
+      // On SIGNED_OUT: Clear active staff context
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setStaff(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // On SIGNED_IN or USER_UPDATED: Fetch the new active staff profile
+      setUser(currentUser);
       if (currentUser) {
         await fetchStaffProfile(currentUser.id, currentUser.email);
       } else {
@@ -156,7 +216,7 @@ export function AuthProvider({
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, fetchStaffProfile, refreshStaff]);
+  }, [supabase, fetchStaffProfile, refreshStaff, initialStaff]);
 
   return (
     <AuthContext.Provider
@@ -168,7 +228,7 @@ export function AuthProvider({
         hotelName: staff?.hotel_name ?? null,
         hotelLogoUrl: staff?.hotel_logo_url ?? null,
         isLoading,
-        isAuthenticated: Boolean(user && staff),
+        isAuthenticated: Boolean((user || staff) && staff),
         refreshStaff,
       }}
     >

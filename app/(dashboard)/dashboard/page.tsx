@@ -18,7 +18,8 @@ import {
   Building2,
   MoreHorizontal,
   ArrowRight,
-  LogOut,
+  UtensilsCrossed,
+  LayoutDashboard,
 } from 'lucide-react';
 import { getCurrentStaff } from '../../../lib/auth/session';
 import { getDashboardStats } from '../../../lib/reports/queries';
@@ -26,6 +27,7 @@ import { getRooms, getRoomCategories } from '../../../lib/rooms/queries';
 import { formatCurrency } from '../../../lib/utils/currency';
 import DashboardRoomGrid from '../../../components/dashboard/DashboardRoomGrid';
 import PropertyStatusCards from '../../../components/dashboard/PropertyStatusCards';
+import AnimatedKpiValue from '../../../components/shared/AnimatedKpiValue';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,10 +62,10 @@ export default async function DashboardPage({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Access Denied Alert */}
       {isAccessDenied && (
-        <div className="p-4 bg-action-danger/10 border border-action-danger/30 rounded-lg flex items-start gap-3 text-action-danger">
+        <div className="p-4 bg-action-danger/10 border border-action-danger/30 rounded-xl flex items-start gap-3 text-action-danger">
           <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-sm">Restricted Access</p>
@@ -74,13 +76,14 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Page Title & Greeting */}
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 pb-1 border-b border-border-subtle">
+      {/* Page Title & Greeting matching Food & Beverage Overview standard */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-border-subtle">
         <div>
-          <h1 className="text-display font-serif text-brand-forest">
-            Good {getGreeting()}, {staff?.full_name?.split(' ')[0]}
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-ink tracking-tight flex items-center gap-2.5">
+            <Building2 className="w-6 h-6 text-brand-forest shrink-0" aria-hidden="true" />
+            <span>Good {getGreeting()}, {staff?.full_name?.split(' ')[0]}</span>
           </h1>
-          <p className="text-body text-ink-muted mt-1">
+          <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
             {staff?.hotel_name} · <span className="capitalize">{staff?.role}</span> ·{' '}
             {new Date().toLocaleDateString('en-IN', {
               weekday: 'long',
@@ -90,67 +93,91 @@ export default async function DashboardPage({
             })}
           </p>
         </div>
-      </div>
 
-      {/* Quick Actions (Design.md §4: rounded-lg, primary solid brand-forest, secondary distinct) */}
-      <div className="space-y-2.5">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
-          {/* Primary Action (Prominent full-width on mobile) */}
+        <div className="flex items-center gap-2">
           <Link
             href="/bookings/new"
-            className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 bg-brand-forest hover:bg-brand-forest-light text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-2xs min-h-touch cursor-pointer"
+            className="pms-btn-primary flex items-center gap-2 shadow-xs text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>New Booking</span>
-          </Link>
-
-          {/* Secondary Actions */}
-          <Link
-            href="/rooms"
-            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
-          >
-            <BedDouble className="w-4 h-4 text-ink-muted" />
-            <span>Room Chart</span>
-          </Link>
-
-          <Link
-            href="/billing"
-            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
-          >
-            <Receipt className="w-4 h-4 text-ink-muted" />
-            <span>Billing</span>
-          </Link>
-
-          <Link
-            href="/payments"
-            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
-          >
-            <CreditCard className="w-4 h-4 text-ink-muted" />
-            <span>Payments</span>
-          </Link>
-
-          <Link
-            href="/reports"
-            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
-          >
-            <BarChart3 className="w-4 h-4 text-ink-muted" />
-            <span>Reports</span>
-          </Link>
-
-          <Link
-            href="/guests"
-            className="inline-flex items-center justify-center gap-2 bg-brand-sand-dark/60 hover:bg-brand-sand text-ink hover:text-brand-forest px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border-subtle transition-colors min-h-touch cursor-pointer"
-          >
-            <Users className="w-4 h-4 text-ink-muted" />
-            <span>Guests</span>
+            <span>+ New Booking</span>
           </Link>
         </div>
       </div>
 
-      {/* Primary Visual Element: Live Room Status Counters */}
+      {/* Quick Actions (Food & Beverage Overview Card Reference Style) */}
+      <div className="bg-white rounded-xl border border-border-subtle p-5 shadow-card space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+            Quick Actions — Operational Shortcuts
+          </span>
+          <span className="text-xs text-ink-muted hidden sm:inline">One-click property navigation</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Link href="/bookings/new" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <Plus className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">New Booking</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">Check-in / Reserve</div>
+            </div>
+          </Link>
+
+          <Link href="/rooms" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <BedDouble className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">Room Chart</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">Live matrix</div>
+            </div>
+          </Link>
+
+          <Link href="/billing" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <Receipt className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">Billing</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">Folios & GST</div>
+            </div>
+          </Link>
+
+          <Link href="/payments" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <CreditCard className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">Payments</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">Ledger & Cash</div>
+            </div>
+          </Link>
+
+          <Link href="/food-beverage" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <UtensilsCrossed className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">F&amp;B POS</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">Dining &amp; Kitchen</div>
+            </div>
+          </Link>
+
+          <Link href="/reports" className="pms-quick-action group">
+            <div className="w-8 h-8 rounded-md bg-brand-forest/10 group-hover:bg-white/20 flex items-center justify-center shrink-0">
+              <BarChart3 className="w-4 h-4 text-brand-forest group-hover:text-white" />
+            </div>
+            <div className="truncate min-w-0">
+              <div className="font-semibold truncate">Reports</div>
+              <div className="text-[10px] text-ink-muted group-hover:text-white/80 truncate">ADR &amp; RevPAR</div>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Primary Visual Element: Live Room Status Counters with staggered entrance */}
       <PropertyStatusCards
         stats={{
           available: stats.rooms.available,
@@ -160,34 +187,38 @@ export default async function DashboardPage({
         }}
       />
 
-      {/* Signature Section: Live Room Grid (Design.md §0) */}
-      <div>
+      {/* Signature Section: Live Room Grid (Wrapped in unified card shell) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+            Floor-by-Floor Room Matrix
+          </h2>
+          <span className="text-xs text-ink-muted">Real-time status updates</span>
+        </div>
         <DashboardRoomGrid initialRooms={rooms} categories={categories} />
       </div>
 
-      {/* Secondary Information Hierarchy: Operations & Financial Panels (Non-Redundant) */}
+      {/* Secondary Information Hierarchy: Operations & Financial Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Panel 1: Financial Overview (Single source of financial truth) */}
-        <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 space-y-5 flex flex-col justify-between">
+        {/* Panel 1: Financial Overview */}
+        <div className="bg-white rounded-xl border border-border-subtle shadow-card p-5 space-y-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md">
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
-              <div>
-                <h3 className="text-h2 font-bold text-ink">Financial Summary</h3>
-                <p className="text-xs text-ink-muted mt-0.5">Today's collection & outstanding balances</p>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-brand-forest" />
+                <h2 className="text-sm font-bold text-ink">Financial Summary</h2>
               </div>
-              <div className="p-2 bg-status-green/10 rounded-lg text-status-green">
-                <TrendingUp className="w-5 h-5" />
-              </div>
+              <span className="text-xs text-ink-muted">Today&apos;s collections</span>
             </div>
 
             {/* Collection Total & Mode Breakdown */}
-            <div className="p-4 bg-brand-sand/50 rounded-lg border border-border-subtle space-y-3">
+            <div className="p-4 bg-brand-sand/50 rounded-xl border border-border-subtle space-y-3">
               <div className="flex items-baseline justify-between">
                 <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                  Today's Collection
+                  Today&apos;s Collection
                 </span>
-                <span className="text-2xl font-bold font-sans text-brand-forest tabular-nums">
-                  {formatCurrency(stats.today.collection)}
+                <span className="text-2xl font-bold font-serif text-brand-forest tabular-nums">
+                  <AnimatedKpiValue value={stats.today.collection} type="currency" />
                 </span>
               </div>
 
@@ -201,7 +232,7 @@ export default async function DashboardPage({
                     if (amount === 0) return null;
                     const ModeIcon = modeIcons[mode] || MoreHorizontal;
                     return (
-                      <div key={mode} className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded border border-border-subtle">
+                      <div key={mode} className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-border-subtle">
                         <span className="flex items-center gap-1.5 text-ink-muted">
                           <ModeIcon className="w-3.5 h-3.5 text-brand-forest" />
                           <span>{modeLabels[mode] || mode}</span>
@@ -217,7 +248,7 @@ export default async function DashboardPage({
             </div>
 
             {/* Pending Balance Row */}
-            <div className="flex items-center justify-between p-4 bg-status-amber/10 rounded-lg border border-status-amber/25">
+            <div className="flex items-center justify-between p-4 bg-status-amber/10 rounded-xl border border-status-amber/25">
               <div>
                 <p className="text-xs font-semibold text-status-amber uppercase tracking-wider">
                   Pending Balance
@@ -226,8 +257,8 @@ export default async function DashboardPage({
                   Across {stats.pending.bookingCount} active reservation{stats.pending.bookingCount === 1 ? '' : 's'}
                 </p>
               </div>
-              <span className="text-xl font-bold font-sans text-status-amber tabular-nums">
-                {formatCurrency(stats.pending.totalBalance)}
+              <span className="text-xl font-bold font-serif text-status-amber tabular-nums">
+                <AnimatedKpiValue value={stats.pending.totalBalance} type="currency" />
               </span>
             </div>
           </div>
@@ -244,31 +275,29 @@ export default async function DashboardPage({
               href="/billing"
               className="font-semibold text-brand-forest hover:text-brand-forest-light hover:underline flex items-center gap-1"
             >
-              <span>Manage guest bills</span>
+              <span>Manage guest folios</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
 
         {/* Panel 2: Today's Movements & Housekeeping Operations */}
-        <div className="bg-white rounded-lg border border-border-subtle shadow-2xs p-5 space-y-5 flex flex-col justify-between">
+        <div className="bg-white rounded-xl border border-border-subtle shadow-card p-5 space-y-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md">
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
-              <div>
-                <h3 className="text-h2 font-bold text-ink">Guest Operations</h3>
-                <p className="text-xs text-ink-muted mt-0.5">Today's scheduled arrivals and departures</p>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-brand-forest" />
+                <h2 className="text-sm font-bold text-ink">Guest Operations</h2>
               </div>
-              <div className="p-2 bg-brand-sand rounded-lg text-brand-forest">
-                <Users className="w-5 h-5" />
-              </div>
+              <span className="text-xs text-ink-muted">Arrivals &amp; departures</span>
             </div>
 
             {/* Arrivals List */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink-muted">
                 <span>Arrivals Scheduled</span>
-                <span className="px-2 py-0.5 rounded bg-status-amber/15 text-status-amber border border-status-amber/30 text-[11px] font-bold">
-                  {stats.today.arrivals.length}
+                <span className="px-2 py-0.5 rounded-full bg-status-amber/15 text-status-amber text-[11px] font-bold">
+                  {stats.today.arrivals.length} Live
                 </span>
               </div>
 
@@ -305,8 +334,8 @@ export default async function DashboardPage({
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink-muted">
                 <span>Departures Scheduled</span>
-                <span className="px-2 py-0.5 rounded bg-status-blue/15 text-status-blue border border-status-blue/30 text-[11px] font-bold">
-                  {stats.today.departures.length}
+                <span className="px-2 py-0.5 rounded-full bg-status-blue/15 text-status-blue text-[11px] font-bold">
+                  {stats.today.departures.length} Due
                 </span>
               </div>
 

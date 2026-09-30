@@ -17,9 +17,9 @@ interface GuestDetailPageProps {
 }
 
 export default async function GuestDetailPage({ params }: GuestDetailPageProps) {
-  const [guest, allBookings, documents, staff] = await Promise.all([
+  const [guest, guestBookings, documents, staff] = await Promise.all([
     getGuestById(params.guestId),
-    getBookings(),
+    getBookings({ guestId: params.guestId }),
     getGuestDocuments(params.guestId),
     getCurrentStaff(),
   ]);
@@ -29,7 +29,6 @@ export default async function GuestDetailPage({ params }: GuestDetailPageProps) 
   }
 
   const canManage = staff?.role === 'owner' || staff?.role === 'manager';
-  const guestBookings = allBookings.filter((b) => b.guest_id === guest.id);
   const validBookings = guestBookings.filter((b) => b.booking_status !== 'cancelled');
   const totalStays = guest.total_stays ?? validBookings.length;
   const totalSpent = guest.total_spent ?? validBookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);

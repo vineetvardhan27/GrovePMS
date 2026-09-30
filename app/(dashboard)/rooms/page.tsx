@@ -1,3 +1,5 @@
+import { BedDouble } from 'lucide-react';
+import PageHeader from '../../../components/shared/PageHeader';
 import { getRooms, getRoomCategories, getPropertyResources } from '../../../lib/rooms/queries';
 import RoomGrid from '../../../components/rooms/RoomGrid';
 
@@ -12,12 +14,11 @@ export default async function RoomsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-display text-brand-forest">Room Chart</h1>
-        <p className="text-body text-ink-muted">
-          Live room availability, housekeeping, and property inventory
-        </p>
-      </div>
+      <PageHeader
+        title="Room Chart"
+        description="Live room availability, housekeeping, and property inventory"
+        icon={BedDouble}
+      />
 
       <RoomGrid
         initialRooms={rooms}

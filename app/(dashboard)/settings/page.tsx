@@ -1,5 +1,6 @@
-import { Percent, BedDouble, ArrowRight, UtensilsCrossed, Users } from 'lucide-react';
+import { Percent, BedDouble, ArrowRight, UtensilsCrossed, Users, Settings } from 'lucide-react';
 import Link from 'next/link';
+import PageHeader from '../../../components/shared/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,15 +159,11 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="pb-1 border-b border-border-subtle/70">
-        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest tracking-tight">
-          Settings
-        </h1>
-        <p className="text-xs sm:text-sm text-ink-muted mt-1 font-normal">
-          Property, staff credentials, and operational configuration
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Property, staff credentials, and operational configuration"
+        icon={Settings}
+      />
 
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">

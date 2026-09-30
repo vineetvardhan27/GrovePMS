@@ -48,6 +48,7 @@ export const getStaffResolution = serverCache(async function getStaffResolution(
           id,
           name,
           slug,
+          logo_url,
           settings
         )
       `)
@@ -74,6 +75,7 @@ export const getStaffResolution = serverCache(async function getStaffResolution(
             id,
             name,
             slug,
+            logo_url,
             settings
           )
         `)
@@ -112,7 +114,7 @@ export const getStaffResolution = serverCache(async function getStaffResolution(
     if (!hotelData && staffRow.hotel_id) {
       const { data: directHotel, error: hotelErr } = await supabase
         .from('hotels')
-        .select('id, name, slug, settings')
+        .select('id, name, slug, logo_url, settings')
         .eq('id', staffRow.hotel_id)
         .maybeSingle();
 
@@ -128,8 +130,7 @@ export const getStaffResolution = serverCache(async function getStaffResolution(
 
     const hotelName = hotelData?.name || 'Hotel Greenery View';
     const hotelSlug = hotelData?.slug || 'hotel-greenery-view';
-    const hotelSettings = hotelData?.settings || null;
-    const hotelLogoUrl = (hotelSettings as any)?.logo_url || (hotelData as any)?.logo_url || null;
+    const hotelLogoUrl = hotelData?.logo_url || hotelData?.settings?.logo_url || null;
 
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[AUTH] Hotel found: ${Boolean(hotelData)}`);
@@ -145,7 +146,6 @@ export const getStaffResolution = serverCache(async function getStaffResolution(
       hotel_name: hotelName,
       hotel_slug: hotelSlug,
       hotel_logo_url: hotelLogoUrl,
-      hotel_settings: hotelSettings,
       is_active: staffRow.is_active,
     };
 

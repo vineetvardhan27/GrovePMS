@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '../../lib/supabase/client';
 import { RoomWithCategory } from '../../lib/rooms/types';
 import { RoomStatus, HousekeepingStatus } from '../../lib/types/database.types';
@@ -19,25 +19,33 @@ export default function RealtimeRoomSubscriber({
 }: RealtimeRoomSubscriberProps) {
   const [isConnected, setIsConnected] = useState(true);
 
+  // Keep a stable ref to latest onRoomUpdated callback without triggering effect re-runs
+  const onRoomUpdatedRef = useRef(onRoomUpdated);
+  useEffect(() => {
+    onRoomUpdatedRef.current = onRoomUpdated;
+  }, [onRoomUpdated]);
+
   useEffect(() => {
     // 1. Setup cross-tab BroadcastChannel for instantaneous updates
     let broadcast: BroadcastChannel | null = null;
-    try {
-      broadcast = new BroadcastChannel('hotel_pms_rooms_sync');
-      broadcast.onmessage = (event) => {
-        if (event.data?.type === 'ROOM_STATUS_UPDATED') {
-          const { roomId, status, housekeeping_status } = event.data;
-          onRoomUpdated(roomId, status, housekeeping_status);
-        }
-      };
-    } catch {
-      // BroadcastChannel not supported in environment
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        broadcast = new BroadcastChannel('hotel_pms_rooms_sync');
+        broadcast.onmessage = (event) => {
+          if (event.data?.type === 'ROOM_STATUS_UPDATED') {
+            const { roomId, status, housekeeping_status } = event.data;
+            onRoomUpdatedRef.current(roomId, status, housekeeping_status);
+          }
+        };
+      } catch (err) {
+        console.warn('BroadcastChannel initialization error:', err);
+      }
     }
 
-    // 2. Setup Supabase Realtime postgres_changes subscription
+    // 2. Setup Supabase Realtime postgres_changes subscription (Single stable channel)
     let channel: any = null;
+    const supabase = createClient();
     try {
-      const supabase = createClient();
       channel = supabase
         .channel('rooms-realtime-channel')
         .on(
@@ -50,34 +58,35 @@ export default function RealtimeRoomSubscriber({
           (payload: any) => {
             const newRow = payload.new;
             if (newRow && newRow.id) {
-              onRoomUpdated(newRow.id, newRow.status, newRow.housekeeping_status);
+              onRoomUpdatedRef.current(newRow.id, newRow.status, newRow.housekeeping_status);
             }
           }
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             setIsConnected(true);
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            // Local fallback active
-            setIsConnected(true);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            setIsConnected(false);
           }
         });
-    } catch {
-      setIsConnected(true);
+    } catch (err) {
+      console.warn('Supabase Realtime subscription error:', err);
+      setIsConnected(false);
     }
 
     return () => {
-      if (broadcast) broadcast.close();
+      if (broadcast) {
+        try {
+          broadcast.close();
+        } catch {}
+      }
       if (channel) {
         try {
-          const supabase = createClient();
           supabase.removeChannel(channel);
-        } catch {
-          // Cleanup
-        }
+        } catch {}
       }
     };
-  }, [onRoomUpdated]);
+  }, []); // Stable: runs ONCE on mount, cleans up ONCE on unmount
 
   return (
     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-tiny font-medium bg-status-green/10 text-status-green border border-status-green/20">

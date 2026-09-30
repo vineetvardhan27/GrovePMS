@@ -116,7 +116,7 @@ export async function getFBMenuItemsWithDetails(hotelId?: string): Promise<FBMen
 }
 
 /**
- * Helper to fetch all raw bills with fallback to hotel.settings.fb_bills
+ * Helper to fetch all bills from public.fb_bills relational table
  */
 async function getRawFBBills(hotelId?: string): Promise<FBBillRecord[]> {
   try {
@@ -124,51 +124,43 @@ async function getRawFBBills(hotelId?: string): Promise<FBBillRecord[]> {
     const activeHotelId = hotelId || staff?.hotel_id;
     const supabase = createClient();
 
-    // 1. Try public.fb_bills table
-    try {
-      let q = supabase
-        .from('fb_bills')
-        .select(`
-          *,
-          orders:fb_orders(*),
-          items:fb_order_items(*),
-          payments:fb_payments(*),
-          audit_logs:fb_audit_logs(*)
-        `)
-        .order('created_at', { ascending: false });
+    let q = supabase
+      .from('fb_bills')
+      .select(`
+        *,
+        orders:fb_orders(*),
+        items:fb_order_items(*),
+        payments:fb_payments(*),
+        audit_logs:fb_audit_logs(*)
+      `)
+      .order('created_at', { ascending: false });
 
-      if (activeHotelId) {
-        q = q.eq('hotel_id', activeHotelId);
-      }
+    if (activeHotelId) {
+      q = q.eq('hotel_id', activeHotelId);
+    }
 
-      const { data, error } = await q;
-      if (!error && data && data.length > 0) {
-        return (data as any[]).map((r) => ({
-          ...r,
-          subtotal: Number(r.subtotal || 0),
-          discount_value: Number(r.discount_value || 0),
-          discount_amount: Number(r.discount_amount || 0),
-          taxable_amount: Number(r.taxable_amount || 0),
-          cgst_amount: Number(r.cgst_amount || 0),
-          sgst_amount: Number(r.sgst_amount || 0),
-          gst_amount: Number(r.gst_amount || 0),
-          grand_total: Number(r.grand_total || 0),
-          total_paid: Number(r.total_paid || 0),
-          balance_due: Number(r.balance_due || 0),
-          orders: (r.orders || []).map((o: any) => ({
-            ...o,
-            items: (r.items || []).filter((i: any) => i.order_id === o.id).map((i: any) => ({
-              ...i,
-              quantity: Number(i.quantity),
-              unit_price_snapshot: Number(i.unit_price_snapshot),
-              base_price_snapshot: Number(i.base_price_snapshot || 0),
-              gst_rate: Number(i.gst_rate || 0),
-              taxable_amount: Number(i.taxable_amount || 0),
-              gst_amount: Number(i.gst_amount || 0),
-              total_amount: Number(i.total_amount || 0),
-            })),
-          })),
-          items: (r.items || []).map((i: any) => ({
+    const { data, error } = await q;
+    if (error) {
+      console.error('Error fetching fb_bills from database:', error.message);
+      return [];
+    }
+
+    if (data) {
+      return (data as any[]).map((r) => ({
+        ...r,
+        subtotal: Number(r.subtotal || 0),
+        discount_value: Number(r.discount_value || 0),
+        discount_amount: Number(r.discount_amount || 0),
+        taxable_amount: Number(r.taxable_amount || 0),
+        cgst_amount: Number(r.cgst_amount || 0),
+        sgst_amount: Number(r.sgst_amount || 0),
+        gst_amount: Number(r.gst_amount || 0),
+        grand_total: Number(r.grand_total || 0),
+        total_paid: Number(r.total_paid || 0),
+        balance_due: Number(r.balance_due || 0),
+        orders: (r.orders || []).map((o: any) => ({
+          ...o,
+          items: (r.items || []).filter((i: any) => i.order_id === o.id).map((i: any) => ({
             ...i,
             quantity: Number(i.quantity),
             unit_price_snapshot: Number(i.unit_price_snapshot),
@@ -178,39 +170,8 @@ async function getRawFBBills(hotelId?: string): Promise<FBBillRecord[]> {
             gst_amount: Number(i.gst_amount || 0),
             total_amount: Number(i.total_amount || 0),
           })),
-          payments: (r.payments || []).map((p: any) => ({
-            ...p,
-            amount: Number(p.amount),
-          })),
-        }));
-      }
-    } catch {
-      // Table fallback
-    }
-
-    // 2. Fallback to hotel.settings.fb_bills
-    const targetHotelId = activeHotelId || 'a0000000-0000-0000-0000-000000000001';
-    const { data: hotel } = await (supabase.from('hotels') as any)
-      .select('settings')
-      .eq('id', targetHotelId)
-      .maybeSingle();
-
-    const storedBills: FBBillRecord[] = (hotel?.settings?.fb_bills as FBBillRecord[]) || [];
-    return storedBills.map((r) => ({
-      ...r,
-      subtotal: Number(r.subtotal || 0),
-      discount_value: Number(r.discount_value || 0),
-      discount_amount: Number(r.discount_amount || 0),
-      taxable_amount: Number(r.taxable_amount || 0),
-      cgst_amount: Number(r.cgst_amount || 0),
-      sgst_amount: Number(r.sgst_amount || 0),
-      gst_amount: Number(r.gst_amount || 0),
-      grand_total: Number(r.grand_total || 0),
-      total_paid: Number(r.total_paid || 0),
-      balance_due: Number(r.balance_due || 0),
-      orders: (r.orders || []).map((o) => ({
-        ...o,
-        items: (o.items || []).map((i) => ({
+        })),
+        items: (r.items || []).map((i: any) => ({
           ...i,
           quantity: Number(i.quantity),
           unit_price_snapshot: Number(i.unit_price_snapshot),
@@ -220,26 +181,16 @@ async function getRawFBBills(hotelId?: string): Promise<FBBillRecord[]> {
           gst_amount: Number(i.gst_amount || 0),
           total_amount: Number(i.total_amount || 0),
         })),
-      })),
-      items: (r.items || []).map((i) => ({
-        ...i,
-        quantity: Number(i.quantity),
-        unit_price_snapshot: Number(i.unit_price_snapshot),
-        base_price_snapshot: Number(i.base_price_snapshot || 0),
-        gst_rate: Number(i.gst_rate || 0),
-        taxable_amount: Number(i.taxable_amount || 0),
-        gst_amount: Number(i.gst_amount || 0),
-        total_amount: Number(i.total_amount || 0),
-      })),
-      payments: (r.payments || []).map((p) => ({
-        ...p,
-        amount: Number(p.amount),
-      })),
-    }));
+        payments: (r.payments || []).map((p: any) => ({
+          ...p,
+          amount: Number(p.amount),
+        })),
+      }));
+    }
   } catch (err) {
     console.error('getRawFBBills error:', err);
-    return [];
   }
+  return [];
 }
 
 /**

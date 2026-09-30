@@ -1,12 +1,62 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { updateSession } from './lib/supabase/middleware';
+import { updateSession, hasAuthCookie, createRedirectResponse } from './lib/supabase/middleware';
 import { StaffRole } from './lib/types/database.types';
 import { hasRoutePermission } from './lib/auth/permissions';
+
+/**
+ * Public routes that do not require authentication:
+ * Marketing, information, policy, and FAQ pages.
+ */
+const PUBLIC_ROUTES = [
+  '/',
+  '/about',
+  '/pricing',
+  '/contact',
+  '/compliance',
+  '/privacy-policy',
+  '/terms',
+  '/security',
+  '/cookie-policy',
+  '/faqs',
+];
+
+/**
+ * Protected routes requiring authenticated staff session:
+ * Dashboard, operational modules, PMS management, settings.
+ */
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/rooms',
+  '/bookings',
+  '/checkin',
+  '/checkout',
+  '/billing',
+  '/guests',
+  '/payments',
+  '/food-beverage',
+  '/inventory',
+  '/banquet',
+  '/reports',
+  '/settings',
+];
+
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === '/') return true;
+  return PUBLIC_ROUTES.some(
+    (route) => route !== '/' && (pathname === route || pathname.startsWith(`${route}/`))
+  );
+}
+
+function isProtectedRoute(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Static files and internal Next.js assets bypass middleware
+  // 1. Static files, API routes, and internal Next.js assets bypass middleware
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -16,52 +66,69 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Redirect /sign-in to /login
+  // 2. Normalize legacy /sign-in route to canonical /login
   if (pathname === '/sign-in') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Update supabase session and check auth
-  const { response, user } = await updateSession(request);
+  const hasSession = hasAuthCookie(request);
 
-  const isAuthenticated = Boolean(user);
-  const activeRole: StaffRole = (user?.user_metadata?.role as StaffRole) || 'reception';
+  // 3. Optimization for Public Routes:
+  // If request is for a public marketing/info page and has no auth session cookie,
+  // immediately continue without calling Supabase auth or updateSession().
+  if (isPublicRoute(pathname)) {
+    if (!hasSession) {
+      return NextResponse.next();
+    }
+    // If a session cookie is present, refresh tokens in the background to keep cookies valid
+    const { response } = await updateSession(request);
+    return response;
+  }
 
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/sign-in');
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register-hotel');
+  const isProtected = isProtectedRoute(pathname);
 
-  const isDashboardRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/rooms') ||
-    pathname.startsWith('/bookings') ||
-    pathname.startsWith('/checkin') ||
-    pathname.startsWith('/checkout') ||
-    pathname.startsWith('/billing') ||
-    pathname.startsWith('/guests') ||
-    pathname.startsWith('/payments') ||
-    pathname.startsWith('/inventory') ||
-    pathname.startsWith('/banquet') ||
-    pathname.startsWith('/reports') ||
-    pathname.startsWith('/settings');
-
-  // 1. If unauthenticated and accessing protected routes -> redirect to login
-  if (!isAuthenticated && isDashboardRoute) {
+  // 4. Fast-path for unauthenticated users accessing protected routes:
+  // Without any session cookie, the user cannot be authenticated.
+  // Redirect immediately to login without incurring remote Supabase auth overhead.
+  if (!hasSession && isProtected) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectedFrom', pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // 2. If authenticated and accessing login -> redirect to dashboard
-  if (isAuthenticated && isAuthRoute) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    return NextResponse.redirect(redirectUrl);
+  // 5. Fast-path for unauthenticated users accessing auth routes (e.g. /login, /register-hotel):
+  // Allow immediate rendering without Supabase auth calls.
+  if (!hasSession && isAuthRoute) {
+    return NextResponse.next();
   }
 
-  // 3. If authenticated, enforce Role-Based Route Gating per PRD §5 & Architecture.md §4
-  if (isAuthenticated && isDashboardRoute) {
+  // 6. For routes requiring verification (or when auth session cookies are present):
+  // Validate session against Supabase Auth, refreshing tokens if needed.
+  const { response, user } = await updateSession(request);
+  const isAuthenticated = Boolean(user);
+  const activeRole: StaffRole = (user?.user_metadata?.role as StaffRole) || 'reception';
+
+  // 7. If unauthenticated after token validation and accessing a protected route -> redirect to login
+  if (!isAuthenticated && isProtected) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/login';
+    redirectUrl.searchParams.set('redirectedFrom', pathname);
+    return createRedirectResponse(redirectUrl, response);
+  }
+
+  // 8. If authenticated and accessing login or sign-in -> redirect to dashboard
+  if (isAuthenticated && (pathname.startsWith('/login') || pathname === '/sign-in')) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return createRedirectResponse(redirectUrl, response);
+  }
+
+  // 9. If authenticated, enforce Role-Based Route Gating per PRD §5 & Architecture.md §4
+  if (isAuthenticated && isProtected) {
     const isAllowed = hasRoutePermission(activeRole, pathname);
 
     if (!isAllowed) {
@@ -69,7 +136,7 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/dashboard';
       redirectUrl.searchParams.set('access_denied', 'true');
-      return NextResponse.redirect(redirectUrl);
+      return createRedirectResponse(redirectUrl, response);
     }
   }
 
@@ -87,3 +154,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
+

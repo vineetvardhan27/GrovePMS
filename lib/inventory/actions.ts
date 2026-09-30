@@ -3,6 +3,7 @@
 import { createClient } from '../supabase/server';
 import { getCurrentStaff } from '../auth/session';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 import {
   SaveInventoryItemInput,
   RecordPurchaseInput,
@@ -83,66 +84,41 @@ export async function saveInventoryItemAction(input: SaveInventoryItemInput): Pr
       updated_at: nowIso,
     };
 
-    // 1. Try public.inventory_items
-    try {
-      await (supabase.from('inventory_items') as any).upsert({
-        id: itemRecord.id,
-        hotel_id: staff.hotel_id,
-        name: itemRecord.name,
-        category: itemRecord.category,
-        unit: itemRecord.unit,
-        item_type: itemRecord.item_type,
-        inventory_type: itemRecord.inventory_type,
-        current_stock: itemRecord.current_stock,
-        in_use_stock: itemRecord.in_use_stock,
-        damaged_stock: itemRecord.damaged_stock,
-        lost_stock: itemRecord.lost_stock,
-        repair_stock: itemRecord.repair_stock,
-        retired_stock: itemRecord.retired_stock,
-        minimum_stock: itemRecord.minimum_stock,
-        target_stock: itemRecord.target_stock,
-        cost_per_unit: itemRecord.cost_per_unit,
-        replacement_target_year: itemRecord.replacement_target_year,
-        is_active: itemRecord.is_active,
-        updated_at: nowIso,
-      });
-    } catch {
-      // Fallback
+    // Persist directly to public.inventory_items table
+    const { error: upsertErr } = await (supabase.from('inventory_items') as any).upsert({
+      id: itemRecord.id,
+      hotel_id: staff.hotel_id,
+      name: itemRecord.name,
+      category: itemRecord.category,
+      unit: itemRecord.unit,
+      item_type: itemRecord.item_type,
+      inventory_type: itemRecord.inventory_type,
+      current_stock: itemRecord.current_stock,
+      in_use_stock: itemRecord.in_use_stock,
+      damaged_stock: itemRecord.damaged_stock,
+      lost_stock: itemRecord.lost_stock,
+      repair_stock: itemRecord.repair_stock,
+      retired_stock: itemRecord.retired_stock,
+      minimum_stock: itemRecord.minimum_stock,
+      target_stock: itemRecord.target_stock,
+      cost_per_unit: itemRecord.cost_per_unit,
+      replacement_target_year: itemRecord.replacement_target_year,
+      is_active: itemRecord.is_active,
+      updated_at: nowIso,
+    });
+
+    if (upsertErr) {
+      console.error('Error saving inventory item to table:', upsertErr);
+      return { error: `Failed to save inventory item: ${upsertErr.message}` };
     }
-
-    // 2. Fallback to hotel.settings.inventory_items
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || [];
-    const existingIdx = existingItems.findIndex(
-      (i) => i.id === itemId || i.name.toLowerCase() === input.name.trim().toLowerCase()
-    );
-
-    let updatedItems: InventoryItem[];
-    if (existingIdx >= 0) {
-      updatedItems = [...existingItems];
-      updatedItems[existingIdx] = {
-        ...existingItems[existingIdx],
-        ...itemRecord,
-        current_stock: input.current_stock !== undefined ? Number(input.current_stock) : existingItems[existingIdx].current_stock,
-      };
-    } else {
-      updatedItems = [...existingItems, itemRecord];
-    }
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-        },
-      })
-      .eq('id', staff.hotel_id);
 
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return { success: true, item: itemRecord };
   } catch (err: any) {
     console.error('saveInventoryItemAction error:', err);
@@ -216,55 +192,34 @@ export async function recordPurchaseAction(input: RecordPurchaseInput): Promise<
       created_at: nowIso,
     };
 
-    // 1. Try public.inventory_transactions & public.inventory_items table
-    try {
-      await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
-      await (supabase.from('inventory_items') as any)
-        .update({
-          current_stock: newStock,
-          cost_per_unit: unitPrice > 0 ? unitPrice : targetItem.cost_per_unit,
-          updated_at: nowIso,
-        })
-        .eq('id', targetItem.id)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
+    // Persist directly to public.inventory_transactions & public.inventory_items tables
+    const { error: txErr } = await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
+    if (txErr) {
+      console.error('Error inserting inventory transaction:', txErr);
+      return { error: `Failed to record transaction: ${txErr.message}` };
     }
 
-    // 2. Fallback to hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || items;
-    const existingTransactions: InventoryTransaction[] =
-      (hotelData?.settings?.inventory_transactions as InventoryTransaction[]) || [];
-
-    const updatedItems = existingItems.map((item) =>
-      item.id === targetItem.id
-        ? {
-            ...item,
-            current_stock: newStock,
-            cost_per_unit: unitPrice > 0 ? unitPrice : item.cost_per_unit,
-            updated_at: nowIso,
-          }
-        : item
-    );
-
-    const updatedTransactions = [transactionRecord, ...existingTransactions];
-
-    await (supabase.from('hotels') as any)
+    const { error: itemErr } = await (supabase.from('inventory_items') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-          inventory_transactions: updatedTransactions,
-        },
+        current_stock: newStock,
+        cost_per_unit: unitPrice > 0 ? unitPrice : targetItem.cost_per_unit,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', targetItem.id)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (itemErr) {
+      console.error('Error updating inventory item stock:', itemErr);
+      return { error: `Failed to update inventory stock: ${itemErr.message}` };
+    }
 
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return { success: true, transaction: transactionRecord, new_stock: newStock };
   } catch (err: any) {
     console.error('recordPurchaseAction error:', err);
@@ -343,44 +298,30 @@ export async function recordUsageAction(input: RecordUsageInput): Promise<{
       created_at: nowIso,
     };
 
-    // 1. Try public.inventory_transactions & public.inventory_items table
-    try {
-      await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
-      await (supabase.from('inventory_items') as any)
-        .update({ current_stock: newStock, updated_at: nowIso })
-        .eq('id', targetItem.id)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
+    // Persist directly to public.inventory_transactions & public.inventory_items tables
+    const { error: txErr } = await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
+    if (txErr) {
+      console.error('Error inserting inventory usage transaction:', txErr);
+      return { error: `Failed to record usage: ${txErr.message}` };
     }
 
-    // 2. Fallback to hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
+    const { error: itemErr } = await (supabase.from('inventory_items') as any)
+      .update({ current_stock: newStock, updated_at: nowIso })
+      .eq('id', targetItem.id)
+      .eq('hotel_id', staff.hotel_id);
 
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || items;
-    const existingTransactions: InventoryTransaction[] =
-      (hotelData?.settings?.inventory_transactions as InventoryTransaction[]) || [];
-
-    const updatedItems = existingItems.map((item) =>
-      item.id === targetItem.id ? { ...item, current_stock: newStock, updated_at: nowIso } : item
-    );
-
-    const updatedTransactions = [transactionRecord, ...existingTransactions];
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-          inventory_transactions: updatedTransactions,
-        },
-      })
-      .eq('id', staff.hotel_id);
+    if (itemErr) {
+      console.error('Error updating inventory item stock:', itemErr);
+      return { error: `Failed to update item stock: ${itemErr.message}` };
+    }
 
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return { success: true, transaction: transactionRecord, new_stock: newStock };
   } catch (err: any) {
     console.error('recordUsageAction error:', err);
@@ -473,57 +414,35 @@ export async function reportDamageAction(input: ReportDamageInput): Promise<{
       created_at: nowIso,
     };
 
-    // 1. Try public.inventory_transactions & public.inventory_items table
-    try {
-      await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
-      await (supabase.from('inventory_items') as any)
-        .update({
-          current_stock: newAvailable,
-          in_use_stock: newInUse,
-          damaged_stock: newDamaged,
-          updated_at: nowIso,
-        })
-        .eq('id', targetItem.id)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
+    // Persist directly to public.inventory_transactions & public.inventory_items tables
+    const { error: txErr } = await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
+    if (txErr) {
+      console.error('Error inserting inventory damage transaction:', txErr);
+      return { error: `Failed to report damage: ${txErr.message}` };
     }
 
-    // 2. Fallback to hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || items;
-    const existingTransactions: InventoryTransaction[] =
-      (hotelData?.settings?.inventory_transactions as InventoryTransaction[]) || [];
-
-    const updatedItems = existingItems.map((item) =>
-      item.id === targetItem.id
-        ? {
-            ...item,
-            current_stock: newAvailable,
-            in_use_stock: newInUse,
-            damaged_stock: newDamaged,
-            updated_at: nowIso,
-          }
-        : item
-    );
-
-    const updatedTransactions = [transactionRecord, ...existingTransactions];
-
-    await (supabase.from('hotels') as any)
+    const { error: itemErr } = await (supabase.from('inventory_items') as any)
       .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-          inventory_transactions: updatedTransactions,
-        },
+        current_stock: newAvailable,
+        in_use_stock: newInUse,
+        damaged_stock: newDamaged,
+        updated_at: nowIso,
       })
-      .eq('id', staff.hotel_id);
+      .eq('id', targetItem.id)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (itemErr) {
+      console.error('Error updating inventory item asset stocks:', itemErr);
+      return { error: `Failed to update asset stock: ${itemErr.message}` };
+    }
 
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return {
       success: true,
       transaction: transactionRecord,
@@ -560,37 +479,23 @@ export async function toggleInventoryItemStatusAction(
     const supabase = createClient();
     const nowIso = new Date().toISOString();
 
-    // 1. Try public.inventory_items
-    try {
-      await (supabase.from('inventory_items') as any)
-        .update({ is_active: isActive, updated_at: nowIso })
-        .eq('id', itemId)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
+    const { error: updErr } = await (supabase.from('inventory_items') as any)
+      .update({ is_active: isActive, updated_at: nowIso })
+      .eq('id', itemId)
+      .eq('hotel_id', staff.hotel_id);
+
+    if (updErr) {
+      console.error('Error toggling inventory item status:', updErr);
+      return { error: `Failed to toggle item status: ${updErr.message}` };
     }
 
-    // 2. Fallback to hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
-
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || [];
-    const updatedItems = existingItems.map((item) =>
-      item.id === itemId ? { ...item, is_active: isActive, updated_at: nowIso } : item
-    );
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-        },
-      })
-      .eq('id', staff.hotel_id);
-
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return { success: true };
   } catch (err: any) {
     console.error('toggleInventoryItemStatusAction error:', err);
@@ -663,44 +568,30 @@ export async function recordWastageAction(input: ReportWasteInput): Promise<{
       created_at: nowIso,
     };
 
-    // 1. Try public.inventory_transactions & public.inventory_items table
-    try {
-      await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
-      await (supabase.from('inventory_items') as any)
-        .update({ current_stock: newStock, updated_at: nowIso })
-        .eq('id', targetItem.id)
-        .eq('hotel_id', staff.hotel_id);
-    } catch {
-      // Fallback
+    // Persist directly to public.inventory_transactions & public.inventory_items tables
+    const { error: txErr } = await (supabase.from('inventory_transactions') as any).insert(transactionRecord);
+    if (txErr) {
+      console.error('Error inserting inventory wastage transaction:', txErr);
+      return { error: `Failed to record wastage: ${txErr.message}` };
     }
 
-    // 2. Fallback to hotel.settings
-    const { data: hotelData } = await (supabase.from('hotels') as any)
-      .select('id, settings')
-      .eq('id', staff.hotel_id)
-      .single();
+    const { error: itemErr } = await (supabase.from('inventory_items') as any)
+      .update({ current_stock: newStock, updated_at: nowIso })
+      .eq('id', targetItem.id)
+      .eq('hotel_id', staff.hotel_id);
 
-    const existingItems: InventoryItem[] = (hotelData?.settings?.inventory_items as InventoryItem[]) || items;
-    const existingTransactions: InventoryTransaction[] =
-      (hotelData?.settings?.inventory_transactions as InventoryTransaction[]) || [];
-
-    const updatedItems = existingItems.map((item) =>
-      item.id === targetItem.id ? { ...item, current_stock: newStock, updated_at: nowIso } : item
-    );
-
-    const updatedTransactions = [transactionRecord, ...existingTransactions];
-
-    await (supabase.from('hotels') as any)
-      .update({
-        settings: {
-          ...(hotelData?.settings || {}),
-          inventory_items: updatedItems,
-          inventory_transactions: updatedTransactions,
-        },
-      })
-      .eq('id', staff.hotel_id);
+    if (itemErr) {
+      console.error('Error updating inventory item stock:', itemErr);
+      return { error: `Failed to update item stock: ${itemErr.message}` };
+    }
 
     revalidatePath('/inventory');
+    invalidateCacheByTags([
+      CACHE_CONFIG.INVENTORY.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'inventory',
+      'reports',
+    ]);
     return { success: true, transaction: transactionRecord, new_stock: newStock };
   } catch (err: any) {
     console.error('recordWastageAction error:', err);

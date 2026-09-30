@@ -17,6 +17,7 @@ import {
 import { Guest } from '../guests/queries';
 import { RoomWithCategory } from '../rooms/queries';
 import { revalidatePath } from 'next/cache';
+import { invalidateCacheByTags, CACHE_CONFIG } from '../cache/serverCache';
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -373,6 +374,13 @@ export async function createBookingAction(input: CreateBookingInput): Promise<Bo
   revalidatePath('/payments');
   revalidatePath('/billing');
 
+  invalidateCacheByTags([
+    CACHE_CONFIG.DASHBOARD_STATS.tag(hotelId),
+    CACHE_CONFIG.REPORTS.tag(hotelId),
+    'dashboard-stats',
+    'reports',
+  ]);
+
   const finalBookingDetails: BookingWithDetails = {
     ...bookingInserted,
     guest: guestData,
@@ -451,6 +459,13 @@ export async function cancelBookingAction(bookingId: string) {
     revalidatePath('/rooms');
     revalidatePath('/dashboard');
     revalidatePath('/billing');
+
+    invalidateCacheByTags([
+      CACHE_CONFIG.DASHBOARD_STATS.tag(staff.hotel_id),
+      CACHE_CONFIG.REPORTS.tag(staff.hotel_id),
+      'dashboard-stats',
+      'reports',
+    ]);
 
     return { success: true };
   } catch (err: any) {

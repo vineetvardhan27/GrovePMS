@@ -1,76 +1,240 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useTransition, useCallback, useRef, useDeferredValue } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Users,
   Search,
   Phone,
   Mail,
   MapPin,
-  FileText,
   Sparkles,
   Calendar,
   CreditCard,
   X,
   History,
+  Loader2,
 } from 'lucide-react';
 import type { Guest } from '../../lib/guests/queries';
 import type { BookingWithDetails } from '../../lib/bookings/queries';
+import type { PaginatedResult } from '../../lib/types/pagination';
+import { getGuestBookingsAction } from '../../lib/guests/actions';
 import { formatCurrency } from '../../lib/utils/currency';
 import { formatDate } from '../../lib/utils/dates';
 import { maskIdNumber } from '../../lib/utils/idExtractor';
+import PaginationControls from '../shared/PaginationControls';
 
 interface GuestDirectoryProps {
-  initialGuests: Guest[];
-  bookings: BookingWithDetails[];
+  initialGuests?: Guest[];
+  bookings?: BookingWithDetails[];
+  initialData?: PaginatedResult<Guest>;
+  initialSearch?: string;
 }
 
-export default function GuestDirectory({ initialGuests, bookings }: GuestDirectoryProps) {
-  const [guests, setGuests] = useState<Guest[]>(initialGuests);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+export default function GuestDirectory({
+  initialGuests,
+  bookings: initialBookings = [],
+  initialData,
+  initialSearch = '',
+}: GuestDirectoryProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  // Normalize initial paginated data
+  const paginatedData: PaginatedResult<Guest> = initialData || {
+    data: initialGuests || [],
+    page: 1,
+    pageSize: 50,
+    totalCount: initialGuests ? initialGuests.length : null,
+    totalPages: initialGuests ? Math.max(1, Math.ceil(initialGuests.length / 50)) : 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  };
+
+  const [guests, setGuests] = useState<Guest[]>(paginatedData.data);
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const deferredSearch = useDeferredValue(searchQuery);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const latestRequestSeqRef = useRef<number>(0);
+
+  // Guest Stays Drawer state
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [guestBookings, setGuestBookings] = useState<BookingWithDetails[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState<boolean>(false);
 
-  const filteredGuests = useMemo(() => {
-    if (!searchQuery.trim()) return guests;
-    const s = searchQuery.trim().toLowerCase();
-    return guests.filter(
-      (g) =>
-        g.full_name.toLowerCase().includes(s) ||
-        g.phone.toLowerCase().includes(s) ||
-        (g.email && g.email.toLowerCase().includes(s)) ||
-        (g.address && g.address.toLowerCase().includes(s))
-    );
-  }, [guests, searchQuery]);
+  // Sync guests when server data changes
+  useEffect(() => {
+    setGuests(paginatedData.data);
+  }, [paginatedData.data]);
 
-  // Guest's bookings
-  const guestBookings = useMemo(() => {
-    if (!selectedGuest) return [];
-    return bookings.filter((b) => b.guest_id === selectedGuest.id);
-  }, [bookings, selectedGuest]);
+  // Sync search state if URL searchParams changed externally
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchQuery(urlSearch);
+  }, [searchParams]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Navigate with new query params (uses router.replace for search/filters to avoid polluting history)
+  const updateQueryParams = useCallback(
+    (updates: Record<string, string | number | null>, options?: { replace?: boolean }) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === '' || (key === 'page' && value === 1)) {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+
+      const queryString = params.toString();
+      const targetUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      const shouldReplace = options?.replace ?? true;
+
+      startTransition(() => {
+        if (shouldReplace) {
+          router.replace(targetUrl, { scroll: false });
+        } else {
+          router.push(targetUrl, { scroll: false });
+        }
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
+  // Immediate search execution (cancels obsolete pending timers)
+  const executeSearchImmediate = useCallback(
+    (query: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      latestRequestSeqRef.current += 1;
+      updateQueryParams({ search: query.trim(), page: 1 }, { replace: true });
+    },
+    [updateQueryParams]
+  );
+
+  // Debounced search handler: typing is immediate in UI, API call debounced ~250ms
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    // Cancel any obsolete pending debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    // If completely cleared, apply immediately without 250ms wait
+    if (!val.trim()) {
+      executeSearchImmediate('');
+      return;
+    }
+
+    // Schedule debounced search (~250ms)
+    debounceTimerRef.current = setTimeout(() => {
+      executeSearchImmediate(val);
+    }, 250);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    executeSearchImmediate('');
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSearchImmediate(searchQuery);
+    } else if (e.key === 'Escape') {
+      handleClearSearch();
+    }
+  };
+
+  // Page change
+  const handlePageChange = (newPage: number) => {
+    updateQueryParams({ page: newPage }, { replace: false });
+  };
+
+  // Open Stays Drawer and fetch guest bookings on demand
+  const handleOpenStays = async (guest: Guest) => {
+    setSelectedGuest(guest);
+    setIsLoadingBookings(true);
+    setGuestBookings([]);
+
+    try {
+      // If bookings were pre-passed, filter from them; otherwise fetch on-demand
+      if (initialBookings.length > 0) {
+        setGuestBookings(initialBookings.filter((b) => b.guest_id === guest.id));
+      } else {
+        const fetchedBookings = await getGuestBookingsAction(guest.id);
+        setGuestBookings(fetchedBookings);
+      }
+    } catch (err) {
+      console.error('Error fetching stays for guest:', err);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Search Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-border-subtle">
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          {isPending ? (
+            <Loader2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brand-forest animate-spin" />
+          ) : (
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          )}
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, phone, city..."
-            className="w-full pl-9 pr-4 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Search by name, phone, email..."
+            className="w-full pl-9 pr-8 py-2 bg-white border border-border-subtle rounded-lg text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-brand-forest min-h-touch"
+            aria-label="Search guests"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink p-1 cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         <p className="text-xs text-ink-muted">
-          Showing <strong>{filteredGuests.length}</strong> guest records
+          Showing <strong>{guests.length}</strong> of{' '}
+          <strong>{paginatedData.totalCount ?? guests.length}</strong> guest records
         </p>
       </div>
 
       {/* Guest Table */}
-      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-lg border border-border-subtle shadow-2xs overflow-hidden relative">
+        {/* Subtle loading indicator on top of table */}
+        {isPending && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-forest/20 overflow-hidden z-20">
+            <div className="w-full h-full bg-brand-forest animate-pulse" />
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-brand-sand-dark/60 border-b border-border-subtle text-ink font-semibold uppercase tracking-wider">
@@ -85,14 +249,14 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {filteredGuests.length === 0 ? (
+              {guests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-ink-muted">
-                    No guest profiles found.
+                    No guest profiles found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filteredGuests.map((guest) => {
+                guests.map((guest) => {
                   const isRepeat = (guest.total_stays || 0) >= 2;
 
                   return (
@@ -158,7 +322,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                           </Link>
                           <button
                             type="button"
-                            onClick={() => setSelectedGuest(guest)}
+                            onClick={() => handleOpenStays(guest)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-subtle bg-brand-sand hover:bg-brand-sand-dark text-ink text-xs font-medium transition-colors cursor-pointer"
                           >
                             <History className="w-3.5 h-3.5" />
@@ -171,10 +335,22 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                 })
               )}
             </tbody>
-
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      <PaginationControls
+        currentPage={paginatedData.page}
+        totalPages={paginatedData.totalPages}
+        totalCount={paginatedData.totalCount}
+        pageSize={paginatedData.pageSize}
+        hasNextPage={paginatedData.hasNextPage}
+        hasPrevPage={paginatedData.hasPrevPage}
+        onPageChange={handlePageChange}
+        itemLabel="guest profiles"
+        isLoading={isPending}
+      />
 
       {/* Guest Stay History Drawer */}
       {selectedGuest && (
@@ -219,7 +395,12 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                 {/* Stays History */}
                 <div>
                   <h4 className="font-bold text-ink text-sm mb-3">Reservation History</h4>
-                  {guestBookings.length === 0 ? (
+                  {isLoadingBookings ? (
+                    <div className="p-8 flex flex-col items-center justify-center gap-2 text-ink-muted">
+                      <Loader2 className="w-6 h-6 animate-spin text-brand-forest" />
+                      <span>Loading stay history...</span>
+                    </div>
+                  ) : guestBookings.length === 0 ? (
                     <div className="p-4 bg-brand-sand/30 rounded-lg text-center text-ink-muted">
                       No past bookings logged in the system.
                     </div>
@@ -238,7 +419,7 @@ export default function GuestDirectory({ initialGuests, bookings }: GuestDirecto
                           </div>
 
                           <div className="flex items-center justify-between text-ink-muted">
-                            <span>Room {b.room.room_number} ({b.room.category.name})</span>
+                            <span>Room {b.room?.room_number || '—'} ({b.room?.category?.name || 'Standard'})</span>
                             <span className="font-bold text-ink tabular-nums">{formatCurrency(b.total_amount)}</span>
                           </div>
 

@@ -25,6 +25,7 @@ import {
 import { FBDashboardSummary, FBBillRecord, FBOrderRecord } from '../../lib/fb/types';
 import { FB_ROUTES } from '../../lib/fb/routes';
 import { formatCurrency } from '../../lib/utils/currency';
+import AnimatedKpiValue from '../shared/AnimatedKpiValue';
 
 interface FBDashboardProps {
   summary: FBDashboardSummary;
@@ -44,11 +45,11 @@ export default function FBDashboard({
   return (
     <div className="space-y-6">
       {/* 1. Header & Summary Metric Cards */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border-subtle">
         <div>
-          <h1 className="text-2xl font-bold font-serif text-ink tracking-tight flex items-center gap-2.5">
-            <UtensilsCrossed className="w-6 h-6 text-brand-forest" />
-            Food & Beverage Overview
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-ink tracking-tight flex items-center gap-2.5">
+            <UtensilsCrossed className="w-6 h-6 text-brand-forest shrink-0" aria-hidden="true" />
+            <span>Food &amp; Beverage Overview</span>
           </h1>
           <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
             Real-time restaurant sales, room service orders, kitchen tickets, and billing control.
@@ -58,7 +59,7 @@ export default function FBDashboard({
         <div className="flex items-center gap-2">
           <Link
             href={FB_ROUTES.NEW_BILL}
-            className="pms-btn-primary flex items-center gap-2 shadow-sm text-sm"
+            className="pms-btn-primary flex items-center gap-2 shadow-xs text-xs sm:text-sm"
           >
             <Plus className="w-4 h-4" />
             <span>+ New Food Bill</span>
@@ -66,119 +67,159 @@ export default function FBDashboard({
         </div>
       </div>
 
-      {/* 2. Top Summary KPI Cards */}
+      {/* 2. Top Summary KPI Cards with Staggered Entrance and Hover Lift */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {/* Today's Sales */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '0ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
-            <span>Today's Sales</span>
-            <TrendingUp className="w-3.5 h-3.5 text-brand-forest" />
+            <span>Today&apos;s Sales</span>
+            <div className="p-1 rounded bg-brand-forest/10 text-brand-forest transition-transform duration-200 group-hover:scale-105">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-ink tabular-nums">
-              {formatCurrency(summary.today_sales)}
+            <div className="text-base sm:text-lg font-bold font-serif text-ink tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.today_sales} type="currency" />
             </div>
-            <div className="text-[11px] text-brand-forest font-medium mt-0.5">
+            <div className="text-[11px] text-brand-forest font-medium mt-0.5 truncate">
               {summary.today_orders_count} Order{summary.today_orders_count === 1 ? '' : 's'}
             </div>
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '40ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Pending</span>
-            <AlertCircle className="w-3.5 h-3.5 text-status-amber" />
+            <div className="p-1 rounded bg-status-amber/15 text-status-amber transition-transform duration-200 group-hover:scale-105">
+              <AlertCircle className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-status-amber tabular-nums">
-              {formatCurrency(summary.pending_payments_amount)}
+            <div className="text-base sm:text-lg font-bold font-serif text-status-amber tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.pending_payments_amount} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Unsettled bills</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Unsettled bills</div>
           </div>
         </div>
 
         {/* Room Charges */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '80ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Room Charges</span>
-            <Building className="w-3.5 h-3.5 text-status-blue" />
+            <div className="p-1 rounded bg-status-blue/15 text-status-blue transition-transform duration-200 group-hover:scale-105">
+              <Building className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-status-blue tabular-nums">
-              {formatCurrency(summary.room_charges_amount)}
+            <div className="text-base sm:text-lg font-bold font-serif text-status-blue tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.room_charges_amount} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Posted to folios</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Posted to folios</div>
           </div>
         </div>
 
         {/* Walk-in Sales */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '120ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Walk-in Sales</span>
-            <UserCheck className="w-3.5 h-3.5 text-status-green" />
+            <div className="p-1 rounded bg-status-green/15 text-status-green transition-transform duration-200 group-hover:scale-105">
+              <UserCheck className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-status-green tabular-nums">
-              {formatCurrency(summary.walkin_sales_amount)}
+            <div className="text-base sm:text-lg font-bold font-serif text-status-green tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.walkin_sales_amount} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Direct restaurant</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Direct dining</div>
           </div>
         </div>
 
         {/* Breakfast Sales */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '160ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Breakfast</span>
-            <Coffee className="w-3.5 h-3.5 text-amber-600" />
+            <div className="p-1 rounded bg-amber-500/15 text-amber-600 transition-transform duration-200 group-hover:scale-105">
+              <Coffee className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-ink tabular-nums">
-              {formatCurrency(summary.breakfast_sales)}
+            <div className="text-base sm:text-lg font-bold font-serif text-ink tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.breakfast_sales} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Morning orders</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Morning orders</div>
           </div>
         </div>
 
         {/* Lunch Sales */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '200ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Lunch</span>
-            <Sun className="w-3.5 h-3.5 text-amber-500" />
+            <div className="p-1 rounded bg-amber-600/15 text-amber-500 transition-transform duration-200 group-hover:scale-105">
+              <Sun className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-ink tabular-nums">
-              {formatCurrency(summary.lunch_sales)}
+            <div className="text-base sm:text-lg font-bold font-serif text-ink tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.lunch_sales} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Afternoon orders</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Afternoon meals</div>
           </div>
         </div>
 
         {/* Dinner Sales */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '240ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
             <span>Dinner</span>
-            <Moon className="w-3.5 h-3.5 text-indigo-500" />
+            <div className="p-1 rounded bg-indigo-500/15 text-indigo-500 transition-transform duration-200 group-hover:scale-105">
+              <Moon className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-ink tabular-nums">
-              {formatCurrency(summary.dinner_sales)}
+            <div className="text-base sm:text-lg font-bold font-serif text-ink tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.dinner_sales} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">Evening orders</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">Evening service</div>
           </div>
         </div>
 
         {/* Snacks & Drinks */}
-        <div className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between">
+        <div
+          className="bg-white p-3.5 rounded-xl border border-border-subtle shadow-card flex flex-col justify-between transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-xs pms-card-entrance group cursor-default"
+          style={{ animationDelay: '280ms' }}
+        >
           <div className="flex items-center justify-between text-ink-muted text-xs font-medium">
-            <span>Snacks & Bev</span>
-            <Cookie className="w-3.5 h-3.5 text-teal-600" />
+            <span>Snacks &amp; Bev</span>
+            <div className="p-1 rounded bg-teal-600/15 text-teal-600 transition-transform duration-200 group-hover:scale-105">
+              <Cookie className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div className="mt-2">
-            <div className="text-lg font-bold text-ink tabular-nums">
-              {formatCurrency(summary.snacks_sales + summary.beverages_sales)}
+            <div className="text-base sm:text-lg font-bold font-serif text-ink tabular-nums leading-tight">
+              <AnimatedKpiValue value={summary.snacks_sales + summary.beverages_sales} type="currency" />
             </div>
-            <div className="text-[11px] text-ink-muted mt-0.5">All-day items</div>
+            <div className="text-[11px] text-ink-muted mt-0.5 truncate">All-day items</div>
           </div>
         </div>
       </div>

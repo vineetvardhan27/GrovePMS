@@ -8,6 +8,7 @@ import {
   PropertyResource,
   getEffectiveRoomRates,
 } from './types';
+import { getOrSetCache, CACHE_CONFIG } from '../cache/serverCache';
 
 const serverCache = typeof (React as any).cache === 'function' ? (React as any).cache : (<T extends (...args: any[]) => any>(fn: T): T => fn);
 
@@ -286,28 +287,39 @@ export const DEFAULT_BANQUET_HALL: PropertyResource = {
 };
 
 export const getRoomCategories = serverCache(async function getRoomCategories(hotelId?: string): Promise<RoomCategory[]> {
-  try {
-    const staff = await getCurrentStaff();
-    const activeHotelId = hotelId || staff?.hotel_id;
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-    const supabase = createClient();
-    let query = supabase.from('room_categories').select('*').order('base_rate', { ascending: true });
-    if (activeHotelId) {
-      query = query.eq('hotel_id', activeHotelId);
+  const { data } = await getOrSetCache(
+    {
+      key: ['room-categories', activeHotelId],
+      tags: [CACHE_CONFIG.ROOM_CATEGORIES.tag(activeHotelId), 'room-categories'],
+      ttlSeconds: CACHE_CONFIG.ROOM_CATEGORIES.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
+        let query = supabase.from('room_categories').select('*').order('base_rate', { ascending: true });
+        if (activeHotelId) {
+          query = query.eq('hotel_id', activeHotelId);
+        }
+        const { data, error } = await query;
+        if (error) {
+          console.error('Error fetching room categories from Supabase:', error.message);
+          return activeHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_ROOM_CATEGORIES : [];
+        }
+        if (data) {
+          if (data.length > 0) return data as RoomCategory[];
+          if (activeHotelId && activeHotelId !== 'a0000000-0000-0000-0000-000000000001') return [];
+        }
+      } catch (err) {
+        console.error('Failed to connect to Supabase for room categories:', err);
+      }
+      return DEFAULT_ROOM_CATEGORIES;
     }
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching room categories from Supabase:', error.message);
-      return activeHotelId === 'a0000000-0000-0000-0000-000000000001' ? DEFAULT_ROOM_CATEGORIES : [];
-    }
-    if (data) {
-      if (data.length > 0) return data as RoomCategory[];
-      if (activeHotelId && activeHotelId !== 'a0000000-0000-0000-0000-000000000001') return [];
-    }
-  } catch (err) {
-    console.error('Failed to connect to Supabase for room categories:', err);
-  }
-  return DEFAULT_ROOM_CATEGORIES;
+  );
+
+  return data;
 });
 
 export const getRooms = serverCache(async function getRooms(hotelId?: string): Promise<RoomWithCategory[]> {
@@ -351,22 +363,32 @@ export const getRooms = serverCache(async function getRooms(hotelId?: string): P
 });
 
 export const getPropertyResources = serverCache(async function getPropertyResources(hotelId?: string): Promise<PropertyResource[]> {
-  try {
-    const staff = await getCurrentStaff();
-    const activeHotelId = hotelId || staff?.hotel_id;
+  const staff = await getCurrentStaff();
+  const activeHotelId = hotelId || staff?.hotel_id || 'a0000000-0000-0000-0000-000000000001';
 
-    const supabase = createClient();
-    let query = supabase.from('property_resources').select('*').order('created_at', { ascending: true });
-    if (activeHotelId) {
-      query = query.eq('hotel_id', activeHotelId);
+  const { data } = await getOrSetCache(
+    {
+      key: ['property-resources', activeHotelId],
+      tags: [CACHE_CONFIG.ROOMS_CONFIG.tag(activeHotelId), 'property-resources'],
+      ttlSeconds: CACHE_CONFIG.ROOMS_CONFIG.ttl,
+    },
+    async () => {
+      try {
+        const supabase = createClient();
+        let query = supabase.from('property_resources').select('*').order('created_at', { ascending: true });
+        if (activeHotelId) {
+          query = query.eq('hotel_id', activeHotelId);
+        }
+        const { data, error } = await query;
+        if (!error && data && data.length > 0) {
+          return data as PropertyResource[];
+        }
+      } catch (err) {
+        // Return fallback
+      }
+      return [DEFAULT_BANQUET_HALL];
     }
-    const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      return data as PropertyResource[];
-    }
-  } catch (err) {
-    // Return fallback
-  }
+  );
 
-  return [DEFAULT_BANQUET_HALL];
+  return data;
 });

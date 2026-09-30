@@ -1,25 +1,36 @@
-import { getGuests } from '../../../lib/guests/queries';
-import { getBookings } from '../../../lib/bookings/queries';
+import { Users } from 'lucide-react';
+import PageHeader from '../../../components/shared/PageHeader';
+import { getGuestsPaginated } from '../../../lib/guests/queries';
 import GuestDirectory from '../../../components/guests/GuestDirectory';
 
 export const dynamic = 'force-dynamic';
 
-export default async function GuestsPage() {
-  const [guests, bookings] = await Promise.all([
-    getGuests(),
-    getBookings(),
-  ]);
+interface GuestsPageProps {
+  searchParams?: {
+    page?: string;
+    search?: string;
+  };
+}
+
+export default async function GuestsPage({ searchParams }: GuestsPageProps) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const searchQuery = searchParams?.search || '';
+
+  const paginatedGuests = await getGuestsPaginated({
+    page,
+    pageSize: 50,
+    query: searchQuery,
+  });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-display text-brand-forest">Guest Database</h1>
-        <p className="text-body text-ink-muted">
-          Search guest profiles, contact records, and repeat stay history
-        </p>
-      </div>
+      <PageHeader
+        title="Guest Directory"
+        description="Search guest profiles, contact records, and repeat stay history"
+        icon={Users}
+      />
 
-      <GuestDirectory initialGuests={guests} bookings={bookings} />
+      <GuestDirectory initialData={paginatedGuests} initialSearch={searchQuery} />
     </div>
   );
 }
