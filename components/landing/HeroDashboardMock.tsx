@@ -113,7 +113,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
       }}
     >
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl border border-border-subtle overflow-hidden text-left"
+        className="bg-white rounded-2xl sm:rounded-3xl border border-border-subtle overflow-hidden text-left relative"
         style={{
           boxShadow: inView || reduced
             ? '0 24px 80px -12px rgba(31, 61, 58, 0.15), 0 8px 24px -8px rgba(0, 0, 0, 0.08)'
@@ -121,8 +121,14 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
           transition: 'box-shadow 1s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
+        {/* Subtle architectural grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+          aria-hidden="true"
+        />
+
         {/* Product Chrome Top Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-border-subtle bg-brand-sand/30">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b border-border-subtle bg-brand-sand/30 relative z-10">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded overflow-hidden bg-white border border-border-subtle flex items-center justify-center shrink-0">
               <Image
@@ -147,7 +153,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
         </div>
 
         {/* Dashboard Body */}
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 relative z-10">
           {/* KPI Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
             {[

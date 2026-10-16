@@ -230,12 +230,27 @@ export default function LandingPageClient({
   const ctaSection = useInView();
 
   return (
-    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 overflow-x-hidden">
+    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 overflow-x-hidden relative">
+      {/* Page-wide subtle architectural grid texture */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture"
+        aria-hidden="true"
+      />
+
       {/* ───────────── 1. STICKY NAVBAR ───────────── */}
       <PublicHeader staffName={initialStaffName} staffRole={initialStaffRole} />
 
       {/* ───────────── 2. HERO SECTION ───────────── */}
-      <section ref={hero.ref} className="pt-24 sm:pt-32 pb-8 sm:pb-12" id="platform">
+      <section ref={hero.ref} className="pt-24 sm:pt-32 pb-8 sm:pb-12 relative overflow-hidden" id="platform">
+        {/* Subtle hospitality architectural background highlight */}
+        <div
+          className="absolute inset-0 pointer-events-none -z-10"
+          aria-hidden="true"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 25%, rgba(31, 61, 58, 0.035) 0%, transparent 68%)',
+          }}
+        />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Badge */}
           <FadeIn inView={hero.inView} delay={0} direction="up" distance={12}>
@@ -310,10 +325,15 @@ export default function LandingPageClient({
       {/* ───────────── 4. MODULES GRID ───────────── */}
       <section
         ref={modulesSection.ref}
-        className="bg-white border-y border-border-subtle py-16 sm:py-24"
+        className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden"
         id="features"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Subtle architectural grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          aria-hidden="true"
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={modulesSection.inView} delay={0}>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
@@ -387,8 +407,13 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 6. DASHBOARD SHOWCASE & ANALYTICS ───────────── */}
-      <section ref={dashboardShowcase.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={dashboardShowcase.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden">
+        {/* Subtle architectural grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          aria-hidden="true"
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={dashboardShowcase.inView} delay={0}>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
@@ -476,25 +501,32 @@ export default function LandingPageClient({
                 <StaggerItem key={hotel.name} index={i}>
                   <FloatingCard
                     hoverY={-4}
-                    className="bg-white rounded-2xl border border-border-subtle p-4 sm:p-5 text-center"
+                    className="bg-white rounded-2xl border border-border-subtle p-4 sm:p-5 text-center relative overflow-hidden"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-brand-forest flex items-center justify-center mx-auto mb-2.5 shadow-xs">
-                      <Building2 className="w-5 h-5 text-white" />
-                    </div>
-                    <h4 className="font-serif font-bold text-sm text-ink">{hotel.name}</h4>
-                    <p className="text-[11px] text-ink-muted mt-0.5">{hotel.location}</p>
-                    <div className="mt-3 space-y-1 text-[11px] text-ink-muted pt-2.5 border-t border-border-subtle/60">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Crown className="w-3 h-3 text-brand-forest" />
-                        <span>Owner</span>
+                    {/* Subtle architectural grid texture */}
+                    <div
+                      className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+                      aria-hidden="true"
+                    />
+                    <div className="relative z-10">
+                      <div className="w-10 h-10 rounded-xl bg-brand-forest flex items-center justify-center mx-auto mb-2.5 shadow-xs">
+                        <Building2 className="w-5 h-5 text-white" />
                       </div>
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Users className="w-3 h-3 text-brand-forest/70" />
-                        <span>Staff</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-1.5">
-                        <Lock className="w-3 h-3 text-brand-forest/50" />
-                        <span>Isolated Data</span>
+                      <h4 className="font-serif font-bold text-sm text-ink">{hotel.name}</h4>
+                      <p className="text-[11px] text-ink-muted mt-0.5">{hotel.location}</p>
+                      <div className="mt-3 space-y-1 text-[11px] text-ink-muted pt-2.5 border-t border-border-subtle/60">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Crown className="w-3 h-3 text-brand-forest" />
+                          <span>Owner</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Users className="w-3 h-3 text-brand-forest/70" />
+                          <span>Staff</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Lock className="w-3 h-3 text-brand-forest/50" />
+                          <span>Isolated Data</span>
+                        </div>
                       </div>
                     </div>
                   </FloatingCard>
@@ -506,8 +538,13 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 8. SECURITY & DATA PROTECTION TRUST SECTION ───────────── */}
-      <section ref={securityTrustSection.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={securityTrustSection.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden">
+        {/* Subtle architectural grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          aria-hidden="true"
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={securityTrustSection.inView} delay={0}>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-3">
@@ -602,32 +639,39 @@ export default function LandingPageClient({
             inView={customerExample.inView}
             delay={120}
             scale={true}
-            className="max-w-lg mx-auto bg-white rounded-3xl border border-border-subtle p-5 sm:p-8 text-center shadow-xs"
+            className="max-w-lg mx-auto bg-white rounded-3xl border border-border-subtle p-5 sm:p-8 text-center shadow-xs relative overflow-hidden"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-forest text-white flex items-center justify-center mx-auto mb-3.5 shadow-sm">
-              <Hotel className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <h3 className="font-serif font-bold text-lg sm:text-xl text-brand-forest">Hotel Greenery View</h3>
-            <div className="flex items-center justify-center gap-1.5 mt-1 text-xs sm:text-sm text-ink-muted">
-              <MapPin className="w-3.5 h-3.5 text-brand-forest/70" />
-              <span>Gangtok, Sikkim</span>
-            </div>
-            <p className="text-xs text-ink-muted mt-3 leading-relaxed max-w-sm mx-auto">
-              A boutique hospitality property in the foothills of the Eastern Himalayas, running its
-              complete operations — front desk, billing, housekeeping, F&B, and reporting — on {PRODUCT_NAME}.
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-4 border-t border-border-subtle">
-              <div>
-                <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">19</span>
-                <span className="block text-[10px] text-ink-muted">Rooms</span>
+            {/* Subtle architectural grid texture */}
+            <div
+              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+              aria-hidden="true"
+            />
+            <div className="relative z-10">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-forest text-white flex items-center justify-center mx-auto mb-3.5 shadow-sm">
+                <Hotel className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <div>
-                <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">4</span>
-                <span className="block text-[10px] text-ink-muted">Staff Roles</span>
+              <h3 className="font-serif font-bold text-lg sm:text-xl text-brand-forest">Hotel Greenery View</h3>
+              <div className="flex items-center justify-center gap-1.5 mt-1 text-xs sm:text-sm text-ink-muted">
+                <MapPin className="w-3.5 h-3.5 text-brand-forest/70" />
+                <span>Gangtok, Sikkim</span>
               </div>
-              <div>
-                <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">12</span>
-                <span className="block text-[10px] text-ink-muted">Modules</span>
+              <p className="text-xs text-ink-muted mt-3 leading-relaxed max-w-sm mx-auto">
+                A boutique hospitality property in the foothills of the Eastern Himalayas, running its
+                complete operations — front desk, billing, housekeeping, F&B, and reporting — on {PRODUCT_NAME}.
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-4 border-t border-border-subtle">
+                <div>
+                  <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">19</span>
+                  <span className="block text-[10px] text-ink-muted">Rooms</span>
+                </div>
+                <div>
+                  <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">4</span>
+                  <span className="block text-[10px] text-ink-muted">Staff Roles</span>
+                </div>
+                <div>
+                  <span className="text-base sm:text-lg font-serif font-bold text-brand-forest">12</span>
+                  <span className="block text-[10px] text-ink-muted">Modules</span>
+                </div>
               </div>
             </div>
           </FadeIn>
@@ -635,8 +679,13 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 10. FAQ SECTION ───────────── */}
-      <section ref={faqSection.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24" id="faqs">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section ref={faqSection.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden" id="faqs">
+        {/* Subtle architectural grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          aria-hidden="true"
+        />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={faqSection.inView} delay={0}>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-3">

@@ -886,8 +886,14 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
           {/* ══════════════════════════════════════════════
            * LEFT COLUMN: PRICING SIDE
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white">
-            <div>
+          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white relative overflow-hidden">
+            {/* Subtle architectural grid texture */}
+            <div
+              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+              aria-hidden="true"
+            />
+
+            <div className="relative z-10">
               {/* Top label & active status */}
               <div
                 className="flex items-center justify-between pb-3.5 border-b border-border-subtle/70"
@@ -953,7 +959,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
 
               {/* ONBOARDING INSET PANEL (Second Layer Surface) */}
               <div
-                className="mt-5 p-4 rounded-[18px] bg-[#F8F5EE] border border-border-subtle transition-all duration-200 hover:border-brand-forest/30"
+                className="mt-5 p-4 rounded-[18px] bg-[#F8F5EE] border border-border-subtle transition-all duration-200 hover:border-brand-forest/30 relative overflow-hidden"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(12px)',
@@ -962,17 +968,24 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                     : 'opacity 550ms cubic-bezier(0.16, 1, 0.3, 1) 250ms, transform 550ms cubic-bezier(0.16, 1, 0.3, 1) 250ms',
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-forest">
-                    WHITE-GLOVE SETUP
-                  </span>
-                  <span className="font-serif font-bold text-brand-forest text-base sm:text-lg tabular-nums">
-                    ₹10,000
-                  </span>
+                {/* Architectural grid texture */}
+                <div
+                  className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+                  aria-hidden="true"
+                />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-forest">
+                      WHITE-GLOVE SETUP
+                    </span>
+                    <span className="font-serif font-bold text-brand-forest text-base sm:text-lg tabular-nums">
+                      ₹10,000
+                    </span>
+                  </div>
+                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                    White-glove property setup, GST mapping, room configuration, and staff training handled by our team.
+                  </p>
                 </div>
-                <p className="text-xs text-ink-muted mt-1 leading-relaxed">
-                  White-glove property setup, GST mapping, room configuration, and staff training handled by our team.
-                </p>
               </div>
 
               {/* CORE FEATURES (Compact Two-Column Feature List) */}
@@ -1006,7 +1019,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
 
             {/* PHYSICAL 3D BUTTON & WALKTHROUGH LINK */}
             <div
-              className="pt-5 border-t border-border-subtle/70 space-y-2.5"
+              className="pt-5 border-t border-border-subtle/70 space-y-2.5 relative z-10"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateY(0)' : 'translateY(12px)',
@@ -1037,8 +1050,14 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
           {/* ══════════════════════════════════════════════
            * RIGHT COLUMN: ONBOARDING PANEL (WARMER SURFACE)
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-[#F8F5EE] border-t lg:border-t-0 lg:border-l border-border-subtle/80 flex flex-col justify-between space-y-6">
-            <div>
+          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-[#F8F5EE] border-t lg:border-t-0 lg:border-l border-border-subtle/80 flex flex-col justify-between space-y-6 relative overflow-hidden">
+            {/* Subtle architectural grid texture */}
+            <div
+              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+              aria-hidden="true"
+            />
+
+            <div className="relative z-10">
               {/* Top Header */}
               <div
                 className="flex items-center justify-between pb-3.5 border-b border-border-subtle/70"
@@ -1084,7 +1103,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 {onboardingServices.map((service, i) => (
                   <div
                     key={service.step}
-                    className="group relative p-3.5 sm:p-4 rounded-[16px] bg-white border border-border-subtle/80 shadow-[0_1px_3px_rgba(31,61,58,0.04),0_3px_8px_rgba(31,61,58,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-forest/35 hover:shadow-[0_4px_12px_rgba(31,61,58,0.08)] cursor-default"
+                    className="group relative p-3.5 sm:p-4 rounded-[16px] bg-white border border-border-subtle/80 shadow-[0_1px_3px_rgba(31,61,58,0.04),0_3px_8px_rgba(31,61,58,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-forest/35 hover:shadow-[0_4px_12px_rgba(31,61,58,0.08)] cursor-default overflow-hidden"
                     style={{
                       opacity: inView || reduced ? 1 : 0,
                       transform: inView || reduced ? 'translateY(0)' : 'translateY(14px)',
@@ -1093,7 +1112,12 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                         : `opacity 450ms cubic-bezier(0.16, 1, 0.3, 1) ${260 + i * 65}ms, transform 450ms cubic-bezier(0.16, 1, 0.3, 1) ${260 + i * 65}ms`,
                     }}
                   >
-                    <div className="flex items-start gap-2.5">
+                    {/* Architectural grid texture */}
+                    <div
+                      className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+                      aria-hidden="true"
+                    />
+                    <div className="relative z-10 flex items-start gap-2.5">
                       <div className="w-5 h-5 rounded-[7px] bg-status-green/10 text-status-green flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-status-green group-hover:text-white transition-all duration-200">
                         <Check className="w-3 h-3 stroke-[2.5] transition-transform duration-200 group-hover:scale-105" />
                       </div>
@@ -1118,7 +1142,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
 
             {/* READY TO GO LIVE AREA (STATUS PILL + TURNAROUND) */}
             <div
-              className="pt-5 border-t border-border-subtle/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              className="pt-5 border-t border-border-subtle/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateY(0)' : 'translateY(8px)',
@@ -1184,11 +1208,17 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
   const isHeroVisible = hero.inView || isMounted;
 
   return (
-    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 overflow-x-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 overflow-x-hidden flex flex-col justify-between relative">
+      {/* Page-wide subtle architectural grid texture */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture"
+        aria-hidden="true"
+      />
+
       {/* Existing Public Navigation (Fixed Header with proper z-index) */}
       <PublicHeader staffName={staffName} staffRole={staffRole} />
 
-      <main className="w-full flex-1">
+      <main className="w-full flex-1 relative z-[1]">
         {/* ═══════════════════════════════════════════════════════
          * SECTION 1 — HERO SECTION
          * ═══════════════════════════════════════════════════════ */}
@@ -1202,19 +1232,9 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
             aria-hidden="true"
             style={{
               background:
-                'radial-gradient(ellipse at 50% 20%, rgba(31, 61, 58, 0.05) 0%, transparent 68%)',
+                'radial-gradient(ellipse at 50% 20%, rgba(31, 61, 58, 0.035) 0%, transparent 68%)',
             }}
-          >
-            {/* Fine architectural line grid */}
-            <div
-              className="absolute inset-0 opacity-[0.028]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, #1F3D3A 1px, transparent 1px), linear-gradient(to bottom, #1F3D3A 1px, transparent 1px)',
-                backgroundSize: '56px 56px',
-              }}
-            />
-          </div>
+          />
 
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             {/* Step 1: Small editorial eyebrow label */}
@@ -1246,9 +1266,14 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
             {/* Step 4: Premium Pricing Capsule */}
             <FadeIn inView={isHeroVisible} delay={300} direction="up" distance={12} scale>
-              <div className="mt-8 sm:mt-10 inline-flex flex-col sm:flex-row items-center justify-center bg-white border border-border-subtle rounded-2xl shadow-card overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-border-subtle">
+              <div className="mt-8 sm:mt-10 inline-flex flex-col sm:flex-row items-center justify-center bg-white border border-border-subtle rounded-2xl shadow-card overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-border-subtle relative">
+                {/* Architectural grid texture */}
+                <div
+                  className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+                  aria-hidden="true"
+                />
                 {/* Monthly fee */}
-                <div className="px-8 sm:px-10 py-4 sm:py-5 flex items-baseline gap-2.5">
+                <div className="px-8 sm:px-10 py-4 sm:py-5 flex items-baseline gap-2.5 relative z-10">
                   <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight">
                     ₹999
                   </span>
@@ -1256,7 +1281,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                 </div>
 
                 {/* One-time setup & zero commission note */}
-                <div className="px-7 sm:px-9 py-3.5 sm:py-4 text-center sm:text-left bg-brand-sand/30 w-full sm:w-auto">
+                <div className="px-7 sm:px-9 py-3.5 sm:py-4 text-center sm:text-left bg-brand-sand/30 w-full sm:w-auto relative z-10">
                   <span className="text-xs sm:text-sm text-ink-muted block font-medium">
                     + <strong className="text-ink font-bold">₹10,000</strong> one-time setup
                   </span>
@@ -1973,7 +1998,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
             aria-hidden="true"
             style={{
               background:
-                'radial-gradient(ellipse at 50% 50%, rgba(31, 61, 58, 0.05) 0%, transparent 68%)',
+                'radial-gradient(ellipse at 50% 50%, rgba(31, 61, 58, 0.035) 0%, transparent 68%)',
             }}
           />
 

@@ -9,6 +9,8 @@
     --brand-forest: #1F3D3A;
     --brand-sand: #F6F2EC;
     --border-subtle: #DDD5C6;
+    --texture-opacity: 0.046;
+    --texture-grid-size: 56px;
   }
 
   html {
@@ -401,6 +403,16 @@
   .pms-quick-action:hover {
     transform: none !important;
   }
+}
+
+/* ============================================================
+ * Grove Architectural Background Grid Texture
+ * ============================================================ */
+.grove-grid-texture {
+  background-image:
+    linear-gradient(to right, rgba(31, 61, 58, var(--texture-opacity)) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 61, 58, var(--texture-opacity)) 1px, transparent 1px);
+  background-size: var(--texture-grid-size) var(--texture-grid-size);
 }
 
 /* ============================================================
