@@ -333,11 +333,25 @@
   }
 
   /* ----------------------------------------------------------
-   * SKELETON LOADERS
+   * SKELETON LOADERS & WARM SHIMMER ANIMATION
    * ---------------------------------------------------------- */
 
   .pms-skeleton {
-    @apply bg-brand-sand-dark rounded animate-pulse;
+    @apply relative overflow-hidden rounded bg-brand-sand-dark/65;
+  }
+
+  .pms-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+    animation: pmsShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
 
   /* ----------------------------------------------------------
@@ -391,6 +405,12 @@
   animation: pmsCardEntrance 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes pmsShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pms-card-entrance,
   .pms-stat-card,
@@ -402,6 +422,10 @@
   .pms-stat-card:hover,
   .pms-quick-action:hover {
     transform: none !important;
+  }
+  .pms-skeleton::after {
+    animation: none !important;
+    display: none !important;
   }
 }
 

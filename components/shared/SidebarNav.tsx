@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -36,6 +37,13 @@ interface SidebarNavProps {
 
 export default function SidebarNav({ authorizedPaths }: SidebarNavProps) {
   const pathname = usePathname();
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingPath(null);
+  }, [pathname]);
+
+  const activePath = pendingPath || pathname;
   const visibleNavItems = ALL_NAV_ITEMS.filter((item) => authorizedPaths.includes(item.href));
 
   return (
@@ -43,13 +51,18 @@ export default function SidebarNav({ authorizedPaths }: SidebarNavProps) {
       {visibleNavItems.map((item) => {
         const Icon = item.icon;
         const isActive =
-          pathname === item.href ||
-          (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
+          activePath === item.href ||
+          (item.href !== '/dashboard' && activePath.startsWith(`${item.href}/`));
 
         return (
           <Link
             key={item.name}
             href={item.href}
+            onClick={() => {
+              if (pathname !== item.href) {
+                setPendingPath(item.href);
+              }
+            }}
             className={`
               flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 min-h-touch relative group
               ${isActive
