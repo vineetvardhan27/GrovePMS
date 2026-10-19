@@ -1,0 +1,76 @@
+name: CD - Vercel Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Deployment Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Deployment Configuration
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "::error::Missing VERCEL_TOKEN! Please add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID in GitHub Repository Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Determine Target Flags
+        id: flags
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.target_env }}" = "production" ]; then
+              echo "args=--prod" >> $GITHUB_OUTPUT
+              echo "environment=Production" >> $GITHUB_OUTPUT
+            else
+              echo "args=" >> $GITHUB_OUTPUT
+              echo "environment=Preview" >> $GITHUB_OUTPUT
+            fi
+          elif [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "args=--prod" >> $GITHUB_OUTPUT
+            echo "environment=Production" >> $GITHUB_OUTPUT
+          else
+            echo "args=" >> $GITHUB_OUTPUT
+            echo "environment=Preview" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Vercel (${{ steps.flags.outputs.environment }})
+        uses: amondnet/vercel-action@v25
+        id: vercel_deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ steps.flags.outputs.args }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-comment: true
+
+      - name: Deployment Summary
+        run: |
+          echo "### 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target Environment:** ${{ steps.flags.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment URL:** ${{ steps.vercel_deploy.outputs.vercel-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

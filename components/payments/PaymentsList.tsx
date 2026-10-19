@@ -87,7 +87,7 @@ export default function PaymentsList({
             <div className="p-2 bg-status-green/15 rounded-lg">
               <Calendar className="w-4 h-4 text-status-green" />
             </div>
-            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Today's Collection</span>
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Today&apos;s Collection</span>
           </div>
           <p className="text-2xl font-serif font-bold text-brand-forest tabular-nums">{formatCurrency(todayTotal)}</p>
         </div>

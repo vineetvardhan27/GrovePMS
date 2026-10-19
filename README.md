@@ -5,6 +5,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_%26_Realtime-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![CI - Quality & Build Verification](https://github.com/vineetvardhan27/Booking_Sofware/actions/workflows/ci.yml/badge.svg)](https://github.com/vineetvardhan27/Booking_Sofware/actions/workflows/ci.yml)
+[![CD - Vercel Deployment](https://github.com/vineetvardhan27/Booking_Sofware/actions/workflows/deploy.yml/badge.svg)](https://github.com/vineetvardhan27/Booking_Sofware/actions/workflows/deploy.yml)
 
 A modern, high-performance, single-property **Property Management System (PMS) and Hotel Control Centre** engineered for [Hotel Greenery View](https://hotelgreeneryview.com). 
 
@@ -453,7 +455,38 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ## 9. Deployment & Production Operations
 
-- **Frontend Deployment**: Automated CI/CD through [Vercel](https://vercel.com). Commits to `main` automatically trigger builds and edge deployments.
+### GitHub Actions CI/CD Pipeline
+
+The project features a dual-stage automated CI/CD pipeline configured under `.github/workflows/`:
+
+#### 1. Continuous Integration (`.github/workflows/ci.yml`)
+Triggered automatically on every `push` or `pull_request` targeting `main`:
+- **Code Linting**: Strict Next.js & ESLint validation (`npm run lint`).
+- **Type Checking**: Full TypeScript compiler validation (`npm run typecheck`).
+- **Production Build Verification**: Next.js production compilation (`npm run build`) with `.next/cache` restoration to ensure zero build regressions.
+- **Security Audit**: Automated dependency vulnerability scanner (`npm audit --audit-level=high`).
+
+#### 2. Continuous Deployment (`.github/workflows/deploy.yml`)
+Automated deployments powered by Vercel:
+- **Preview Deployments**: Triggered on any Pull Request against `main`. Automatically compiles and generates an ephemeral preview URL, commenting directly on the PR.
+- **Production Deployments**: Triggered on merge/push to `main`. Deploys directly to the live production domain (`--prod`).
+- **Manual Trigger**: Supports on-demand deployments with environment selection (`production` / `preview`) via GitHub Actions `workflow_dispatch`.
+
+#### 3. Required GitHub Secrets Setup
+
+Navigate to your GitHub repository: **Settings → Secrets and variables → Actions** and add the following repository secrets:
+
+| Secret Name | Description | Where to find |
+| :--- | :--- | :--- |
+| `VERCEL_TOKEN` | Vercel Personal / Team Access Token | Vercel Dashboard → Account Settings → Tokens |
+| `VERCEL_ORG_ID` | Vercel Team / User ID | `.vercel/project.json` or Project Settings → General |
+| `VERCEL_PROJECT_ID` | Vercel Project ID | `.vercel/project.json` or Project Settings → General |
+| `NEXT_PUBLIC_SUPABASE_URL` | *(Optional)* Supabase Project URL | Supabase Dashboard → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *(Optional)* Supabase Anon Key | Supabase Dashboard → Project Settings → API |
+
+> [!TIP]
+> To quickly find your `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`, install Vercel CLI locally (`npm i -g vercel`), run `vercel link`, and inspect the generated `.vercel/project.json` file.
+
 - **Database Migrations**: Managed via the Supabase CLI:
   ```bash
   npx supabase db push

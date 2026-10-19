@@ -271,7 +271,7 @@ export default function RoomDetailDrawer({
                     {/* Remarks */}
                     {bookingInfo.remarks && (
                       <p className="text-[11px] text-ink-muted italic border-t border-black/5 pt-2">
-                        "{bookingInfo.remarks}"
+                        &quot;{bookingInfo.remarks}&quot;
                       </p>
                     )}
                   </div>

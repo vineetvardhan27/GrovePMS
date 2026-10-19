@@ -298,7 +298,7 @@ export default function SearchableInventorySelector({
             {filteredItems.length === 0 ? (
               <div className="p-6 text-center text-ink-muted space-y-2">
                 <Package className="w-7 h-7 mx-auto text-ink-muted/50" />
-                <p className="font-medium text-xs">No inventory items found matching "{searchQuery}"</p>
+                <p className="font-medium text-xs">No inventory items found matching &quot;{searchQuery}&quot;</p>
                 {searchQuery && (
                   <button
                     type="button"

@@ -41,7 +41,7 @@ export default function WastageDashboardView({
         <div className="pms-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-amber">
-              Today's Wastage
+              Today&apos;s Wastage
             </span>
             <div className="p-1 rounded bg-status-amber/10 text-status-amber">
               <Calendar className="w-3.5 h-3.5" />
@@ -57,7 +57,7 @@ export default function WastageDashboardView({
         <div className="pms-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-ink-muted mb-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-status-red">
-              This Month's Wastage
+              This Month&apos;s Wastage
             </span>
             <div className="p-1 rounded bg-status-red/10 text-status-red">
               <TrendingDown className="w-3.5 h-3.5" />

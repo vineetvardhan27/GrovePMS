@@ -353,7 +353,7 @@ export default function RegisterHotelPage() {
               <span>Primary Owner Governance</span>
             </div>
             <p>
-              This account will have full access to your hotel's PMS, including staff management, billing, reports, and hotel settings. <strong>Only one Owner account is allowed per hotel.</strong>
+              This account will have full access to your hotel&apos;s PMS, including staff management, billing, reports, and hotel settings. <strong>Only one Owner account is allowed per hotel.</strong>
             </p>
           </div>
 

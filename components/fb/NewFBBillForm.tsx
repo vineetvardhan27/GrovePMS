@@ -699,7 +699,7 @@ export default function NewFBBillForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
               {filteredMenuItems.length === 0 ? (
                 <div className="col-span-2 py-10 text-center text-xs text-ink-muted">
-                  No matching food items found for "{menuSearchQuery}".
+                  No matching food items found for &quot;{menuSearchQuery}&quot;.
                 </div>
               ) : (
                 filteredMenuItems.map((item) => {

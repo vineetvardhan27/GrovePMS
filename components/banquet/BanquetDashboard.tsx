@@ -293,7 +293,7 @@ export default function BanquetDashboard({
           style={{ animationDelay: '100ms' }}
         >
           <div className="flex items-center justify-between text-ink-muted mb-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Today's Events</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Today&apos;s Events</span>
             <Clock className={`w-3.5 h-3.5 ${summary.todays_events_count > 0 ? 'text-status-amber' : 'text-ink-muted/50'}`} />
           </div>
           <p

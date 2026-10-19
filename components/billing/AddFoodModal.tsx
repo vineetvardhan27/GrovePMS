@@ -341,7 +341,7 @@ export default function AddFoodModal({
             <div className="border border-border-subtle/80 rounded-xl max-h-44 overflow-y-auto divide-y divide-border-subtle/50 bg-white">
               {filteredItems.length === 0 ? (
                 <div className="p-4 text-center text-ink-muted space-y-1">
-                  <p className="text-xs">No food items match "{searchQuery}"</p>
+                  <p className="text-xs">No food items match &quot;{searchQuery}&quot;</p>
                   {searchQuery && (
                     <button
                       type="button"

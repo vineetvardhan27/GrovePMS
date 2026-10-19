@@ -531,7 +531,7 @@ export default function OwnerIntelligenceDashboard({ data }: OwnerIntelligenceDa
         <div className="pms-card p-4 flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between pb-2.5 border-b border-border-subtle">
             <div>
-              <h3 className="text-sm font-serif font-bold text-brand-forest leading-tight">Today's Operations</h3>
+              <h3 className="text-sm font-serif font-bold text-brand-forest leading-tight">Today&apos;s Operations</h3>
               <p className="text-[11px] text-ink-muted mt-0.5">In-house guests, arrivals, departures &amp; events</p>
             </div>
             <div className="p-1.5 bg-brand-sand rounded-lg text-brand-forest shrink-0">
