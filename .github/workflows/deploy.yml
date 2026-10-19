@@ -26,6 +26,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to Vercel
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
