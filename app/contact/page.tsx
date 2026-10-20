@@ -134,7 +134,8 @@ export default function ContactPage() {
     if (code === 'SCRIPT_LOAD_FAILED' || code === '200500' || code === '600010') {
       message = 'Verification blocked by browser. If using Brave Shields, AdBlock, or a VPN, please pause it for localhost or click Reload.';
     } else if (code === '110200') {
-      message = 'Domain not authorized for this Turnstile sitekey. Please verify Cloudflare settings.';
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+      message = `Domain "${currentHost}" is not authorized for this Turnstile site key. Please add "${currentHost}" to Allowed Domains in your Cloudflare dashboard.`;
     } else if (code === '110600' || code === '110620' || code === 'SCRIPT_LOAD_TIMEOUT') {
       message = 'Verification challenge timed out. Please check your internet connection and reload.';
     }
