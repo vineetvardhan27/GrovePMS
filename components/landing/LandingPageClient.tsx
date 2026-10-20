@@ -44,6 +44,7 @@ import { createClient } from '@/lib/supabase/client';
 import { HeroDashboardSkeleton } from './HeroDashboardMock';
 import { OperationalTimelineSkeleton } from './OperationalTimeline';
 import { DashboardShowcaseSkeleton } from './DashboardShowcaseInteractive';
+import MultiPropertyArchitecture from './MultiPropertyArchitecture';
 
 // Dynamically imported heavy interactive components (isolated from initial critical path)
 const HeroDashboard = dynamic(() => import('./HeroDashboardMock'), {
@@ -434,18 +435,18 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 7. MULTI-TENANT ARCHITECTURE ───────────── */}
-      <section ref={multiTenant.ref} className="py-16 sm:py-24">
+      <section ref={multiTenant.ref} className="py-16 sm:py-24 overflow-hidden relative" id="multi-tenant-architecture">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+          <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
             <FadeIn inView={multiTenant.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-brand-forest tracking-tight">
                 Built for Multiple Properties.
                 <br />
                 <span className="text-brand-forest-light">Isolated by Design.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={multiTenant.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2.5">
+              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
                 Every property operates in its own secure workspace. Hotel data, staff, bookings,
                 billing, reports and settings remain strictly isolated through PostgreSQL Row-Level
                 Security.
@@ -453,87 +454,8 @@ export default function LandingPageClient({
             </FadeIn>
           </div>
 
-          <div className="max-w-3xl mx-auto">
-            <FadeIn inView={multiTenant.inView} delay={150} direction="down" className="text-center mb-5">
-              <div className="inline-flex items-center gap-2.5 px-6 py-3 bg-brand-forest text-white rounded-2xl shadow-xs">
-                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="font-serif font-bold text-sm sm:text-base">{PRODUCT_NAME} Platform</span>
-              </div>
-            </FadeIn>
-
-            <div className="flex justify-center mb-5">
-              <svg width="400" height="48" viewBox="0 0 400 48" className="w-full max-w-sm">
-                <line
-                  x1="200" y1="0" x2="200" y2="24"
-                  stroke="#1F3D3A" strokeWidth="1.5"
-                  strokeDasharray="24"
-                  className="transition-all"
-                />
-                <line
-                  x1="66" y1="24" x2="334" y2="24"
-                  stroke="#1F3D3A" strokeWidth="1.5"
-                  strokeDasharray="268"
-                  className="transition-all"
-                />
-                {[66, 200, 334].map((x, i) => (
-                  <line
-                    key={i}
-                    x1={x} y1="24" x2={x} y2="48"
-                    stroke="#1F3D3A" strokeWidth="1.5"
-                    strokeDasharray="24"
-                    className="transition-all"
-                  />
-                ))}
-              </svg>
-            </div>
-
-            <StaggerContainer
-              inView={multiTenant.inView}
-              baseDelay={200}
-              staggerMs={100}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4"
-            >
-              {[
-                { name: 'Hotel Alpha', location: 'Mumbai' },
-                { name: 'Hotel Beta', location: 'Jaipur' },
-                { name: 'Hotel Gamma', location: 'Goa' },
-              ].map((hotel, i) => (
-                <StaggerItem key={hotel.name} index={i}>
-                  <FloatingCard
-                    hoverY={-4}
-                    className="bg-white rounded-2xl border border-border-subtle p-4 sm:p-5 text-center relative overflow-hidden"
-                  >
-                    {/* Subtle architectural grid texture */}
-                    <div
-                      className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
-                      aria-hidden="true"
-                    />
-                    <div className="relative z-10">
-                      <div className="w-10 h-10 rounded-xl bg-brand-forest flex items-center justify-center mx-auto mb-2.5 shadow-xs">
-                        <Building2 className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="font-serif font-bold text-sm text-ink">{hotel.name}</h4>
-                      <p className="text-[11px] text-ink-muted mt-0.5">{hotel.location}</p>
-                      <div className="mt-3 space-y-1 text-[11px] text-ink-muted pt-2.5 border-t border-border-subtle/60">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <Crown className="w-3 h-3 text-brand-forest" />
-                          <span>Owner</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1.5">
-                          <Users className="w-3 h-3 text-brand-forest/70" />
-                          <span>Staff</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1.5">
-                          <Lock className="w-3 h-3 text-brand-forest/50" />
-                          <span>Isolated Data</span>
-                        </div>
-                      </div>
-                    </div>
-                  </FloatingCard>
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-          </div>
+          {/* Enhanced Multi-Property Architecture Interactive Diagram */}
+          <MultiPropertyArchitecture inView={multiTenant.inView} />
         </div>
       </section>
 
