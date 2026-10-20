@@ -1261,6 +1261,59 @@ export interface Database {
           created_at?: string;
         };
       };
+      contact_submissions: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          subject: string;
+          message: string;
+          hotel_name: string | null;
+          phone: string | null;
+          category: string;
+          ip_address: string | null;
+          user_agent: string | null;
+          status: string;
+          delivery_provider: string | null;
+          delivery_message_id: string | null;
+          delivery_error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          subject: string;
+          message: string;
+          hotel_name?: string | null;
+          phone?: string | null;
+          category?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          status?: string;
+          delivery_provider?: string | null;
+          delivery_message_id?: string | null;
+          delivery_error?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          subject?: string;
+          message?: string;
+          hotel_name?: string | null;
+          phone?: string | null;
+          category?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          status?: string;
+          delivery_provider?: string | null;
+          delivery_message_id?: string | null;
+          delivery_error?: string | null;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
