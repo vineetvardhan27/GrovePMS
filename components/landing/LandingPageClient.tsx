@@ -416,13 +416,13 @@ export default function LandingPageClient({
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-            <FadeIn inView={dashboardShowcase.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+            <FadeIn inView={dashboardShowcase.inView} delay={0} direction="up" distance={16}>
+              <h2 className="text-[clamp(1.5rem,3.2vw+0.6rem,2.25rem)] font-serif font-bold text-brand-forest leading-tight tracking-tight">
                 See Your Property at a Glance.
               </h2>
             </FadeIn>
-            <FadeIn inView={dashboardShowcase.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2">
+            <FadeIn inView={dashboardShowcase.inView} delay={90} direction="up" distance={14}>
+              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
                 Real-time operational intelligence — occupancy, revenue, arrivals, room status, pending
                 payments, and booking activity — all on one dashboard.
               </p>
@@ -431,6 +431,27 @@ export default function LandingPageClient({
 
           {/* Heavy Animated Charts & Metric Counters (Dynamically Imported) */}
           <DashboardShowcaseInteractive inView={dashboardShowcase.inView} />
+
+          {/* Fallback for JavaScript-disabled environments */}
+          <noscript>
+            <div className="mt-4 bg-brand-sand/40 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-border-subtle">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                {[
+                  { label: 'Occupancy', val: '78%' },
+                  { label: "Today's Revenue", val: '₹86K' },
+                  { label: 'Arrivals', val: '18' },
+                  { label: 'Departures', val: '6' },
+                  { label: 'Pending Payments', val: '3' },
+                  { label: 'Available Rooms', val: '12' },
+                ].map((item) => (
+                  <div key={item.label} className="bg-white rounded-xl p-3 border border-border-subtle">
+                    <span className="text-[10px] uppercase font-bold text-ink-muted block">{item.label}</span>
+                    <div className="text-xl font-serif font-bold text-brand-forest mt-0.5">{item.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </noscript>
         </div>
       </section>
 
