@@ -377,33 +377,26 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 5. PMS WORKFLOW — Responsive Timeline ───────────── */}
-      <section ref={workflowSection.ref} className="py-16 sm:py-20" id="solutions">
+      <section ref={workflowSection.ref} className="py-16 sm:py-24" id="solutions">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={workflowSection.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+              <h2 className="text-[clamp(1.75rem,3.2vw+0.6rem,2.5rem)] font-serif font-bold text-brand-forest leading-[1.18] tracking-tight">
                 One Platform.
                 <br />
                 <span className="text-brand-forest-light">Every Operation Connected.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={workflowSection.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2">
+              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
                 From the moment a reservation is made to the final report, every step flows through one
                 system.
               </p>
             </FadeIn>
           </div>
 
-          {/* Heavy SVG Timeline (Dynamically Imported) */}
+          {/* Interactive Connected Operations Flow & Upgraded Audit-Trail Badge */}
           <OperationalTimeline inView={workflowSection.inView} />
-
-          <FadeIn inView={workflowSection.inView} delay={400} className="mt-6 sm:mt-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-xs font-semibold text-brand-forest">
-              <Activity className="w-3.5 h-3.5" />
-              <span>Every action creates a connected audit trail</span>
-            </div>
-          </FadeIn>
         </div>
       </section>
 
