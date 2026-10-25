@@ -132,25 +132,25 @@ export default function PublicHeader({
         `}
         style={{
           background: scrolled
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 253, 249, 0.50) 50%, rgba(255, 255, 255, 0.64) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 253, 249, 0.28) 50%, rgba(255, 255, 255, 0.42) 100%)',
+            ? 'var(--glass-bg-scrolled)'
+            : 'var(--glass-bg-top)',
           backdropFilter: scrolled
-            ? 'blur(30px) saturate(220%) brightness(106%) contrast(102%)'
-            : 'blur(26px) saturate(210%) brightness(107%) contrast(102%)',
+            ? 'blur(32px) saturate(220%) brightness(105%) contrast(102%)'
+            : 'blur(28px) saturate(210%) brightness(106%) contrast(102%)',
           WebkitBackdropFilter: scrolled
-            ? 'blur(30px) saturate(220%) brightness(106%) contrast(102%)'
-            : 'blur(26px) saturate(210%) brightness(107%) contrast(102%)',
+            ? 'blur(32px) saturate(220%) brightness(105%) contrast(102%)'
+            : 'blur(28px) saturate(210%) brightness(106%) contrast(102%)',
           border: scrolled
-            ? '1px solid rgba(255, 255, 255, 0.85)'
-            : '1px solid rgba(255, 255, 255, 0.72)',
+            ? '1px solid var(--glass-border-scrolled)'
+            : '1px solid var(--glass-border-top)',
           boxShadow: scrolled
-            ? '0 20px 48px -10px rgba(24, 49, 44, 0.12), 0 4px 16px -2px rgba(24, 49, 44, 0.05), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.45)'
-            : '0 16px 40px -8px rgba(24, 49, 44, 0.08), 0 4px 14px -2px rgba(24, 49, 44, 0.03), 0 0 0 1px rgba(31, 61, 58, 0.07), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.45)',
+            ? '0 20px 48px -10px rgba(15, 36, 33, 0.15), 0 4px 16px -2px rgba(15, 36, 33, 0.06), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1.5px 0 var(--glass-highlight), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.08)'
+            : '0 16px 40px -8px rgba(15, 36, 33, 0.11), 0 4px 14px -2px rgba(15, 36, 33, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1.5px 1.5px 0 var(--glass-highlight), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.06)',
         }}
       >
         {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-x-8 sm:inset-x-14 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-14 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent"
           aria-hidden="true"
         />
 
@@ -160,9 +160,9 @@ export default function PublicHeader({
           aria-hidden="true"
         />
 
-        {/* Subtle bottom ambient glass refraction */}
+        {/* Subtle bottom ambient glass refraction with dark forest green/teal depth */}
         <div
-          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent"
+          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/25 to-transparent"
           aria-hidden="true"
         />
 
@@ -227,9 +227,9 @@ export default function PublicHeader({
               </span>
               <Link
                 href="/dashboard"
-                className="relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full transition-all duration-200 flex items-center gap-1.5 shadow-[0_4px_16px_rgba(31,61,58,0.28),inset_0_1px_1.5px_rgba(255,255,255,0.45)] hover:shadow-[0_6px_24px_rgba(31,61,58,0.36),inset_0_1px_1.5px_rgba(255,255,255,0.6)] hover:-translate-y-0.5 active:translate-y-0 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:transform-none"
+                className="grove-cta-button relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full flex items-center gap-1.5 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2 focus-visible:ring-offset-white/80"
               >
-                <span className="pointer-events-none absolute inset-x-2 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
+                <span className="pointer-events-none absolute inset-x-2.5 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
                 <span>Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" />
               </Link>
@@ -244,9 +244,9 @@ export default function PublicHeader({
               </Link>
               <Link
                 href="/register-hotel"
-                className="relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full transition-all duration-200 flex items-center gap-1.5 shadow-[0_4px_16px_rgba(31,61,58,0.28),inset_0_1px_1.5px_rgba(255,255,255,0.45)] hover:shadow-[0_6px_24px_rgba(31,61,58,0.36),inset_0_1px_1.5px_rgba(255,255,255,0.6)] hover:-translate-y-0.5 active:translate-y-0 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:transform-none"
+                className="grove-cta-button relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full flex items-center gap-1.5 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2 focus-visible:ring-offset-white/80"
               >
-                <span className="pointer-events-none absolute inset-x-2 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
+                <span className="pointer-events-none absolute inset-x-2.5 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
                 <span>Get Started</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" />
               </Link>
@@ -288,11 +288,13 @@ export default function PublicHeader({
             }
           `}
           style={{
-            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 252, 246, 0.62) 100%)',
-            backdropFilter: 'blur(32px) saturate(220%) brightness(107%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(220%) brightness(107%)',
-            border: '1px solid rgba(255, 255, 255, 0.80)',
-            boxShadow: '0 20px 50px -10px rgba(24, 49, 44, 0.16), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95)',
+            background:
+              'linear-gradient(180deg, rgba(255, 255, 255, 0.40) 0%, rgba(19, 56, 52, 0.04) 50%, rgba(15, 46, 43, 0.12) 100%), linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 252, 246, 0.65) 100%)',
+            backdropFilter: 'blur(32px) saturate(220%) brightness(106%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(220%) brightness(106%)',
+            border: '1px solid rgba(255, 255, 255, 0.82)',
+            boxShadow:
+              '0 20px 50px -10px rgba(15, 36, 33, 0.18), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.06)',
             animation: 'groveMenuSlideIn 200ms ease-out',
           }}
         >
@@ -333,7 +335,7 @@ export default function PublicHeader({
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block bg-gradient-to-b from-[#28534E] to-[#1B3835] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center transition-all hover:brightness-110 shadow-xs border border-white/20"
+                  className="grove-cta-button block bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2"
                 >
                   Open Dashboard →
                 </Link>
@@ -350,7 +352,7 @@ export default function PublicHeader({
                 <Link
                   href="/register-hotel"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block bg-gradient-to-b from-[#28534E] to-[#1B3835] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center transition-all hover:brightness-110 shadow-xs border border-white/20"
+                  className="grove-cta-button block bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2"
                 >
                   Get Started →
                 </Link>
