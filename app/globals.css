@@ -4,8 +4,10 @@
 
 @layer base {
   :root {
-    --background: 40 33% 94%;  /* #F6F2EC - brand-sand */
-    --foreground: 60 5% 13%;   /* #22221F - ink */
+    --background: 40 33% 94%;
+    /* #F6F2EC - brand-sand */
+    --foreground: 60 5% 13%;
+    /* #22221F - ink */
     --brand-forest: #1F3D3A;
     --brand-sand: #F6F2EC;
     --border-subtle: #DDD5C6;
@@ -14,11 +16,11 @@
 
     /* Ultra-Premium Glassmorphic Navbar Optical Tokens */
     --glass-bg-top: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(19, 56, 52, 0.03) 45%, rgba(15, 46, 43, 0.14) 100%),
-                    linear-gradient(90deg, rgba(19, 56, 52, 0.06) 0%, transparent 15%, transparent 85%, rgba(19, 56, 52, 0.06) 100%),
-                    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 253, 249, 0.35) 50%, rgba(255, 255, 255, 0.45) 100%);
+      linear-gradient(90deg, rgba(19, 56, 52, 0.06) 0%, transparent 15%, transparent 85%, rgba(19, 56, 52, 0.06) 100%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 253, 249, 0.35) 50%, rgba(255, 255, 255, 0.45) 100%);
     --glass-bg-scrolled: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(19, 56, 52, 0.05) 45%, rgba(15, 46, 43, 0.18) 100%),
-                         linear-gradient(90deg, rgba(19, 56, 52, 0.08) 0%, transparent 15%, transparent 85%, rgba(19, 56, 52, 0.08) 100%),
-                         linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 253, 249, 0.52) 50%, rgba(255, 255, 255, 0.65) 100%);
+      linear-gradient(90deg, rgba(19, 56, 52, 0.08) 0%, transparent 15%, transparent 85%, rgba(19, 56, 52, 0.08) 100%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 253, 249, 0.52) 50%, rgba(255, 255, 255, 0.65) 100%);
     --glass-blur-top: 28px;
     --glass-blur-scrolled: 32px;
     --glass-border-top: rgba(255, 255, 255, 0.70);
@@ -75,12 +77,17 @@
   }
 
   /* Serif only for branding & page-level titles */
-  h1, h2, h3, .font-serif {
+  h1,
+  h2,
+  h3,
+  .font-serif {
     font-family: var(--font-fraunces), Georgia, serif;
   }
 
   /* Form control defaults */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-family: inherit;
   }
 
@@ -101,82 +108,42 @@
 
   /* Primary: Forest green, one per section max */
   .pms-btn-primary {
-    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
-           bg-brand-forest text-white text-sm font-medium
-           hover:bg-brand-forest-light
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-1
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-brand-forest text-white text-sm font-medium hover:bg-brand-forest-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-1 transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Secondary: White with border — supporting actions */
   .pms-btn-secondary {
-    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
-           bg-white border border-border-subtle text-ink text-sm font-medium
-           hover:bg-brand-sand
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-white border border-border-subtle text-ink text-sm font-medium hover:bg-brand-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1 transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Danger outline: report damage, cancel — restrained red */
   .pms-btn-danger-outline {
-    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
-           bg-status-red/10 border border-status-red/30 text-status-red text-sm font-medium
-           hover:bg-status-red/20
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30 focus-visible:ring-offset-1
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-status-red/10 border border-status-red/30 text-status-red text-sm font-medium hover:bg-status-red/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30 focus-visible:ring-offset-1 transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Danger filled: truly destructive operations only */
   .pms-btn-danger {
-    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg
-           bg-action-danger text-white text-sm font-medium
-           hover:bg-action-danger/90
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-danger/40 focus-visible:ring-offset-1
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-action-danger text-white text-sm font-medium hover:bg-action-danger/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-danger/40 focus-visible:ring-offset-1 transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Ghost/Icon-only: compact table row actions */
   .pms-btn-icon {
-    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
-           text-ink-muted
-           hover:bg-brand-sand hover:text-ink
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-ink-muted hover:bg-brand-sand hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   /* Icon button — danger tint */
   .pms-btn-icon-danger {
-    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
-           text-status-red bg-status-red/10
-           hover:bg-status-red/20
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-status-red bg-status-red/10 hover:bg-status-red/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-red/30 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   /* Icon button — green tint */
   .pms-btn-icon-success {
-    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
-           text-status-green bg-status-green/10
-           hover:bg-status-green/20
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-green/30
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-status-green bg-status-green/10 hover:bg-status-green/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-green/30 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   /* Icon button — amber tint */
   .pms-btn-icon-amber {
-    @apply inline-flex items-center justify-center w-8 h-8 rounded-md
-           text-status-amber bg-status-amber/10
-           hover:bg-status-amber/20
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-amber/30
-           transition-colors duration-150 cursor-pointer
-           disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-status-amber bg-status-amber/10 hover:bg-status-amber/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-amber/30 transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   /* ----------------------------------------------------------
@@ -193,19 +160,12 @@
 
   /* Interactive KPI / Stat card with subtle entrance & hover lift */
   .pms-stat-card {
-    @apply bg-white rounded-xl border border-border-subtle shadow-card p-4 sm:p-5
-           transition-all duration-200 ease-out
-           hover:-translate-y-0.5 hover:shadow-md hover:border-ink-muted/30
-           active:translate-y-0 active:shadow-xs
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1;
+    @apply bg-white rounded-xl border border-border-subtle shadow-card p-4 sm:p-5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-ink-muted/30 active:translate-y-0 active:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1;
   }
 
   /* Quick action shortcut card matching Food & Beverage */
   .pms-quick-action {
-    @apply flex items-center gap-2.5 p-3 rounded-lg bg-brand-sand/50
-           hover:bg-brand-forest hover:text-white text-ink font-medium text-xs
-           border border-border-subtle transition-all duration-150 cursor-pointer
-           shadow-2xs hover:shadow-xs active:translate-y-0;
+    @apply flex items-center gap-2.5 p-3 rounded-lg bg-brand-sand/50 hover:bg-brand-forest hover:text-white text-ink font-medium text-xs border border-border-subtle transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-xs active:translate-y-0;
   }
 
   /* ----------------------------------------------------------
@@ -313,16 +273,12 @@
   }
 
   .pms-tab-item {
-    @apply relative pb-3 px-4 text-sm font-medium text-ink-muted
-           hover:text-ink
-           transition-colors duration-150 cursor-pointer
-           focus-visible:outline-none;
+    @apply relative pb-3 px-4 text-sm font-medium text-ink-muted hover:text-ink transition-colors duration-150 cursor-pointer focus-visible:outline-none;
   }
 
   .pms-tab-item::after {
     content: '';
-    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-brand-forest
-           scale-x-0 transition-transform duration-150;
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-brand-forest scale-x-0 transition-transform duration-150;
   }
 
   .pms-tab-item-active {
@@ -338,10 +294,7 @@
    * ---------------------------------------------------------- */
 
   .pms-pill-tab {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md
-           text-xs font-medium text-ink-muted
-           hover:bg-brand-sand hover:text-ink
-           transition-colors duration-150 cursor-pointer whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-ink-muted hover:bg-brand-sand hover:text-ink transition-colors duration-150 cursor-pointer whitespace-nowrap;
   }
 
   .pms-pill-tab-active {
@@ -349,13 +302,11 @@
   }
 
   .pms-pill-tab-count {
-    @apply px-1.5 py-0.5 rounded text-[10px] font-mono
-           bg-white/20 text-white;
+    @apply px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white;
   }
 
   .pms-pill-tab-count-inactive {
-    @apply px-1.5 py-0.5 rounded text-[10px] font-mono
-           bg-brand-sand-dark text-ink-muted;
+    @apply px-1.5 py-0.5 rounded text-[10px] font-mono bg-brand-sand-dark text-ink-muted;
   }
 
   /* ----------------------------------------------------------
@@ -363,17 +314,11 @@
    * ---------------------------------------------------------- */
 
   .pms-input {
-    @apply w-full h-9 px-3 rounded-lg border border-border-subtle bg-white
-           text-ink text-sm placeholder:text-ink-muted/60
-           focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60
-           transition-all duration-150;
+    @apply w-full h-9 px-3 rounded-lg border border-border-subtle bg-white text-ink text-sm placeholder:text-ink-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60 transition-all duration-150;
   }
 
   .pms-select {
-    @apply h-9 px-3 pr-8 rounded-lg border border-border-subtle bg-white
-           text-ink text-sm appearance-none
-           focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60
-           transition-all duration-150 cursor-pointer;
+    @apply h-9 px-3 pr-8 rounded-lg border border-border-subtle bg-white text-ink text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-brand-forest/25 focus:border-brand-forest/60 transition-all duration-150 cursor-pointer;
   }
 
   .pms-label {
@@ -393,12 +338,10 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.45) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        transparent 100%);
     animation: pmsShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
 
@@ -435,6 +378,7 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #5C5B54;
 }
+
 /* ============================================================
  * Card Animations & Motion Design System
  * ============================================================ */
@@ -443,6 +387,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -460,6 +405,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .pms-card-entrance,
   .pms-stat-card,
   .pms-quick-action {
@@ -467,10 +413,12 @@
     transition: none !important;
     transform: none !important;
   }
+
   .pms-stat-card:hover,
   .pms-quick-action:hover {
     transform: none !important;
   }
+
   .pms-skeleton::after {
     animation: none !important;
     display: none !important;
@@ -512,12 +460,10 @@
   border-radius: 9999px;
   color: #ffffff;
   font-weight: 600;
-  background: linear-gradient(
-    135deg,
-    #285a52 0%,
-    #173e39 55%,
-    #12332f 100%
-  );
+  background: linear-gradient(135deg,
+      #285a52 0%,
+      #173e39 55%,
+      #12332f 100%);
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
     0 8px 22px rgba(22, 61, 55, 0.20),
@@ -534,12 +480,10 @@
 .grove-cta-button:hover,
 .cta-primary:hover {
   transform: translateY(-2px);
-  background: linear-gradient(
-    135deg,
-    #2e665d 0%,
-    #1a4741 55%,
-    #143a35 100%
-  );
+  background: linear-gradient(135deg,
+      #2e665d 0%,
+      #1a4741 55%,
+      #143a35 100%);
   box-shadow:
     0 12px 28px rgba(22, 61, 55, 0.26),
     0 4px 10px rgba(15, 43, 39, 0.14),
@@ -564,11 +508,9 @@
   border-radius: 9999px;
   color: #1F3D3A;
   font-weight: 600;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.85) 0%,
-    rgba(255, 252, 246, 0.62) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 252, 246, 0.62) 100%);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.82);
@@ -586,11 +528,9 @@
 
 .cta-secondary:hover {
   transform: translateY(-2px);
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.96) 0%,
-    rgba(255, 253, 249, 0.88) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(255, 253, 249, 0.88) 100%);
   border-color: rgba(255, 255, 255, 0.98);
   box-shadow:
     0 8px 24px rgba(31, 61, 58, 0.09),
@@ -681,6 +621,7 @@
 }
 
 @supports not (backdrop-filter: blur(10px)) {
+
   .grove-navbar-capsule,
   .grove-glass-card,
   .grove-glass-panel {
@@ -693,6 +634,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -704,6 +646,7 @@
     transition: none !important;
     will-change: auto;
   }
+
   .grove-cta-button,
   .cta-primary,
   .cta-secondary,
@@ -713,6 +656,7 @@
     transform: none !important;
     will-change: auto;
   }
+
   .grove-cta-button:hover,
   .grove-cta-button:active,
   .cta-primary:hover,
@@ -724,9 +668,17 @@
   .grove-glass-card:hover {
     transform: none !important;
   }
+
   @keyframes groveMenuSlideIn {
-    from { opacity: 1; transform: none; }
-    to   { opacity: 1; transform: none; }
+    from {
+      opacity: 1;
+      transform: none;
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
@@ -738,12 +690,15 @@
     stroke-dashoffset: 360;
     opacity: 0;
   }
+
   12% {
     opacity: 1;
   }
+
   88% {
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -755,12 +710,15 @@
     stroke-dashoffset: 90;
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -772,12 +730,15 @@
     stroke-dashoffset: 200;
     opacity: 0;
   }
+
   15% {
     opacity: 1;
   }
+
   85% {
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -789,12 +750,15 @@
     stroke-dashoffset: 320;
     opacity: 0;
   }
+
   15% {
     opacity: 1;
   }
+
   85% {
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -806,12 +770,15 @@
     stroke-dashoffset: 440;
     opacity: 0;
   }
+
   15% {
     opacity: 1;
   }
+
   85% {
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -819,10 +786,13 @@
 }
 
 @keyframes isolationBadgePulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(46, 125, 79, 0.45);
   }
+
   50% {
     transform: scale(1.12);
     box-shadow: 0 0 0 4px rgba(46, 125, 79, 0);
@@ -830,10 +800,13 @@
 }
 
 @keyframes terminalNodeGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     r: 3.5;
     opacity: 0.85;
   }
+
   50% {
     r: 4.8;
     opacity: 1;
@@ -879,6 +852,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .grove-pulse-flow-side-1,
   .grove-pulse-flow-center,
   .grove-pulse-flow-side-2,
@@ -901,7 +875,8 @@
     margin: 10mm 12mm 10mm 12mm;
   }
 
-  html, body {
+  html,
+  body {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #111827 !important;
@@ -916,7 +891,7 @@
 
   /* Reset dashboard layout wrapper margins and padding */
   main,
-  main > div,
+  main>div,
   .p-5,
   .sm\:p-6,
   .md\:p-8 {
@@ -1015,10 +990,12 @@
     transform: scaleY(0.35);
     opacity: 0.6;
   }
+
   50% {
     transform: scaleY(1);
     opacity: 1;
   }
+
   100% {
     transform: scaleY(0.45);
     opacity: 0.7;
@@ -1026,10 +1003,13 @@
 }
 
 @keyframes opStreamPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.3;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0.75;
@@ -1039,17 +1019,21 @@
 .animate-audit-wave-1 {
   animation: auditWave 1.3s ease-in-out infinite alternate;
 }
+
 .animate-audit-wave-2 {
   animation: auditWave 1.3s ease-in-out 0.22s infinite alternate;
 }
+
 .animate-audit-wave-3 {
   animation: auditWave 1.3s ease-in-out 0.44s infinite alternate;
 }
+
 .animate-audit-wave-4 {
   animation: auditWave 1.3s ease-in-out 0.15s infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-audit-wave-1,
   .animate-audit-wave-2,
   .animate-audit-wave-3,

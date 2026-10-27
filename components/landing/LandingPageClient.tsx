@@ -50,6 +50,7 @@ import { HeroDashboardSkeleton } from './HeroDashboardMock';
 import { OperationalTimelineSkeleton } from './OperationalTimeline';
 import { DashboardShowcaseSkeleton } from './DashboardShowcaseInteractive';
 import MultiPropertyArchitecture from './MultiPropertyArchitecture';
+import HotelPropertyShowcase from './HotelPropertyShowcase';
 
 // Dynamically imported heavy interactive components (isolated from initial critical path)
 const HeroDashboard = dynamic(() => import('./HeroDashboardMock'), {
@@ -196,6 +197,26 @@ const faqs = [
 ];
 
 /* ══════════════════════════════════════════════
+ * CASE STUDY PROPERTY DATA
+ * ══════════════════════════════════════════════ */
+const caseStudyProperty = {
+  statusTag: 'Live',
+  typeTag: 'Boutique Hotel',
+  locationTag: 'Gangtok, Sikkim',
+  title: 'Hotel Greenery View',
+  description: 'One platform for reservations, billing, housekeeping and dining.',
+  sectionLabel: 'Active modules',
+  modules: [
+    'Front Desk',
+    'Guest Billing',
+    'Housekeeping',
+    'F&B & KOT',
+    'Owner Reports',
+  ],
+  ctaLabel: 'View Grove PMS',
+};
+
+/* ══════════════════════════════════════════════
  * MAIN LANDING PAGE CLIENT COMPONENT
  * ══════════════════════════════════════════════ */
 export default function LandingPageClient({
@@ -217,7 +238,7 @@ export default function LandingPageClient({
         if (session?.user) {
           setSessionUser(true);
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, [initialStaffName]);
 
@@ -643,186 +664,69 @@ export default function LandingPageClient({
 
           {/* Premium Customer Showcase Card */}
           <FadeIn inView={customerExample.inView} delay={120} direction="up" distance={16}>
-            <div className="bg-white rounded-[28px] sm:rounded-[32px] border border-border-subtle/80 shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08),0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden transition-all duration-300 hover:shadow-[0_28px_60px_-15px_rgba(31,61,58,0.12)]">
+            <div className="bg-white rounded-[24px] sm:rounded-[32px] border border-border-subtle/80 shadow-[0_16px_40px_-15px_rgba(31,61,58,0.07)] overflow-hidden transition-all duration-300 hover:shadow-[0_24px_50px_-15px_rgba(31,61,58,0.11)]">
               {/* Top: 2-Column Property Presentation */}
-              <div className="grid grid-cols-1 lg:grid-cols-12">
+              <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
                 {/* Left Column: Property Identity & Context */}
-                <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-between">
-                  <div>
-                    {/* Live status badge & property tags */}
-                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-[11px] font-bold uppercase tracking-wider">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Live Property
-                      </span>
-                      <span className="text-[11px] font-medium text-ink-muted/90 bg-brand-sand/70 px-2.5 py-1 rounded-full border border-border-subtle/50">
-                        Boutique Himalayan Hotel
-                      </span>
-                      <span className="text-[11px] font-medium text-ink-muted/90 bg-brand-sand/70 px-2.5 py-1 rounded-full border border-border-subtle/50 hidden sm:inline-flex">
-                        Gangtok, Sikkim
-                      </span>
+                <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-center space-y-4 sm:space-y-5">
+                  {/* Live status badge & property tags */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-[11px] font-bold uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {caseStudyProperty.statusTag}
+                    </span>
+                    <span className="text-[11px] font-medium text-ink-muted/90 bg-brand-sand/70 px-2.5 py-1 rounded-full border border-border-subtle/50">
+                      {caseStudyProperty.typeTag}
+                    </span>
+                    <span className="text-[11px] font-medium text-ink-muted/90 bg-brand-sand/70 px-2.5 py-1 rounded-full border border-border-subtle/50">
+                      {caseStudyProperty.locationTag}
+                    </span>
+                  </div>
+
+                  {/* Hotel Title */}
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-brand-forest tracking-tight">
+                    {caseStudyProperty.title}
+                  </h3>
+
+                  {/* Refined Concise Description */}
+                  <p className="text-sm sm:text-[15px] text-ink-muted leading-relaxed">
+                    {caseStudyProperty.description}
+                  </p>
+
+                  {/* Thin Subtle Divider */}
+                  <div className="h-px bg-border-subtle/50 w-full" aria-hidden="true" />
+
+                  {/* Neatly Arranged Pill-Shaped Modules Badges */}
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-brand-forest/65">
+                      {caseStudyProperty.sectionLabel}
                     </div>
-
-                    {/* Hotel Title & Location */}
-                    <div className="space-y-1.5">
-                      <h3 className="font-serif font-bold text-2xl sm:text-3xl lg:text-4xl text-brand-forest tracking-tight">
-                        Hotel Greenery View
-                      </h3>
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm text-ink-muted font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-brand-forest/75 shrink-0" />
-                        <span>Gangtok, Sikkim · Eastern Himalayas</span>
-                      </div>
-                    </div>
-
-                    {/* Narrative Description */}
-                    <p className="mt-4 sm:mt-5 text-sm sm:text-[15px] text-ink-muted leading-relaxed max-w-xl">
-                      A boutique Himalayan property managing its daily hotel operations on Grove.
-                      From reservation matrix check-ins and folios to restaurant KOTs, housekeeping turnaround,
-                      and end-of-day revenue reconciliation — all managed from one unified platform.
-                    </p>
-
-                    {/* Active Operational Modules Badges */}
-                    <div className="mt-6 pt-5 border-t border-border-subtle/60">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-brand-forest/60 mb-2.5">
-                        Active Operating Modules
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {[
-                          'Front Desk & Matrix',
-                          'Guest Folios & Billing',
-                          'Housekeeping Turnaround',
-                          'F&B Orders & KOT',
-                          'Banquet Management',
-                          'Inventory Consumption',
-                          'Owner Daily Reports',
-                        ].map((module) => (
-                          <span
-                            key={module}
-                            className="text-[11px] font-medium text-ink/80 bg-brand-sand/70 border border-border-subtle/70 px-2.5 py-1 rounded-lg transition-colors hover:bg-brand-sand"
-                          >
-                            {module}
-                          </span>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {caseStudyProperty.modules.map((module) => (
+                        <span
+                          key={module}
+                          className="inline-flex items-center text-[10.5px] sm:text-[11px] font-medium text-brand-forest/90 bg-[#F6F3ED] border border-[#E7E2D6] px-2.5 py-0.5 rounded-full transition-colors hover:bg-[#EFECE3]"
+                        >
+                          {module}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Refined Contextual CTA */}
-                  <div className="mt-8 pt-4">
+                  {/* Upgraded Premium Emerald Button CTA */}
+                  <div className="pt-1 sm:pt-2">
                     <Link
                       href="/#features"
-                      className="group inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-brand-forest hover:text-brand-forest-light transition-colors"
+                      className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-forest text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md hover:bg-brand-forest-light hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                     >
-                      <span>Explore the property&apos;s operational setup</span>
-                      <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                      <span>{caseStudyProperty.ctaLabel}</span>
+                      <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 text-emerald-300" />
                     </Link>
                   </div>
                 </div>
 
-                {/* Right Column: Visual Property Panel with Mountain Contour & Glassmorphic Telemetry */}
-                <div className="lg:col-span-5 bg-gradient-to-br from-[#122825] via-[#1B3835] to-[#254F49] relative p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden text-white min-h-[380px] lg:min-h-full">
-                  {/* Subtle architectural coordinate grid texture */}
-                  <div
-                    className="absolute inset-0 pointer-events-none opacity-10"
-                    style={{
-                      backgroundImage:
-                        'linear-gradient(to right, rgba(255, 255, 255, 0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 1px, transparent 1px)',
-                      backgroundSize: '36px 36px',
-                    }}
-                    aria-hidden="true"
-                  />
-
-                  {/* Atmospheric radial ambient light */}
-                  <div
-                    className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none"
-                    aria-hidden="true"
-                  />
-
-                  {/* Top Bar: Property Identifier */}
-                  <div className="flex items-center justify-between gap-2 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[11px] font-medium shadow-2xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>Property Node: HGV-01</span>
-                    </div>
-                    <span className="text-[10px] font-mono tracking-wider text-white/60 uppercase">
-                      Gangtok · Sikkim
-                    </span>
-                  </div>
-
-                  {/* Floating Glassmorphic Operational Summary Panel */}
-                  <div className="relative z-10 my-auto py-6">
-                    <div className="bg-white/12 backdrop-blur-xl border border-white/20 rounded-2xl p-4 sm:p-5 shadow-[0_16px_36px_rgba(0,0,0,0.30)] space-y-3.5">
-                      <div className="flex items-center justify-between border-b border-white/15 pb-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-400/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-2xs">
-                            <Activity className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-semibold text-white">Live Operations Sync</div>
-                            <div className="text-[10px] text-white/70">Autonomous Hotel Workspace</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                          Operational
-                        </span>
-                      </div>
-
-                      {/* Quick telemetry indicators */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-white/8 rounded-xl p-2.5 border border-white/10">
-                          <div className="text-[10px] text-white/60 uppercase font-medium">Property Type</div>
-                          <div className="text-xs font-semibold text-white mt-0.5">Boutique Hotel</div>
-                        </div>
-                        <div className="bg-white/8 rounded-xl p-2.5 border border-white/10">
-                          <div className="text-[10px] text-white/60 uppercase font-medium">Deployment</div>
-                          <div className="text-xs font-semibold text-white mt-0.5">Cloud PMS · RLS</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] pt-0.5 text-white/80">
-                        <span className="flex items-center gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
-                          <span>Tenant Data Isolated</span>
-                        </span>
-                        <span className="text-[10px] text-emerald-300/90 font-medium">Active Today</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Authentic Himalayan Contour Mountain Silhouette at Panel Base */}
-                  <div className="relative z-0 h-16 sm:h-20 -mx-6 sm:-mx-8 lg:-mx-10 -mb-6 sm:-mb-8 lg:-mb-10 overflow-hidden pointer-events-none">
-                    <svg
-                      className="absolute bottom-0 left-0 right-0 w-full h-full text-emerald-950/45"
-                      viewBox="0 0 500 120"
-                      fill="none"
-                      preserveAspectRatio="none"
-                    >
-                      {/* Distant mountain ridge */}
-                      <path
-                        d="M0 120 L0 80 L70 45 L130 65 L200 25 L270 60 L340 18 L410 50 L500 30 L500 120 Z"
-                        fill="currentColor"
-                        opacity="0.4"
-                      />
-                      {/* Mid mountain ridge */}
-                      <path
-                        d="M0 120 L0 90 L50 68 L110 88 L175 52 L240 78 L305 40 L370 72 L440 52 L500 68 L500 120 Z"
-                        fill="currentColor"
-                        opacity="0.65"
-                      />
-                      {/* Fore ridge */}
-                      <path
-                        d="M0 120 L0 102 L80 75 L150 95 L220 68 L290 92 L360 62 L430 85 L500 75 L500 120 Z"
-                        fill="currentColor"
-                        opacity="0.95"
-                      />
-                      {/* Himalayan snow crest highlights */}
-                      <path
-                        d="M340 18 L334 28 L348 26 Z M200 25 L195 34 L206 32 Z"
-                        fill="rgba(255,255,255,0.35)"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                {/* Right Column: Visual Property Panel with Authentic Hotel Photograph */}
+                <HotelPropertyShowcase className="lg:col-span-5" />
               </div>
 
               {/* Bottom Shelf: Visually Integrated Statistics Row */}
@@ -928,9 +832,6 @@ export default function LandingPageClient({
               className="lg:col-span-7 flex"
             >
               <div className="grove-glass-card w-full rounded-[28px] p-6 sm:p-8 lg:p-9 border-2 border-brand-forest/25 relative flex flex-col justify-between overflow-hidden shadow-[0_20px_50px_-12px_rgba(31,61,58,0.12)]">
-                {/* Top highlight line */}
-                <div className="pointer-events-none absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-forest/40 to-transparent" aria-hidden="true" />
-
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest text-white text-[11px] font-bold uppercase tracking-wider shadow-xs">
@@ -1202,9 +1103,8 @@ export default function LandingPageClient({
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-200 ${
-                          isOpen ? 'rotate-180 text-brand-forest' : ''
-                        }`}
+                        className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-forest' : ''
+                          }`}
                       />
                     </button>
                     {isOpen && (
@@ -1230,58 +1130,86 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 14. FINAL CTA ───────────── */}
-      <section ref={ctaSection.ref} className="py-20 sm:py-28 relative">
+      <section ref={ctaSection.ref} className="py-12 sm:py-16 lg:py-20 relative">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 50% 60%, rgba(31,61,58,0.04) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(31,61,58,0.035) 0%, transparent 65%)',
           }}
         />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeIn inView={ctaSection.inView} delay={0} direction="up" distance={16}>
-            <div className="grove-glass-panel rounded-[32px] p-8 sm:p-12 lg:p-16 border border-white/95 shadow-[0_24px_64px_-16px_rgba(31,61,58,0.14)] text-center relative overflow-hidden">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-brand-forest max-w-2xl mx-auto leading-tight">
-                Ready to Run Your Property
-                <br />
-                <span className="text-brand-forest-light">From One Platform?</span>
-              </h2>
-              <p className="mt-4 text-xs sm:text-base text-ink-muted max-w-xl mx-auto leading-relaxed">
-                Bring reservations, front desk matrix, guest billing, housekeeping, F&B orders, and owner reporting into one connected system.
-              </p>
+            <div className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 lg:p-12 text-center bg-gradient-to-b from-white/95 via-white/90 to-[#FAF6F0]/90 backdrop-blur-xl border border-white/85 shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08),0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_24px_60px_-15px_rgba(31,61,58,0.11)]">
+              {/* Delicate grid texture */}
+              <div
+                className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-30"
+                aria-hidden="true"
+              />
 
-              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto">
-                <GroveButton
-                  href="/register-hotel"
-                  variant="primary"
-                  size="lg"
-                  withArrow
-                  className="w-full sm:w-auto"
-                >
-                  Get Started Today
-                </GroveButton>
-                <GroveButton
-                  href="/login"
-                  variant="secondary"
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  Sign In to Existing Property
-                </GroveButton>
+              {/* Soft ambient lighting */}
+              <div
+                className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-emerald-500/5 rounded-full blur-3xl"
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute -bottom-24 left-1/2 -translate-x-1/2 w-80 h-40 bg-[#d4a373]/8 rounded-full blur-3xl"
+                aria-hidden="true"
+              />
+
+              {/* Top hairline highlight for glassmorphism */}
+              <div
+                className="pointer-events-none absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                aria-hidden="true"
+              />
+
+              <div className="relative z-10">
+                {/* Balanced 2-line headline */}
+                <h2 className="font-serif font-bold text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] text-brand-forest tracking-tight leading-[1.2] max-w-2xl mx-auto">
+                  Your Entire Property.
+                  <br className="hidden sm:inline" />
+                  <span className="block sm:inline sm:ml-2">One Powerful Platform.</span>
+                </h2>
+
+                {/* Subtitle */}
+                <p className="mt-3 sm:mt-3.5 text-xs sm:text-sm md:text-[15px] text-ink-muted max-w-xl mx-auto leading-relaxed">
+                  Manage reservations, front desk, guest billing, housekeeping, and restaurant operations—all in one seamless workspace.
+                </p>
+
+                {/* Single aligned CTA button row */}
+                <div className="mt-6 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3.5 w-full max-w-md sm:max-w-none mx-auto">
+                  <Link
+                    href="/register-hotel"
+                    className="cta-primary whitespace-nowrap inline-flex items-center justify-center text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full font-medium text-white shadow-[0_8px_20px_-4px_rgba(22,61,55,0.25)] hover:shadow-[0_12px_24px_-4px_rgba(22,61,55,0.32)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 group"
+                  >
+                    <span>Get Started Today</span>
+                    <ArrowRight
+                      className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1 text-emerald-300 shrink-0"
+                      aria-hidden="true"
+                    />
+                  </Link>
+
+                  <Link
+                    href="/login"
+                    className="cta-secondary whitespace-nowrap inline-flex items-center justify-center text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full font-medium text-brand-forest transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <span>Sign In to Existing Property</span>
+                  </Link>
+                </div>
+
+                {/* Legal note closer to buttons */}
+                <p className="text-[11px] text-ink-muted/70 mt-3 sm:mt-3.5 max-w-sm mx-auto leading-normal">
+                  By creating an account, you agree to our{' '}
+                  <Link href="/terms" className="text-brand-forest/90 font-medium hover:underline hover:text-brand-forest">
+                    Terms of Service
+                  </Link>{' '}
+                  and acknowledge our{' '}
+                  <Link href="/privacy-policy" className="text-brand-forest/90 font-medium hover:underline hover:text-brand-forest">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
               </div>
-
-              {/* Legal Acknowledgement note */}
-              <p className="text-[11px] text-ink-muted mt-5 max-w-sm mx-auto">
-                By creating an account, you agree to our{' '}
-                <Link href="/terms" className="text-brand-forest font-medium hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and acknowledge our{' '}
-                <Link href="/privacy-policy" className="text-brand-forest font-medium hover:underline">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
             </div>
           </FadeIn>
         </div>
