@@ -55,7 +55,6 @@ export default function HotelPropertyShowcase({ className = '' }: HotelPropertyS
             ? 'none'
             : `translate3d(${mouseOffset.x}px, ${mouseOffset.y}px, 0) scale(${isHovered ? 1.05 : 1.01})`,
         }}
-        aria-hidden="true"
       >
         <Image
           src="/images/hotel-greenery-view.jpg"

@@ -3,16 +3,42 @@ import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { Hotel, Sparkles, Building2, MapPin, CheckCircle2, Shield } from 'lucide-react';
 import Link from 'next/link';
+import JsonLd from '@/components/seo/JsonLd';
+import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 
 export const metadata: Metadata = {
-  title: 'About Grove | Hospitality OS for Modern Hotels',
-  description: 'Learn about Grove, the unified operating system connecting front desk, billing, F&B, housekeeping, and reporting for modern hospitality.',
+  title: 'About — Hotel Software for Independent Hotel Owners',
+  description:
+    'Learn about Grove PMS — engineered to bring calm, connected, and reliable cloud PMS technology to independent hotels, boutique resorts, and homestays.',
+  alternates: {
+    canonical: '/about',
+  },
+  openGraph: {
+    title: 'About Grove PMS | Hotel Software for Independent Hotel Owners',
+    description:
+      'Learn about Grove PMS — engineered to bring calm, connected, and reliable cloud PMS technology to independent hotels, boutique resorts, and homestays.',
+    url: 'https://www.grovepms.me/about',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About Grove PMS | Hotel Software for Independent Hotel Owners',
+    description:
+      'Learn about Grove PMS — engineered to bring calm, connected, and reliable cloud PMS technology to independent hotels, boutique resorts, and homestays.',
+  },
 };
 
 export default function AboutPage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', item: '/' },
+    { name: 'About', item: '/about' },
+  ]);
+
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+      <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
+
 
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}

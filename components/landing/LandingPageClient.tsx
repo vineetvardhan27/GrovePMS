@@ -84,61 +84,73 @@ const modules = [
     icon: CalendarCheck,
     name: 'Front Desk',
     desc: 'Real-time room matrix, check-ins, identity verification, keycards, and express checkout.',
+    href: '/features/room-management',
   },
   {
     icon: ClipboardList,
     name: 'Reservations',
     desc: 'Centralized booking engine with date search, room availability, and guest profile linking.',
+    href: '/features/reservations',
   },
   {
     icon: BedDouble,
     name: 'Room Management',
     desc: 'Room categories, floor plans, status tracking, maintenance logs, and rate management.',
+    href: '/features/room-management',
   },
   {
     icon: Users,
     name: 'Guest Management',
     desc: 'Guest profiles, ID records, stay history, preferences, and communication logs.',
+    href: '/features/guest-management',
   },
   {
     icon: CreditCard,
     name: 'Billing & Folios',
     desc: 'Consolidated guest ledgers, room charges, advance deposits, and automated GST invoicing.',
+    href: '/features/billing-and-payments',
   },
   {
     icon: Wallet,
     name: 'Payments',
     desc: 'Multi-mode collection — Cash, UPI, Card — with split payments and receipt generation.',
+    href: '/features/billing-and-payments',
   },
   {
     icon: UtensilsCrossed,
     name: 'F&B Operations',
     desc: 'KOT generation, table orders, room charge posting, walk-in dining, and menu sync.',
+    href: '/hotel-management-software',
   },
   {
     icon: PartyPopper,
     name: 'Banquet & Events',
     desc: 'Hall bookings, decor packages, catering, stage lighting, and standalone event invoicing.',
+    href: '/hotel-management-software',
   },
   {
     icon: Sparkles,
     name: 'Housekeeping',
     desc: 'Room turnaround tracking — dirty, in-progress, inspected, out-of-order — in real time.',
+    href: '/features/room-management',
   },
   {
     icon: Warehouse,
     name: 'Inventory',
     desc: 'Stock management, purchase orders, consumption tracking, and low-stock alerts.',
+    href: '/features/inventory-management',
   },
   {
     icon: BarChart3,
     name: 'Reports & Analytics',
     desc: 'ADR, RevPAR, occupancy analytics, shift handovers, and monthly GST return exports.',
+    href: '/features/reports',
   },
   {
     icon: Settings,
     name: 'Hotel Settings',
     desc: 'Tax configuration, staff management, property details, room categories, and access control.',
+    href: '/security',
   },
 ];
 
@@ -286,14 +298,14 @@ export default function LandingPageClient({
           <FadeIn inView={hero.inView} delay={0} direction="up" distance={12}>
             <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
               <Layers className="w-3.5 h-3.5 text-brand-forest/80" />
-              <span>Unified Hospitality Platform</span>
+              <span>Grove PMS — Unified Property Management</span>
             </div>
           </FadeIn>
 
           {/* Headline */}
           <FadeIn inView={hero.inView} delay={80} direction="up" distance={16}>
             <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-serif font-bold text-brand-forest tracking-tight max-w-4xl mx-auto leading-[1.12]">
-              The Operating System
+              Hotel Property Management Software
               <br />
               <span className="text-brand-forest-light">for Modern Hospitality.</span>
             </h1>
@@ -390,18 +402,36 @@ export default function LandingPageClient({
           >
             {modules.map((mod, i) => {
               const Icon = mod.icon;
+              const cardContent = (
+                <FloatingCard
+                  hoverY={-4}
+                  className="grove-glass-card p-5 sm:p-6 rounded-2xl cursor-pointer group flex flex-col items-start h-full"
+                >
+                  <div className="w-10 h-10 bg-brand-forest text-white rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-serif font-bold text-base text-ink mt-3.5 flex items-center justify-between w-full">
+                    <span>{mod.name}</span>
+                    {mod.href && (
+                      <ArrowRight className="w-3.5 h-3.5 text-brand-forest opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </h3>
+                  <p className="text-xs text-ink-muted leading-relaxed mt-1.5">{mod.desc}</p>
+                </FloatingCard>
+              );
+
               return (
                 <StaggerItem key={mod.name} index={i}>
-                  <FloatingCard
-                    hoverY={-4}
-                    className="grove-glass-card p-5 sm:p-6 rounded-2xl cursor-default group flex flex-col items-start h-full"
-                  >
-                    <div className="w-10 h-10 bg-brand-forest text-white rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-serif font-bold text-base text-ink mt-3.5">{mod.name}</h3>
-                    <p className="text-xs text-ink-muted leading-relaxed mt-1.5">{mod.desc}</p>
-                  </FloatingCard>
+                  {mod.href ? (
+                    <Link
+                      href={mod.href}
+                      className="block h-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-forest rounded-2xl"
+                    >
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    cardContent
+                  )}
                 </StaggerItem>
               );
             })}
@@ -409,11 +439,11 @@ export default function LandingPageClient({
 
           {/* Section Call to Action */}
           <div className="mt-10 sm:mt-12 text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <GroveButton href="/register-hotel" variant="primary" withArrow>
-              Deploy All 12 Modules
+            <GroveButton href="/hotel-management-software" variant="primary" withArrow>
+              Explore Full Platform Architecture
             </GroveButton>
-            <GroveButton href="/#solutions" variant="secondary">
-              See How Workflows Connect
+            <GroveButton href="/register-hotel" variant="secondary">
+              Start Free Trial
             </GroveButton>
           </div>
         </div>

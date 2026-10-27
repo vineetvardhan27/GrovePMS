@@ -7,13 +7,13 @@ const PRODUCT_NAME = 'Grove';
 const PRODUCT_TAGLINE = 'Hospitality OS';
 
 const PRODUCT_LINKS = [
-  { label: 'Features', href: '/#features' },
-  { label: 'Hotel PMS', href: '/#platform' },
-  { label: 'Hotel Billing', href: '/#solutions' },
-  { label: 'Housekeeping', href: '/#features' },
-  { label: 'F&B Operations', href: '/#features' },
-  { label: 'Banquet Management', href: '/#features' },
-  { label: 'Reports & Analytics', href: '/#features' },
+  { label: 'Hotel Management Software', href: '/hotel-management-software' },
+  { label: 'Reservations & Bookings', href: '/features/reservations' },
+  { label: 'Room Management & Front Desk', href: '/features/room-management' },
+  { label: 'Guest Management & CRM', href: '/features/guest-management' },
+  { label: 'Billing & GST Invoices', href: '/features/billing-and-payments' },
+  { label: 'Inventory & Supplies', href: '/features/inventory-management' },
+  { label: 'Operations & Reports', href: '/features/reports' },
   { label: 'Pricing & Plans', href: '/pricing' },
 ];
 

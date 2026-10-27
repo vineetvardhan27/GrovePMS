@@ -2,16 +2,42 @@ import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { Scale, Receipt, Users, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import JsonLd from '@/components/seo/JsonLd';
+import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 
 export const metadata: Metadata = {
-  title: 'Compliance & Responsible Data Handling | Grove — Hospitality OS',
-  description: 'Learn how Grove provides operational tools for GST invoicing, guest register records, and staff audit trails.',
+  title: 'Hotel Compliance, GST Invoicing & Audit Trails',
+  description:
+    'Learn how Grove PMS equips hotels with operational workflows for sequential GST tax invoicing, digital guest registers, and immutable shift audit trails.',
+  alternates: {
+    canonical: '/compliance',
+  },
+  openGraph: {
+    title: 'Hotel Compliance, GST Invoicing & Audit Trails | Grove PMS',
+    description:
+      'Learn how Grove PMS equips hotels with operational workflows for sequential GST tax invoicing, digital guest registers, and immutable shift audit trails.',
+    url: 'https://www.grovepms.me/compliance',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Hotel Compliance, GST Invoicing & Audit Trails | Grove PMS',
+    description:
+      'Learn how Grove PMS equips hotels with operational workflows for sequential GST tax invoicing, digital guest registers, and immutable shift audit trails.',
+  },
 };
 
 export default function CompliancePage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', item: '/' },
+    { name: 'Compliance', item: '/compliance' },
+  ]);
+
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+      <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
+
 
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}

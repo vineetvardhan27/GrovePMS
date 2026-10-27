@@ -2,16 +2,42 @@ import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { Shield, Lock, KeyRound, Layers, Database, UserCheck, CheckCircle2 } from 'lucide-react';
+import JsonLd from '@/components/seo/JsonLd';
+import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 
 export const metadata: Metadata = {
-  title: 'Security & Data Protection | Grove — Hospitality OS',
-  description: 'Technical overview of Grove multi-tenant database isolation, PostgreSQL Row-Level Security, and authentication architecture.',
+  title: 'Hotel Data Security & Tenant Isolation',
+  description:
+    'Discover how Grove PMS secures hotel operations with PostgreSQL Row-Level Security, multi-tenant database isolation, encrypted sessions, and RBAC.',
+  alternates: {
+    canonical: '/security',
+  },
+  openGraph: {
+    title: 'Hotel Data Security & Tenant Isolation | Grove PMS',
+    description:
+      'Discover how Grove PMS secures hotel operations with PostgreSQL Row-Level Security, multi-tenant database isolation, encrypted sessions, and RBAC.',
+    url: 'https://www.grovepms.me/security',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Hotel Data Security & Tenant Isolation | Grove PMS',
+    description:
+      'Discover how Grove PMS secures hotel operations with PostgreSQL Row-Level Security, multi-tenant database isolation, encrypted sessions, and RBAC.',
+  },
 };
 
 export default function SecurityPage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', item: '/' },
+    { name: 'Security', item: '/security' },
+  ]);
+
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+      <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
+
 
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}

@@ -12,7 +12,7 @@ const PRODUCT_NAME = 'Grove';
 const PRODUCT_TAGLINE = 'Hospitality OS';
 
 const NAV_LINKS = [
-  { label: 'Features', href: '/#features' },
+  { label: 'Features', href: '/hotel-management-software' },
   { label: 'Solutions', href: '/#solutions' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Security', href: '/security' },

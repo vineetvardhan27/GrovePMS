@@ -2,16 +2,36 @@ import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { FileText, Calendar } from 'lucide-react';
+import JsonLd from '@/components/seo/JsonLd';
+import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Grove — Hospitality OS',
-  description: 'Terms of service and operational agreement for hotels, owners, and operators using Grove.',
+  title: 'Terms of Service',
+  description:
+    'Terms of service, subscription policies, and operational agreements for hotel properties and staff using Grove PMS.',
+  alternates: {
+    canonical: '/terms',
+  },
+  openGraph: {
+    title: 'Terms of Service | Grove PMS',
+    description:
+      'Terms of service, subscription policies, and operational agreements for hotel properties and staff using Grove PMS.',
+    url: 'https://www.grovepms.me/terms',
+    type: 'website',
+  },
 };
 
 export default function TermsOfServicePage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', item: '/' },
+    { name: 'Terms of Service', item: '/terms' },
+  ]);
+
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+      <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
+
 
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}

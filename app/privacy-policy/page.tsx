@@ -2,16 +2,36 @@ import type { Metadata } from 'next';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { ShieldCheck, Calendar, Lock } from 'lucide-react';
+import JsonLd from '@/components/seo/JsonLd';
+import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Grove — Hospitality OS',
-  description: 'Understand how Grove handles personal, guest, and hotel operational data with strict tenant isolation.',
+  title: 'Privacy Policy',
+  description:
+    'Understand how Grove PMS protects personal, guest, and hotel operational data with strict tenant database isolation and privacy safeguards.',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
+  openGraph: {
+    title: 'Privacy Policy | Grove PMS',
+    description:
+      'Understand how Grove PMS protects personal, guest, and hotel operational data with strict tenant database isolation and privacy safeguards.',
+    url: 'https://www.grovepms.me/privacy-policy',
+    type: 'website',
+  },
 };
 
 export default function PrivacyPolicyPage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', item: '/' },
+    { name: 'Privacy Policy', item: '/privacy-policy' },
+  ]);
+
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+      <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
+
 
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}

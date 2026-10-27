@@ -18,6 +18,8 @@ const PUBLIC_ROUTES = [
   '/security',
   '/cookie-policy',
   '/faqs',
+  '/hotel-management-software',
+  '/features',
 ];
 
 /**
