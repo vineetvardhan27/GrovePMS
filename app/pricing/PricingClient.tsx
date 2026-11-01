@@ -235,8 +235,6 @@ function HowItWorks({ inView }: { inView: boolean }) {
   const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isCardHovered, setIsCardHovered] = useState(false);
-  const [isCardRevealed, setIsCardRevealed] = useState(false);
   const rafRef = useRef<number>(0);
 
   const steps = [
@@ -273,7 +271,6 @@ function HowItWorks({ inView }: { inView: boolean }) {
   useEffect(() => {
     if (reduced) {
       setScrollProgress(100);
-      setIsCardRevealed(true);
       return;
     }
 
@@ -311,22 +308,7 @@ function HowItWorks({ inView }: { inView: boolean }) {
     };
   }, [reduced]);
 
-  // Reveal the onboarding card when all 4 steps are reached
-  useEffect(() => {
-    if (scrollProgress >= 95 || reduced) {
-      setIsCardRevealed(true);
-    }
-  }, [scrollProgress, reduced]);
 
-  // Safety fallback: if inView for a while but card not yet revealed
-  useEffect(() => {
-    if (inView && !isCardRevealed) {
-      const fallback = setTimeout(() => {
-        setIsCardRevealed(true);
-      }, 3000);
-      return () => clearTimeout(fallback);
-    }
-  }, [inView, isCardRevealed]);
 
   // Check if a node is reached based on scroll progress
   const isNodeReached = (position: number) => scrollProgress >= position || reduced;
@@ -609,183 +591,7 @@ function HowItWorks({ inView }: { inView: boolean }) {
         </div>
       </div>
 
-      {/* ──────────────────────────────────────────
-       * WHITE-GLOVE ONBOARDING CARD (PREMIUM FLOATING PANEL)
-       * ────────────────────────────────────────── */}
-      <div
-        onMouseEnter={() => !isMobile && setIsCardHovered(true)}
-        onMouseLeave={() => !isMobile && setIsCardHovered(false)}
-        className="mt-12 sm:mt-16 bg-white rounded-[26px] sm:rounded-[32px] border border-[#DDD5C6]/90 overflow-hidden relative transition-all duration-500 will-change-transform"
-        style={{
-          opacity: isCardRevealed || reduced ? 1 : 0,
-          transform: reduced
-            ? 'none'
-            : !isCardRevealed
-            ? 'translateY(24px) scale(0.985)'
-            : isCardHovered && !isMobile
-            ? 'translateY(-4px) scale(1)'
-            : 'translateY(0) scale(1)',
-          boxShadow:
-            isCardHovered && !reduced && !isMobile
-              ? '0 4px 8px rgba(31, 61, 58, 0.04), 0 18px 42px -6px rgba(31, 61, 58, 0.09), 0 40px 84px -14px rgba(31, 61, 58, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.95)'
-              : '0 2px 4px rgba(31, 61, 58, 0.03), 0 12px 32px -4px rgba(31, 61, 58, 0.06), 0 30px 70px -12px rgba(31, 61, 58, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
-          transition: reduced
-            ? 'opacity 0.2s ease'
-            : isCardHovered && !isMobile
-            ? 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 450ms cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 550ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 550ms cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        {/* Subtle light highlight near top-left edge */}
-        <div
-          className="pointer-events-none absolute inset-0 rounded-[inherit] z-20"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.06) 24%, transparent 60%)',
-          }}
-          aria-hidden="true"
-        />
 
-        <div className="p-6 sm:p-9 lg:p-10 relative z-10">
-          {/* Card Header */}
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5 pb-6 sm:pb-8 border-b border-border-subtle/80">
-            <div>
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 text-brand-forest text-xs font-bold uppercase tracking-wider mb-3 shadow-2xs"
-                style={{
-                  opacity: isCardRevealed || reduced ? 1 : 0,
-                  transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(12px)',
-                  transition: reduced
-                    ? 'none'
-                    : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 0ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 0ms',
-                }}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>White-Glove Onboarding</span>
-              </div>
-              <h3
-                className="font-serif font-bold text-2xl sm:text-3xl lg:text-[2.2rem] text-brand-forest tracking-tight leading-[1.18]"
-                style={{
-                  opacity: isCardRevealed || reduced ? 1 : 0,
-                  transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(12px)',
-                  transition: reduced
-                    ? 'none'
-                    : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms',
-                }}
-              >
-                We configure Grove
-                <br className="hidden sm:inline" /> around your property.
-              </h3>
-              <p
-                className="text-xs sm:text-[13px] text-ink-muted mt-2 leading-relaxed max-w-xl"
-                style={{
-                  opacity: isCardRevealed || reduced ? 1 : 0,
-                  transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(12px)',
-                  transition: reduced
-                    ? 'none'
-                    : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 180ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 180ms',
-                }}
-              >
-                Dedicated implementation engineering with zero guesswork for your team.
-              </p>
-            </div>
-
-            <div
-              className="text-left sm:text-right shrink-0 lg:pl-8 lg:border-l lg:border-border-subtle/70 sm:self-center"
-              style={{
-                opacity: isCardRevealed || reduced ? 1 : 0,
-                transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(12px)',
-                transition: reduced
-                  ? 'none'
-                  : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 250ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 250ms',
-              }}
-            >
-              <span className="font-serif font-bold text-3xl sm:text-4xl lg:text-[2.6rem] text-brand-forest tracking-tight tabular-nums block leading-none">
-                ₹10,000
-              </span>
-              <span className="text-xs text-ink-muted block mt-1.5 font-medium">
-                one-time onboarding investment
-              </span>
-            </div>
-          </div>
-
-          {/* 2-Column Feature Grid (1-Column on Mobile) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-3 sm:gap-y-4 pt-6 sm:pt-8">
-            {onboardingServices.map((service, i) => (
-              <div
-                key={service.step}
-                className="flex items-start gap-3.5 p-3 sm:p-3.5 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-sand/35 cursor-default group"
-                style={{
-                  opacity: isCardRevealed || reduced ? 1 : 0,
-                  transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(10px)',
-                  transition: reduced
-                    ? 'none'
-                    : `opacity 400ms cubic-bezier(0.16, 1, 0.3, 1) ${300 + i * 55}ms, transform 400ms cubic-bezier(0.16, 1, 0.3, 1) ${300 + i * 55}ms`,
-                }}
-              >
-                <div className="w-5 h-5 rounded-[6px] bg-status-green/10 text-status-green flex items-center justify-center shrink-0 mt-0.5 shadow-2xs transition-all duration-200 group-hover:bg-status-green group-hover:text-white group-hover:scale-105">
-                  <Check className="w-3 h-3 stroke-[2.5]" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h4 className="text-xs sm:text-[13px] font-bold text-ink group-hover:text-brand-forest transition-colors">
-                      {service.title}
-                    </h4>
-                    <span className="text-[10px] font-mono font-semibold text-ink-muted/50 tracking-wider shrink-0">
-                      {service.step}
-                    </span>
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-ink-muted leading-relaxed mt-1">
-                    {service.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Completion Bar: READY TO GO LIVE */}
-          <div
-            className="mt-8 pt-6 border-t border-border-subtle/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
-            style={{
-              opacity: isCardRevealed || reduced ? 1 : 0,
-              transform: isCardRevealed || reduced ? 'translateY(0)' : 'translateY(8px)',
-              transition: reduced
-                ? 'none'
-                : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 750ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 750ms',
-            }}
-          >
-            <div className="flex items-center flex-wrap gap-2.5 sm:gap-3.5">
-              {/* Status Pill: ✓ READY TO GO LIVE */}
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-status-green/10 text-status-green border border-status-green/25 font-bold text-[10px] uppercase tracking-wider shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
-                <span>✓ Ready to Go Live</span>
-              </span>
-
-              <span className="text-border-subtle hidden sm:inline">•</span>
-
-              <div className="flex items-center gap-1.5 text-ink-muted font-medium">
-                <Clock className="w-3.5 h-3.5 text-brand-forest shrink-0" />
-                <span>Typical turnaround: <strong>48–72 hours</strong></span>
-              </div>
-
-              <span className="text-border-subtle hidden lg:inline">•</span>
-
-              <span className="text-ink-muted hidden lg:inline">
-                Dedicated onboarding specialist assigned to your property
-              </span>
-            </div>
-
-            <div className="text-left sm:text-right">
-              <span className="font-serif font-bold text-brand-forest text-base sm:text-lg tabular-nums">
-                ₹10,000
-              </span>
-              <span className="text-[11px] text-ink-muted block sm:inline sm:ml-1.5 font-medium">
-                one-time onboarding
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -842,12 +648,12 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
     return 'perspective(1200px) translateY(0px) rotateX(0deg) rotateY(0deg) scale(1)';
   };
 
-  // Layered physical 3D shadows
+  // Layered physical 3D shadows with smoked glass depth
   const getCardShadow = () => {
     if (tilt.isHovered && !reduced) {
-      return '0 2px 4px rgba(31, 61, 58, 0.04), 0 14px 32px -4px rgba(31, 61, 58, 0.09), 0 32px 70px -12px rgba(31, 61, 58, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95)';
+      return '0 20px 48px -10px rgba(10, 20, 18, 0.12), 0 4px 12px -2px rgba(10, 20, 18, 0.04), 0 0 0 1px rgba(28, 45, 41, 0.14), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.90), inset 0 -1px 2px 0 rgba(14, 25, 22, 0.05)';
     }
-    return '0 1px 3px rgba(31, 61, 58, 0.04), 0 10px 28px -4px rgba(31, 61, 58, 0.07), 0 24px 60px -12px rgba(31, 61, 58, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.9)';
+    return '0 12px 36px -8px rgba(10, 20, 18, 0.075), 0 3px 8px -2px rgba(10, 20, 18, 0.03), 0 0 0 1px rgba(28, 45, 41, 0.10), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 2px 0 rgba(14, 25, 22, 0.035)';
   };
 
   return (
@@ -859,8 +665,12 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
         ref={cardRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative bg-white rounded-[26px] sm:rounded-[32px] md:rounded-[34px] border border-[#DDD5C6]/90 overflow-hidden will-change-transform"
+        className="relative rounded-[28px] sm:rounded-[34px] border border-[#1C2D29]/14 overflow-hidden will-change-transform"
         style={{
+          background:
+            'linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.065) 100%), rgba(20, 28, 26, 0.045)',
+          backdropFilter: 'blur(22px) saturate(125%) brightness(101%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(125%) brightness(101%)',
           opacity: inView || reduced ? 1 : 0,
           transform: getCardTransform(),
           boxShadow: getCardShadow(),
@@ -871,32 +681,39 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
             : 'transform 750ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 550ms cubic-bezier(0.16, 1, 0.3, 1), opacity 800ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Subtle light highlight near top-left edge */}
+        {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-0 rounded-[inherit] z-20"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.08) 25%, transparent 60%)',
-          }}
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 to-transparent z-30"
           aria-hidden="true"
         />
 
+        {/* Soft upper curved glass glare reflection */}
+        <div
+          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 via-white/5 to-transparent rounded-t-[28px] sm:rounded-t-[34px] z-30"
+          aria-hidden="true"
+        />
+
+        {/* Subtle bottom ambient glass refraction */}
+        <div
+          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 to-transparent z-30"
+          aria-hidden="true"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 relative z-10">
           {/* ══════════════════════════════════════════════
            * LEFT COLUMN: PRICING SIDE
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white relative overflow-hidden">
+          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white/45 lg:bg-transparent relative overflow-hidden backdrop-blur-md lg:backdrop-blur-none">
             {/* Subtle architectural grid texture */}
             <div
-              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
               aria-hidden="true"
             />
 
             <div className="relative z-10">
               {/* Top label & active status */}
               <div
-                className="flex items-center justify-between pb-3.5 border-b border-border-subtle/70"
+                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(10px)',
@@ -957,9 +774,9 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 </p>
               </div>
 
-              {/* ONBOARDING INSET PANEL (Second Layer Surface) */}
+              {/* ONBOARDING INSET PANEL (Smoked Glass Surface) */}
               <div
-                className="mt-5 p-4 rounded-[18px] bg-[#F8F5EE] border border-border-subtle transition-all duration-200 hover:border-brand-forest/30 relative overflow-hidden"
+                className="mt-5 p-4 rounded-[20px] bg-white/50 border border-[#1C2D29]/12 transition-all duration-200 hover:border-brand-forest/30 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-xs"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(12px)',
@@ -1030,7 +847,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
             >
               <Link
                 href="/register-hotel"
-                className="w-full bg-brand-forest hover:bg-brand-forest-light text-white font-semibold py-3.5 sm:py-4 px-6 rounded-[13px] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base group cursor-pointer select-none shadow-[0_3px_0_#142826,0_6px_14px_rgba(20,40,38,0.18)] hover:-translate-y-0.5 hover:shadow-[0_4px_0_#142826,0_10px_20px_rgba(20,40,38,0.24)] active:translate-y-[1px] active:shadow-[0_1px_0_#142826,0_3px_8px_rgba(20,40,38,0.14)]"
+                className="w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 sm:py-4 px-6 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base group cursor-pointer select-none hover:-translate-y-0.5"
               >
                 <span>Start with Grove</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
@@ -1048,19 +865,19 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
           </div>
 
           {/* ══════════════════════════════════════════════
-           * RIGHT COLUMN: ONBOARDING PANEL (WARMER SURFACE)
+           * RIGHT COLUMN: ONBOARDING PANEL (SMOKED GLASS SURFACE)
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-[#F8F5EE] border-t lg:border-t-0 lg:border-l border-border-subtle/80 flex flex-col justify-between space-y-6 relative overflow-hidden">
+          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-white/30 border-t lg:border-t-0 lg:border-l border-[#1C2D29]/10 flex flex-col justify-between space-y-6 relative overflow-hidden backdrop-blur-sm">
             {/* Subtle architectural grid texture */}
             <div
-              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
               aria-hidden="true"
             />
 
             <div className="relative z-10">
               {/* Top Header */}
               <div
-                className="flex items-center justify-between pb-3.5 border-b border-border-subtle/70"
+                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(10px)',
@@ -1103,7 +920,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 {onboardingServices.map((service, i) => (
                   <div
                     key={service.step}
-                    className="group relative p-3.5 sm:p-4 rounded-[16px] bg-white border border-border-subtle/80 shadow-[0_1px_3px_rgba(31,61,58,0.04),0_3px_8px_rgba(31,61,58,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-forest/35 hover:shadow-[0_4px_12px_rgba(31,61,58,0.08)] cursor-default overflow-hidden"
+                    className="group relative p-3.5 sm:p-4 rounded-[18px] bg-white/60 hover:bg-white/80 border border-[#1C2D29]/10 hover:border-[#1C2D29]/22 shadow-[0_2px_8px_rgba(10,20,18,0.03),inset_0_1px_1px_rgba(255,255,255,0.85)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(10,20,18,0.06)] transition-all duration-200 cursor-default overflow-hidden backdrop-blur-xs"
                     style={{
                       opacity: inView || reduced ? 1 : 0,
                       transform: inView || reduced ? 'translateY(0)' : 'translateY(14px)',
@@ -1264,12 +1081,20 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
               </p>
             </FadeIn>
 
-            {/* Step 4: Premium Pricing Capsule */}
+            {/* Step 4: Premium Pricing Capsule (Smoked Glass) */}
             <FadeIn inView={isHeroVisible} delay={300} direction="up" distance={12} scale>
-              <div className="mt-8 sm:mt-10 inline-flex flex-col sm:flex-row items-center justify-center bg-white border border-border-subtle rounded-2xl shadow-card overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-border-subtle relative">
-                {/* Architectural grid texture */}
+              <div
+                className="mt-8 sm:mt-10 inline-flex flex-col sm:flex-row items-center justify-center rounded-[24px] overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-[#1C2D29]/10 relative border border-[#1C2D29]/14 shadow-[0_12px_32px_-6px_rgba(10,20,18,0.07),inset_0_1.5px_1px_rgba(255,255,255,0.85)]"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.065) 100%), rgba(20, 28, 26, 0.045)',
+                  backdropFilter: 'blur(20px) saturate(125%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(125%)',
+                }}
+              >
+                {/* Specular top highlight */}
                 <div
-                  className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
+                  className="pointer-events-none absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent z-20"
                   aria-hidden="true"
                 />
                 {/* Monthly fee */}
@@ -1281,7 +1106,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                 </div>
 
                 {/* One-time setup & zero commission note */}
-                <div className="px-7 sm:px-9 py-3.5 sm:py-4 text-center sm:text-left bg-brand-sand/30 w-full sm:w-auto relative z-10">
+                <div className="px-7 sm:px-9 py-3.5 sm:py-4 text-center sm:text-left bg-white/20 w-full sm:w-auto relative z-10 backdrop-blur-xs">
                   <span className="text-xs sm:text-sm text-ink-muted block font-medium">
                     + <strong className="text-ink font-bold">₹10,000</strong> one-time setup
                   </span>
@@ -1293,19 +1118,19 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
               </div>
             </FadeIn>
 
-            {/* Step 5: CTA Buttons with Micro-interactions */}
+            {/* Step 5: CTA Buttons matching Grove Navbar */}
             <FadeIn inView={isHeroVisible} delay={400} direction="up" distance={12}>
               <div className="mt-8 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
                 <Link
                   href="/register-hotel"
-                  className="w-full sm:w-auto bg-brand-forest text-white font-semibold px-8 py-3.5 rounded-xl shadow-xs flex items-center justify-center gap-2 text-sm sm:text-base group transition-all duration-200 hover:bg-brand-forest-light hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+                  className="w-full sm:w-auto bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold px-8 py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] flex items-center justify-center gap-2 text-sm sm:text-base group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
                 >
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
                 <Link
                   href="/contact"
-                  className="w-full sm:w-auto bg-white text-ink font-semibold px-7 py-3.5 rounded-xl border border-border-subtle shadow-2xs flex items-center justify-center gap-2 text-sm sm:text-base transition-all duration-200 hover:bg-brand-sand/60 hover:border-ink/30 cursor-pointer"
+                  className="w-full sm:w-auto bg-white/60 hover:bg-white/85 text-ink font-semibold px-7 py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 shadow-2xs flex items-center justify-center gap-2 text-sm sm:text-base transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
                 >
                   <PhoneCall className="w-4 h-4 text-brand-forest" />
                   <span>Book a Demo</span>
@@ -1382,12 +1207,13 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
           >
             {/* Core Card 1: Reservations */}
             <StaggerItem index={0}>
-              <FloatingCard className="bg-white rounded-2xl sm:rounded-3xl border border-border-subtle p-7 sm:p-8 cursor-default group h-full">
+              <FloatingCard className="grove-glass-card rounded-[26px] p-7 sm:p-8 cursor-default group h-full overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent z-10" aria-hidden="true" />
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-brand-forest text-white flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-12 h-12 rounded-[16px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 text-white flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(10,25,22,0.18),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-transform duration-250 group-hover:scale-[1.03]">
                     <CalendarCheck2 className="w-6 h-6" />
                   </div>
-                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase px-2.5 py-1 rounded-full bg-brand-sand text-brand-forest border border-border-subtle">
+                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase px-2.5 py-1 rounded-full bg-white/60 text-brand-forest border border-[#1C2D29]/12 shadow-2xs">
                     Core Engine
                   </span>
                 </div>
@@ -1419,12 +1245,13 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
             {/* Core Card 2: Billing & Payments */}
             <StaggerItem index={1}>
-              <FloatingCard className="bg-white rounded-2xl sm:rounded-3xl border border-border-subtle p-7 sm:p-8 cursor-default group h-full">
+              <FloatingCard className="grove-glass-card rounded-[26px] p-7 sm:p-8 cursor-default group h-full overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent z-10" aria-hidden="true" />
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-brand-forest text-white flex items-center justify-center shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-12 h-12 rounded-[16px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 text-white flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(10,25,22,0.18),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-transform duration-250 group-hover:scale-[1.03]">
                     <Receipt className="w-6 h-6" />
                   </div>
-                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase px-2.5 py-1 rounded-full bg-brand-sand text-brand-forest border border-border-subtle">
+                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase px-2.5 py-1 rounded-full bg-white/60 text-brand-forest border border-[#1C2D29]/12 shadow-2xs">
                     GST-Compliant
                   </span>
                 </div>
@@ -1464,9 +1291,10 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
           >
             {/* Pillar 1: Guest CRM */}
             <StaggerItem index={0}>
-              <FloatingCard className="bg-white rounded-2xl border border-border-subtle p-6 sm:p-7 cursor-default group h-full">
+              <FloatingCard className="grove-glass-card rounded-[24px] p-6 sm:p-7 cursor-default group h-full overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10" aria-hidden="true" />
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-2xs">
+                  <div className="w-10 h-10 rounded-[14px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 text-white flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-250 group-hover:scale-[1.03]">
                     <Users className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1474,7 +1302,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                       <h3 className="font-serif font-bold text-lg text-brand-forest">
                         Guest Profiles & CRM
                       </h3>
-                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-brand-sand text-ink-muted">
+                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/60 text-ink-muted border border-[#1C2D29]/10">
                         CRM
                       </span>
                     </div>
@@ -1501,9 +1329,10 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
             {/* Pillar 2: Inventory & Supplies */}
             <StaggerItem index={1}>
-              <FloatingCard className="bg-white rounded-2xl border border-border-subtle p-6 sm:p-7 cursor-default group h-full">
+              <FloatingCard className="grove-glass-card rounded-[24px] p-6 sm:p-7 cursor-default group h-full overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10" aria-hidden="true" />
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-2xs">
+                  <div className="w-10 h-10 rounded-[14px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 text-white flex items-center justify-center shrink-0 shadow-2xs transition-transform duration-250 group-hover:scale-[1.03]">
                     <PackageCheck className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1511,7 +1340,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                       <h3 className="font-serif font-bold text-lg text-brand-forest">
                         Stock & Inventory
                       </h3>
-                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-brand-sand text-ink-muted">
+                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/60 text-ink-muted border border-[#1C2D29]/10">
                         Supplies
                       </span>
                     </div>
@@ -1573,13 +1402,14 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
               const Icon = mod.icon;
               return (
                 <StaggerItem key={mod.name} index={i}>
-                  <FloatingCard className="bg-white rounded-2xl border border-border-subtle p-5 sm:p-6 cursor-default group h-full flex flex-col justify-between">
+                  <FloatingCard className="grove-glass-card rounded-[22px] p-5 sm:p-6 cursor-default group h-full flex flex-col justify-between overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10" aria-hidden="true" />
                     <div>
                       <div className="flex items-center justify-between mb-3.5">
-                        <div className="w-9 h-9 rounded-lg bg-brand-forest text-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-2xs">
+                        <div className="w-9 h-9 rounded-[12px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 text-white flex items-center justify-center transition-transform duration-250 group-hover:scale-[1.03] shadow-2xs">
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-brand-sand text-ink-muted">
+                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/60 text-ink-muted border border-[#1C2D29]/10">
                           {mod.badge}
                         </span>
                       </div>
@@ -1800,28 +1630,44 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
             </FadeIn>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-            {/* Active Available Tier: Starter */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 lg:gap-5 items-stretch pt-4">
+            {/* Active Available Tier: Starter (Featured Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={100} direction="up" distance={16}>
-              <div className="bg-white rounded-2xl sm:rounded-3xl border-2 border-brand-forest p-6 sm:p-7 relative shadow-card h-full flex flex-col justify-between">
-                <div className="absolute -top-3 left-6 bg-brand-forest text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+              <div
+                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(20, 32, 28, 0.035) 40%, rgba(14, 28, 25, 0.075) 100%), rgba(20, 30, 27, 0.055)',
+                  backdropFilter: 'blur(22px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(22px) saturate(130%)',
+                  border: '1.5px solid rgba(31, 61, 58, 0.32)',
+                  boxShadow:
+                    '0 16px 36px -8px rgba(10, 25, 22, 0.12), 0 3px 10px -2px rgba(10, 25, 22, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.90), inset 0 -1px 2px 0 rgba(14, 25, 22, 0.04)',
+                }}
+              >
+                {/* Delicate specular top-edge glass highlight */}
+                <div
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 to-transparent z-10"
+                  aria-hidden="true"
+                />
+                <div className="absolute -top-3 left-6 z-20 bg-gradient-to-b from-[#28534E] to-[#1B3835] text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-white/25 shadow-xs">
                   Available Now
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-xl text-brand-forest pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
                     Starter
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1">
+                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
                     For independent hotels, boutique stays, and homestays
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl font-serif font-bold text-brand-forest">₹999</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹999</span>
                     <span className="text-xs text-ink-muted font-medium">/ month</span>
                   </div>
                   <p className="text-[11px] text-ink-muted mt-0.5">
                     + ₹10,000 one-time onboarding
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink border-t border-border-subtle/70 pt-4">
+                  <div className="mt-5 space-y-2 text-xs text-ink border-t border-[#1C2D29]/10 pt-4">
                     {[
                       'Reservations & Room Matrix',
                       'Guest Management & Folios',
@@ -1840,7 +1686,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/register-hotel"
-                  className="mt-6 w-full bg-brand-forest hover:bg-brand-forest-light text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-xs hover:-translate-y-0.5 group cursor-pointer"
+                  className="mt-6 w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm hover:-translate-y-0.5 group cursor-pointer"
                 >
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -1848,27 +1694,43 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
               </div>
             </FadeIn>
 
-            {/* Coming Soon Tier 1: Growth */}
+            {/* Coming Soon Tier 1: Growth (Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={180} direction="up" distance={16}>
-              <div className="bg-white/70 rounded-2xl sm:rounded-3xl border border-border-subtle p-6 sm:p-7 relative opacity-85 h-full flex flex-col justify-between">
-                <div className="absolute -top-3 left-6 bg-brand-sand text-ink-muted text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-border-subtle">
+              <div
+                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.055) 100%), rgba(20, 28, 26, 0.045)',
+                  backdropFilter: 'blur(22px) saturate(125%)',
+                  WebkitBackdropFilter: 'blur(22px) saturate(125%)',
+                  border: '1px solid rgba(28, 45, 41, 0.12)',
+                  boxShadow:
+                    '0 12px 28px -6px rgba(10, 20, 18, 0.065), 0 3px 8px -2px rgba(10, 20, 18, 0.03), 0 0 0 1px rgba(28, 45, 41, 0.04), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.035)',
+                }}
+              >
+                {/* Delicate specular top-edge glass highlight */}
+                <div
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                  aria-hidden="true"
+                />
+                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
                   Coming Soon
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-xl text-ink pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
                     Growth
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1">
+                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
                     For expanding boutique hotels requiring automation
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl font-serif font-bold text-ink/75">₹1,999</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹1,999</span>
                     <span className="text-xs text-ink-muted font-medium">/ month</span>
                   </div>
                   <p className="text-[11px] text-ink-muted mt-0.5">
                     Planned upcoming tier
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-border-subtle/70 pt-4">
+                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-[#1C2D29]/10 pt-4">
                     <p className="font-semibold text-ink text-xs mb-1">Includes Starter plus:</p>
                     {[
                       'F&B KOT & Table Order Posting',
@@ -1887,34 +1749,50 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/contact?plan=growth"
-                  className="mt-6 w-full bg-brand-sand hover:bg-brand-sand-dark text-ink-muted font-semibold py-3 rounded-xl border border-border-subtle transition-all duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer"
+                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <span>Notify Me at Launch</span>
                 </Link>
               </div>
             </FadeIn>
 
-            {/* Coming Soon Tier 2: Pro */}
+            {/* Coming Soon Tier 2: Pro (Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={260} direction="up" distance={16}>
-              <div className="bg-white/70 rounded-2xl sm:rounded-3xl border border-border-subtle p-6 sm:p-7 relative opacity-85 h-full flex flex-col justify-between">
-                <div className="absolute -top-3 left-6 bg-brand-sand text-ink-muted text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-border-subtle">
+              <div
+                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.055) 100%), rgba(20, 28, 26, 0.045)',
+                  backdropFilter: 'blur(22px) saturate(125%)',
+                  WebkitBackdropFilter: 'blur(22px) saturate(125%)',
+                  border: '1px solid rgba(28, 45, 41, 0.12)',
+                  boxShadow:
+                    '0 12px 28px -6px rgba(10, 20, 18, 0.065), 0 3px 8px -2px rgba(10, 20, 18, 0.03), 0 0 0 1px rgba(28, 45, 41, 0.04), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.035)',
+                }}
+              >
+                {/* Delicate specular top-edge glass highlight */}
+                <div
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                  aria-hidden="true"
+                />
+                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
                   Coming Soon
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-xl text-ink pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
                     Pro
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1">
+                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
                     For multi-property groups and resort operations
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl font-serif font-bold text-ink/75">₹3,999</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹3,999</span>
                     <span className="text-xs text-ink-muted font-medium">/ month</span>
                   </div>
                   <p className="text-[11px] text-ink-muted mt-0.5">
                     Planned upcoming tier
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-border-subtle/70 pt-4">
+                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-[#1C2D29]/10 pt-4">
                     <p className="font-semibold text-ink text-xs mb-1">Includes Growth plus:</p>
                     {[
                       'Two-Way OTA Channel Manager',
@@ -1933,7 +1811,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/contact?plan=pro"
-                  className="mt-6 w-full bg-brand-sand hover:bg-brand-sand-dark text-ink-muted font-semibold py-3 rounded-xl border border-border-subtle transition-all duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer"
+                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Inquire for Multi-Property</span>
@@ -2027,14 +1905,14 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-md mx-auto mt-8">
               <Link
                 href="/register-hotel"
-                className="w-full sm:w-auto bg-brand-forest hover:bg-brand-forest-light text-white font-semibold py-3.5 px-8 rounded-xl transition-all duration-200 shadow-xs flex items-center justify-center gap-2 group text-sm sm:text-base hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+                className="w-full sm:w-auto bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 px-8 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 group text-sm sm:text-base hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/contact"
-                className="w-full sm:w-auto bg-white text-ink font-semibold py-3.5 px-7 rounded-xl border border-border-subtle transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base shadow-2xs hover:bg-brand-sand/60 hover:border-ink/30 cursor-pointer"
+                className="w-full sm:w-auto bg-white/60 hover:bg-white/85 text-ink font-semibold py-3.5 px-7 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base shadow-2xs hover:-translate-y-0.5 cursor-pointer"
               >
                 <PhoneCall className="w-4 h-4 text-brand-forest" />
                 <span>Book a Demo</span>

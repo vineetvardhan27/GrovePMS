@@ -50,17 +50,69 @@
       inset 0 2px 4px 0 rgba(10, 22, 20, 0.35);
 
     /* Glassmorphic Surface Design System Tokens */
-    --glass-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 253, 249, 0.52) 100%);
-    --glass-card-bg-hover: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 253, 249, 0.72) 100%);
-    --glass-card-border: rgba(255, 255, 255, 0.85);
-    --glass-card-border-hover: rgba(31, 61, 58, 0.22);
-    --glass-card-shadow: 0 10px 30px -10px rgba(31, 61, 58, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 1.5px rgba(255, 255, 255, 0.95);
-    --glass-card-shadow-hover: 0 18px 42px -10px rgba(31, 61, 58, 0.11), 0 4px 12px rgba(0, 0, 0, 0.04), inset 0 1px 1.5px rgba(255, 255, 255, 1);
+    --glass-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.055) 100%),
+      rgba(20, 28, 26, 0.045);
+    --glass-card-bg-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(20, 28, 26, 0.035) 40%, rgba(20, 28, 26, 0.075) 100%),
+      rgba(20, 28, 26, 0.06);
+    --glass-card-border: rgba(28, 45, 41, 0.12);
+    --glass-card-border-hover: rgba(28, 45, 41, 0.20);
+    --glass-card-shadow:
+      0 12px 28px -6px rgba(10, 20, 18, 0.065),
+      0 3px 8px -2px rgba(10, 20, 18, 0.03),
+      0 0 0 1px rgba(28, 45, 41, 0.04),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.78),
+      inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.035);
+    --glass-card-shadow-hover:
+      0 18px 40px -8px rgba(10, 20, 18, 0.11),
+      0 4px 12px -2px rgba(10, 20, 18, 0.045),
+      0 0 0 1px rgba(28, 45, 41, 0.09),
+      inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.90),
+      inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.05);
 
     /* Rich Dark Glass Panel Tokens */
     --glass-dark-bg: linear-gradient(145deg, rgba(24, 52, 48, 0.92) 0%, rgba(16, 38, 35, 0.96) 100%);
     --glass-dark-border: rgba(255, 255, 255, 0.16);
     --glass-dark-shadow: 0 24px 60px -12px rgba(10, 25, 23, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+
+    /* White Glassmorphic Components Tokens (Activity Notifications & Room Status Cards) */
+    --white-glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.24) 100%);
+    --white-glass-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.32) 100%);
+    --white-glass-border: rgba(255, 255, 255, 0.72);
+    --white-glass-border-hover: rgba(255, 255, 255, 0.95);
+    --white-glass-shadow: 0 4px 14px -2px rgba(15, 36, 33, 0.035), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.90);
+    --white-glass-shadow-hover: 0 6px 18px -2px rgba(15, 36, 33, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+
+    --white-glass-panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.42) 0%, rgba(246, 243, 238, 0.28) 50%, rgba(255, 255, 255, 0.35) 100%), rgba(255, 255, 255, 0.20);
+    --white-glass-panel-border: rgba(255, 255, 255, 0.72);
+    --white-glass-panel-shadow: 0 10px 30px -6px rgba(15, 36, 33, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(28, 45, 41, 0.04), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 2px 0 rgba(15, 36, 33, 0.03);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --white-glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+      --white-glass-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+      --white-glass-border: rgba(255, 255, 255, 0.16);
+      --white-glass-border-hover: rgba(255, 255, 255, 0.28);
+      --white-glass-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      --white-glass-shadow-hover: 0 6px 18px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+
+      --white-glass-panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(18, 28, 26, 0.45) 100%);
+      --white-glass-panel-border: rgba(255, 255, 255, 0.12);
+      --white-glass-panel-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.14);
+    }
+  }
+
+  .dark {
+    --white-glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+    --white-glass-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+    --white-glass-border: rgba(255, 255, 255, 0.16);
+    --white-glass-border-hover: rgba(255, 255, 255, 0.28);
+    --white-glass-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    --white-glass-shadow-hover: 0 6px 18px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+
+    --white-glass-panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(18, 28, 26, 0.45) 100%);
+    --white-glass-panel-border: rgba(255, 255, 255, 0.12);
+    --white-glass-panel-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.14);
   }
 
   html {
@@ -584,16 +636,18 @@
 
 /* Glassmorphic Surface Components */
 .grove-glass-card {
+  position: relative;
   background: var(--glass-card-bg);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(20px) saturate(125%) brightness(101%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%) brightness(101%);
   border: 1px solid var(--glass-card-border);
+  border-radius: 26px;
   box-shadow: var(--glass-card-shadow);
   transition:
-    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 240ms ease,
-    background 240ms ease;
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms ease,
+    background 260ms ease;
   will-change: transform, box-shadow;
 }
 
@@ -620,13 +674,52 @@
   box-shadow: 0 2px 8px rgba(31, 61, 58, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
+/* White Glassmorphism Utility Classes */
+.white-glass-panel {
+  position: relative;
+  background: var(--white-glass-panel-bg);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  border: 1px solid var(--white-glass-panel-border);
+  box-shadow: var(--white-glass-panel-shadow);
+  border-radius: 20px;
+}
+
+.white-glass-card {
+  position: relative;
+  background: var(--white-glass-bg);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid var(--white-glass-border);
+  box-shadow: var(--white-glass-shadow);
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.white-glass-card:hover {
+  background: var(--white-glass-bg-hover);
+  border-color: var(--white-glass-border-hover);
+  box-shadow: var(--white-glass-shadow-hover);
+  transform: translateY(-1.5px);
+}
+
 @supports not (backdrop-filter: blur(10px)) {
 
   .grove-navbar-capsule,
-  .grove-glass-card,
   .grove-glass-panel,
   .grove-control-centre-panel {
     background-color: rgba(255, 253, 249, 0.96) !important;
+  }
+
+  .grove-glass-card {
+    background-color: #EEEAE1 !important;
+  }
+
+  .white-glass-panel {
+    background-color: rgba(255, 255, 255, 0.96) !important;
+  }
+
+  .white-glass-card {
+    background-color: rgba(255, 255, 255, 0.94) !important;
   }
 }
 

@@ -371,12 +371,12 @@ export default function LandingPageClient({
       {/* ───────────── 4. MODULES GRID ───────────── */}
       <section
         ref={modulesSection.ref}
-        className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden"
+        className="bg-[#F8F5EE] border-y border-border-subtle/80 py-16 sm:py-24 relative overflow-hidden"
         id="features"
       >
-        {/* Subtle architectural grid texture */}
+        {/* Subtle architectural grid texture visible through translucent glass */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture opacity-75"
           aria-hidden="true"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -398,26 +398,46 @@ export default function LandingPageClient({
             inView={modulesSection.inView}
             baseDelay={120}
             staggerMs={50}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
           >
             {modules.map((mod, i) => {
               const Icon = mod.icon;
               const cardContent = (
-                <FloatingCard
-                  hoverY={-4}
-                  className="grove-glass-card p-5 sm:p-6 rounded-2xl cursor-pointer group flex flex-col items-start h-full"
+                <div
+                  className="grove-glass-card p-5 sm:p-6 rounded-[26px] cursor-pointer group flex flex-col justify-between h-full overflow-hidden"
                 >
-                  <div className="w-10 h-10 bg-brand-forest text-white rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 shadow-xs">
-                    <Icon className="w-5 h-5" />
+                  {/* Delicate specular top-edge glass highlight */}
+                  <div
+                    className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                    aria-hidden="true"
+                  />
+
+                  <div>
+                    {/* 54-58px Icon container with deep forest-green gradient and subtle dark edge */}
+                    <div className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-[18px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 shadow-[0_4px_12px_rgba(10,25,22,0.20),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center shrink-0 transition-transform duration-250 ease-out group-hover:scale-[1.02] overflow-hidden">
+                      <div
+                        className="pointer-events-none absolute inset-x-2 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                        aria-hidden="true"
+                      />
+                      <Icon className="w-6 h-6 text-white" strokeWidth={1.85} />
+                    </div>
+
+                    {/* Feature Title - Refined serif typography in deep charcoal */}
+                    <h3 className="font-serif font-bold text-base sm:text-[17px] text-[#1A2624] mt-4 sm:mt-5 tracking-tight flex items-center justify-between w-full leading-snug">
+                      <span>{mod.name}</span>
+                      {mod.href && (
+                        <div className="w-6 h-6 rounded-full bg-white/50 border border-[#1C2D29]/15 flex items-center justify-center opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 shrink-0 ml-2 shadow-2xs">
+                          <ArrowRight className="w-3.5 h-3.5 text-brand-forest" strokeWidth={2} />
+                        </div>
+                      )}
+                    </h3>
+
+                    {/* Feature Description - Clean sans-serif in warm, muted dark grey */}
+                    <p className="text-xs sm:text-[13px] text-[#4A5451] leading-relaxed mt-2 font-normal">
+                      {mod.desc}
+                    </p>
                   </div>
-                  <h3 className="font-serif font-bold text-base text-ink mt-3.5 flex items-center justify-between w-full">
-                    <span>{mod.name}</span>
-                    {mod.href && (
-                      <ArrowRight className="w-3.5 h-3.5 text-brand-forest opacity-0 group-hover:opacity-100 transition-opacity" />
-                    )}
-                  </h3>
-                  <p className="text-xs text-ink-muted leading-relaxed mt-1.5">{mod.desc}</p>
-                </FloatingCard>
+                </div>
               );
 
               return (
@@ -425,7 +445,7 @@ export default function LandingPageClient({
                   {mod.href ? (
                     <Link
                       href={mod.href}
-                      className="block h-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-forest rounded-2xl"
+                      className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8F5EE] rounded-[26px]"
                     >
                       {cardContent}
                     </Link>

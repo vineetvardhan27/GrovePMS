@@ -306,15 +306,11 @@ export function FloatingCard({
       }}
       onMouseEnter={(e) => {
         if (isMobile || reduced) return;
-        e.currentTarget.style.transform = `translateY(${hoverY}px)`;
-        e.currentTarget.style.boxShadow = '0 12px 32px -4px rgba(31, 61, 58, 0.12)';
-        e.currentTarget.style.borderColor = 'rgba(31, 61, 58, 0.25)';
+        if (hoverY) e.currentTarget.style.transform = `translateY(${hoverY}px)`;
       }}
       onMouseLeave={(e) => {
         if (isMobile || reduced) return;
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '';
-        e.currentTarget.style.borderColor = '';
+        if (hoverY) e.currentTarget.style.transform = 'translateY(0)';
       }}
       {...props}
     >

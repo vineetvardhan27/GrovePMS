@@ -48,7 +48,7 @@ export const STATUS_CONFIG: Record<
   available: {
     label: 'Available',
     icon: CheckCircle2,
-    bgClass: 'bg-status-green/10 hover:bg-status-green/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-green/30 hover:border-status-green',
     textClass: 'text-status-green',
     badgeBg: 'bg-status-green/15 text-status-green border-status-green/25',
@@ -56,7 +56,7 @@ export const STATUS_CONFIG: Record<
   occupied: {
     label: 'Occupied',
     icon: Users,
-    bgClass: 'bg-status-red/10 hover:bg-status-red/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-red/30 hover:border-status-red',
     textClass: 'text-status-red',
     badgeBg: 'bg-status-red/15 text-status-red border-status-red/25',
@@ -64,7 +64,7 @@ export const STATUS_CONFIG: Record<
   arriving_today: {
     label: 'Arriving Today',
     icon: Clock,
-    bgClass: 'bg-status-amber/10 hover:bg-status-amber/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-amber/30 hover:border-status-amber',
     textClass: 'text-status-amber',
     badgeBg: 'bg-status-amber/15 text-status-amber border-status-amber/25',
@@ -72,7 +72,7 @@ export const STATUS_CONFIG: Record<
   reserved: {
     label: 'Reserved',
     icon: Calendar,
-    bgClass: 'bg-status-blue/10 hover:bg-status-blue/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-blue/30 hover:border-status-blue',
     textClass: 'text-status-blue',
     badgeBg: 'bg-status-blue/15 text-status-blue border-status-blue/25',
@@ -80,7 +80,7 @@ export const STATUS_CONFIG: Record<
   cleaning: {
     label: 'Cleaning',
     icon: Sparkles,
-    bgClass: 'bg-status-orange/10 hover:bg-status-orange/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-orange/30 hover:border-status-orange',
     textClass: 'text-status-orange',
     badgeBg: 'bg-status-orange/15 text-status-orange border-status-orange/25',
@@ -88,7 +88,7 @@ export const STATUS_CONFIG: Record<
   maintenance: {
     label: 'Maintenance',
     icon: Wrench,
-    bgClass: 'bg-status-slate/10 hover:bg-status-slate/15',
+    bgClass: 'bg-white/45 hover:bg-white/65 backdrop-blur-md shadow-[0_4px_14px_-2px_rgba(15,36,33,0.035),inset_0_1px_0_rgba(255,255,255,0.9)]',
     borderClass: 'border-status-slate/30 hover:border-status-slate',
     textClass: 'text-status-slate',
     badgeBg: 'bg-status-slate/15 text-status-slate border-status-slate/25',
@@ -111,6 +111,12 @@ export default function RoomCard({ room, onClick, isSelected }: RoomCardProps) {
       }`}
       aria-label={`Room ${room.room_number}, ${room.category.name}, status is ${config.label}`}
     >
+      {/* Delicate white top-edge highlight */}
+      <div
+        className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+        aria-hidden="true"
+      />
+
       {/* Top row: Room Number & Status Icon */}
       <div className="flex items-start justify-between w-full">
         <div>
