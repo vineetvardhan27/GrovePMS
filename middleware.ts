@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = [
   '/',
   '/about',
   '/pricing',
+  '/subscription',
   '/contact',
   '/compliance',
   '/privacy-policy',

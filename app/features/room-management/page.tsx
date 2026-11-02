@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
@@ -8,36 +9,67 @@ import { getBreadcrumbSchema } from '@/lib/seo/structuredData';
 import {
   BedDouble,
   Sparkles,
-  CalendarCheck,
   CheckCircle2,
   ArrowRight,
-  Shield,
   Layers,
   Wrench,
   Clock,
+  ShieldCheck,
+  Building2,
+  RefreshCw,
+  Eye,
+  Sliders,
 } from 'lucide-react';
 
+import RoomManagementShowcase from '@/components/landing/features/RoomManagementShowcase';
+import FeatureFaqSection, { type FaqItem } from '@/components/landing/features/FeatureFaqSection';
+import FeatureModuleNav from '@/components/landing/features/FeatureModuleNav';
+import FeatureConversionBanner from '@/components/landing/features/FeatureConversionBanner';
+
 export const metadata: Metadata = {
-  title: 'Hotel Room Management & Front Desk Software',
+  title: 'Hotel Room Management & Interactive Front Desk Matrix | Grove PMS',
   description:
-    'Visual room matrix, room status tracking, floor layout oversight, and real-time housekeeping turnarounds for hotel front desk operators.',
+    'Real-time visual room matrix, floor-by-floor layout, automated housekeeping turnarounds, and instant maintenance blocking for boutique hotels and resorts.',
   alternates: {
     canonical: '/features/room-management',
   },
   openGraph: {
-    title: 'Hotel Room Management & Front Desk Software | Grove PMS',
+    title: 'Hotel Room Management & Interactive Front Desk Matrix | Grove PMS',
     description:
-      'Visual room matrix, room status tracking, floor layout oversight, and real-time housekeeping turnarounds for hotel front desk operators.',
+      'Real-time visual room matrix, floor-by-floor layout, automated housekeeping turnarounds, and instant maintenance blocking for boutique hotels and resorts.',
     url: 'https://www.grovepms.me/features/room-management',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Hotel Room Management & Front Desk Software | Grove PMS',
+    title: 'Hotel Room Management & Interactive Front Desk Matrix | Grove PMS',
     description:
-      'Visual room matrix, room status tracking, floor layout oversight, and real-time housekeeping turnarounds for hotel front desk operators.',
+      'Real-time visual room matrix, floor-by-floor layout, automated housekeeping turnarounds, and instant maintenance blocking for boutique hotels and resorts.',
   },
 };
+
+const roomFaqs: FaqItem[] = [
+  {
+    question: 'How does Grove synchronize room status between Reception and Housekeeping?',
+    answer:
+      'Whenever front desk checks in or checks out a guest, the room status updates instantly across all devices without page refreshes. Housekeeping staff can mark rooms as "Cleaning In-Progress" or "Clean & Inspected" directly from their mobile phones or tablets, giving reception immediate green-light availability.',
+  },
+  {
+    question: 'Can we configure custom room categories and multi-building layouts?',
+    answer:
+      'Yes. Grove allows full customization of floors, wings, heritage cottages, and villas. You can set individual room base tariffs, extra bed charges, amenities, and default maximum occupancies for Deluxe Kings, Twin Suites, and Villas.',
+  },
+  {
+    question: 'How does maintenance blocking (Out of Order) work?',
+    answer:
+      'If an AC, plumbing, or painting repair is needed, you can mark the room as Out-of-Order with custom maintenance notes and an expected restoration date. Grove automatically excludes these rooms from available sellable inventory so receptionists cannot accidentally assign them.',
+  },
+  {
+    question: 'Is the room matrix fast on mobile phones and tablets?',
+    answer:
+      'Yes. The room matrix is engineered with responsive glassmorphic cards and touch-optimized controls. Whether your manager is walking the property with an iPad or reception is at a desktop terminal, all statuses load instantaneously.',
+  },
+];
 
 export default function RoomManagementFeaturePage() {
   const breadcrumbSchema = getBreadcrumbSchema([
@@ -47,14 +79,14 @@ export default function RoomManagementFeaturePage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between">
+    <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between relative overflow-x-hidden">
       <JsonLd data={breadcrumbSchema} />
       <PublicHeader />
 
-      <main className="pt-28 sm:pt-36 pb-20">
-        {/* Breadcrumb Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-          <nav aria-label="Breadcrumb" className="text-xs text-ink-muted flex items-center gap-1.5">
+      <main className="pt-28 sm:pt-36 pb-12">
+        {/* ── BREADCRUMB BAR ── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8">
+          <nav aria-label="Breadcrumb" className="text-xs text-ink-muted flex items-center gap-1.5 font-medium">
             <Link href="/" className="hover:text-brand-forest transition-colors">
               Home
             </Link>
@@ -67,100 +99,219 @@ export default function RoomManagementFeaturePage() {
           </nav>
         </div>
 
-        {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-6 shadow-2xs">
-            <BedDouble className="w-3.5 h-3.5" />
-            <span>Interactive Room Matrix</span>
+        {/* ── HERO SECTION ── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-8 sm:pb-12">
+          <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
+            <Image
+              src="/Grove.png"
+              alt="Grove Logo"
+              width={16}
+              height={16}
+              className="w-4 h-4 object-contain shrink-0"
+            />
+            <span>Grove PMS — Interactive Front Desk Matrix</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-brand-forest tracking-tight max-w-4xl mx-auto leading-[1.12]">
-            Hotel Room Management & Front Desk Software
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-black tracking-tight max-w-4xl mx-auto leading-[1.10]">
+            Complete Room Clarity.
+            <br />
+            Across Every Floor and Wing.
           </h1>
 
-          <p className="mt-4 sm:mt-6 text-base sm:text-xl text-ink-muted max-w-3xl mx-auto leading-relaxed">
-            Give your reception and housekeeping teams complete real-time clarity. View room statuses across all floors, trigger express check-ins, record maintenance flags, and coordinate instant cleaning turnarounds.
+          <p className="mt-5 sm:mt-7 text-base sm:text-xl text-ink-muted max-w-3xl mx-auto leading-relaxed">
+            Eliminate walk-around room checks and chalkboard matrices. Monitor live floor plans, express guest check-ins, real-time housekeeping turnarounds, and maintenance flags on one responsive interface.
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-md mx-auto">
             <GroveButton href="/register-hotel" variant="primary" size="lg" withArrow className="w-full sm:w-auto">
-              Explore Room Matrix
+              Start Free Trial
             </GroveButton>
             <GroveButton href="/contact" variant="secondary" size="lg" className="w-full sm:w-auto">
               Schedule Front Desk Demo
             </GroveButton>
           </div>
+
+          {/* Interactive Room Matrix Showcase Mockup */}
+          <RoomManagementShowcase />
         </section>
 
-        {/* Capabilities Grid */}
-        <section className="bg-white border-y border-border-subtle py-16 sm:py-24">
+        {/* ── 4 CORE CAPABILITIES ASYMMETRICAL GRID ── */}
+        <section className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 block mb-2">
+              Operational Architecture
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-black">
+              Precision Engineering for Busy Front Desks
+            </h2>
+            <p className="text-sm sm:text-base text-ink-muted mt-3">
+              Built from ground-up for front-office receptionists, executive housekeepers, and general managers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            {/* Capability 1 */}
+            <div className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 p-6 sm:p-8 shadow-[0_10px_30px_rgba(20,28,26,0.03)] space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-2xl bg-brand-forest/10 text-brand-forest flex items-center justify-center">
+                <Layers className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#142320]">
+                Floor-by-Floor Architectural Views
+              </h3>
+              <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                Group rooms intuitively by floors, wings, private cottages, or executive villas. Filter in one click to view only Available, Occupied, or Cleaning rooms, minimizing front desk wait times during peak morning arrivals.
+              </p>
+              <ul className="space-y-2 pt-2 text-xs text-[#142320]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Customizable floor naming and wing grouping</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Configurable room types, tariffs, and extra bed policies</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Capability 2 */}
+            <div className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 p-6 sm:p-8 shadow-[0_10px_30px_rgba(20,28,26,0.03)] space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-2xl bg-brand-forest/10 text-brand-forest flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#142320]">
+                Instant Housekeeping Turnaround Sync
+              </h3>
+              <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                Connect your housekeeping supervisors directly with front-desk reception. When a room is inspected and marked clean, it immediately updates to ready-to-sell across all front desk terminals without intercom calls.
+              </p>
+              <ul className="space-y-2 pt-2 text-xs text-[#142320]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Color-coded status pills: OCC (Red), AVL (Green), CLN (Amber)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Housekeeper assignment and timestamped inspection logs</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Capability 3 */}
+            <div className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 p-6 sm:p-8 shadow-[0_10px_30px_rgba(20,28,26,0.03)] space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-2xl bg-brand-forest/10 text-brand-forest flex items-center justify-center">
+                <Wrench className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#142320]">
+                Maintenance Blocking &amp; Out-of-Order Flags
+              </h3>
+              <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                Take rooms temporarily offline for scheduled deep-cleaning, plumbing maintenance, or painting. Out-of-order rooms are mathematically excluded from available inventory, completely preventing accidental double-allocations.
+              </p>
+              <ul className="space-y-2 pt-2 text-xs text-[#142320]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Log engineering work orders with technician notes</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Automatic adjustment of sellable inventory and ADR statistics</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Capability 4 */}
+            <div className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 p-6 sm:p-8 shadow-[0_10px_30px_rgba(20,28,26,0.03)] space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-2xl bg-brand-forest/10 text-brand-forest flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#142320]">
+                One-Click Folio &amp; Stay Inspection
+              </h3>
+              <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                Clicking any room tile opens an instant contextual inspector showing the occupant name, stay dates, outstanding charges, food orders, and special guest preferences. No navigating between five separate menus.
+              </p>
+              <ul className="space-y-2 pt-2 text-xs text-[#142320]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>Instant access to guest profile and WhatsApp confirmation</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-status-green" />
+                  <span>1-click room upgrade or stay extension directly from matrix</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ── CONNECTED OPERATIONS WORKFLOW ── */}
+        <section className="py-16 sm:py-20 bg-white/60 border-y border-[#1C2D29]/8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 block mb-2">
-                Operational Efficiency
+                Operational Lifecycle
               </span>
-              <h2 className="text-2xl sm:text-4xl font-serif font-bold text-brand-forest">
-                Precision Control Over Every Room on Your Property
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
+                How Rooms Flow Through Grove
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-brand-sand/30 border border-border-subtle space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <h3 className="font-serif font-bold text-lg text-ink">Floor-by-Floor Architecture</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-                  Organize rooms intuitively across floors, buildings, or cottages. Filter instantly by room type (Deluxe, Suite, Executive) or cleaning status.
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="p-5 rounded-2xl bg-white border border-[#1C2D29]/8 shadow-2xs space-y-2 relative">
+                <span className="font-mono font-bold text-xs text-brand-forest px-2 py-0.5 rounded bg-brand-sand">
+                  01. ASSIGN
+                </span>
+                <h4 className="font-serif font-bold text-base text-[#142320]">Arrival &amp; Check-in</h4>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Reception selects an inspected available room and confirms guest ID in seconds.
                 </p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-brand-sand/30 border border-border-subtle space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <h3 className="font-serif font-bold text-lg text-ink">Live Housekeeping States</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-                  Clean & Available, Occupied Dirty, Cleaning In-Progress, or Out-of-Order. Reception sees cleaning updates the second housekeeping finishes inspection.
+              <div className="p-5 rounded-2xl bg-white border border-[#1C2D29]/8 shadow-2xs space-y-2 relative">
+                <span className="font-mono font-bold text-xs text-brand-forest px-2 py-0.5 rounded bg-brand-sand">
+                  02. OCCUPY
+                </span>
+                <h4 className="font-serif font-bold text-base text-[#142320]">Active Stay &amp; POS</h4>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Tile turns red (OCC). Restaurant KOTs and amenities auto-post to the room folio.
                 </p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-brand-sand/30 border border-border-subtle space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center">
-                  <Wrench className="w-5 h-5" />
-                </div>
-                <h3 className="font-serif font-bold text-lg text-ink">Maintenance & Blocking</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-                  Place rooms out of inventory for scheduled plumbing, painting, or AC repairs with custom notes, ensuring they are excluded from available booking inventory.
+              <div className="p-5 rounded-2xl bg-white border border-[#1C2D29]/8 shadow-2xs space-y-2 relative">
+                <span className="font-mono font-bold text-xs text-brand-forest px-2 py-0.5 rounded bg-brand-sand">
+                  03. DEPART
+                </span>
+                <h4 className="font-serif font-bold text-base text-[#142320]">Checkout &amp; Dirty</h4>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Upon bill settlement, the room shifts instantly to yellow (CLN) alerting housekeeping.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white border border-[#1C2D29]/8 shadow-2xs space-y-2 relative">
+                <span className="font-mono font-bold text-xs text-brand-forest px-2 py-0.5 rounded bg-brand-sand">
+                  04. INSPECT
+                </span>
+                <h4 className="font-serif font-bold text-base text-[#142320]">Inspected &amp; Ready</h4>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Housekeeper confirms clean status on mobile; room turns green (AVL) for new guests.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Internal Links Navigation */}
-        <section className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl p-8 border border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
-            <div>
-              <h3 className="font-serif font-bold text-xl text-brand-forest">Explore Other Grove PMS Modules</h3>
-              <p className="text-xs sm:text-sm text-ink-muted mt-1">Connect your room operations with billing, reservations, and inventory.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-brand-forest">
-              <Link href="/features/reservations" className="hover:underline flex items-center gap-1">
-                <span>Reservations</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link href="/features/billing-and-payments" className="hover:underline flex items-center gap-1">
-                <span>Billing & Folios</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link href="/features/inventory-management" className="hover:underline flex items-center gap-1">
-                <span>Inventory</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* ── FAQ SECTION ── */}
+        <FeatureFaqSection moduleName="Room Management" faqs={roomFaqs} />
+
+        {/* ── CONVERSION BANNER ── */}
+        <FeatureConversionBanner
+          title="Empower Your Front Desk with Real-Time Room Visibility."
+          subtitle="Join boutique hotels and independent resorts that use Grove PMS to eliminate room allocation errors, accelerate check-ins, and streamline housekeeping."
+          primaryCtaText="Get Started with Grove PMS"
+        />
+
+        {/* ── MODULE NAVIGATION ── */}
+        <FeatureModuleNav currentSlug="room-management" />
       </main>
 
       <PublicFooter />

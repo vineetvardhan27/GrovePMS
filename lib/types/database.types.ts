@@ -127,6 +127,31 @@ export type BanquetChargeCategory =
   | 'cleaning'
   | 'miscellaneous';
 
+export type SubscriptionStatus =
+  | 'created'
+  | 'authenticated'
+  | 'active'
+  | 'pending'
+  | 'halted'
+  | 'cancelled'
+  | 'completed'
+  | 'expired';
+
+export type PaymentTransactionStatus =
+  | 'created'
+  | 'authorized'
+  | 'captured'
+  | 'refunded'
+  | 'failed';
+
+export type WebhookProcessingStatus =
+  | 'pending'
+  | 'processed'
+  | 'failed'
+  | 'ignored';
+
+export type SubscriptionBillingInterval = 'monthly' | 'yearly' | 'quarterly';
+
 export interface HotelSettings {
   gst_enabled: boolean;
   gst_percentage: number;
@@ -1314,6 +1339,170 @@ export interface Database {
           created_at?: string;
         };
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          plan_name: string;
+          razorpay_plan_id: string | null;
+          razorpay_subscription_id: string | null;
+          status: SubscriptionStatus;
+          amount: number;
+          currency: string;
+          billing_interval: SubscriptionBillingInterval;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          next_billing_at: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          plan_name?: string;
+          razorpay_plan_id?: string | null;
+          razorpay_subscription_id?: string | null;
+          status?: SubscriptionStatus;
+          amount: number;
+          currency?: string;
+          billing_interval?: SubscriptionBillingInterval;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          next_billing_at?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          plan_name?: string;
+          razorpay_plan_id?: string | null;
+          razorpay_subscription_id?: string | null;
+          status?: SubscriptionStatus;
+          amount?: number;
+          currency?: string;
+          billing_interval?: SubscriptionBillingInterval;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          next_billing_at?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      payment_transactions: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          subscription_id: string | null;
+          razorpay_payment_id: string | null;
+          amount: number;
+          currency: string;
+          status: PaymentTransactionStatus;
+          payment_method: string | null;
+          invoice_reference: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          subscription_id?: string | null;
+          razorpay_payment_id?: string | null;
+          amount: number;
+          currency?: string;
+          status?: PaymentTransactionStatus;
+          payment_method?: string | null;
+          invoice_reference?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          subscription_id?: string | null;
+          razorpay_payment_id?: string | null;
+          amount?: number;
+          currency?: string;
+          status?: PaymentTransactionStatus;
+          payment_method?: string | null;
+          invoice_reference?: string | null;
+          created_at?: string;
+        };
+      };
+      billing_customers: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          customer_name: string;
+          email: string;
+          phone: string | null;
+          billing_address: string | null;
+          city: string | null;
+          state: string | null;
+          gstin: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          customer_name: string;
+          email: string;
+          phone?: string | null;
+          billing_address?: string | null;
+          city?: string | null;
+          state?: string | null;
+          gstin?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          hotel_id?: string;
+          customer_name?: string;
+          email?: string;
+          phone?: string | null;
+          billing_address?: string | null;
+          city?: string | null;
+          state?: string | null;
+          gstin?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      webhook_events: {
+        Row: {
+          id: string;
+          razorpay_event_id: string;
+          event_type: string;
+          processing_status: WebhookProcessingStatus;
+          processed_at: string | null;
+          payload: Json;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          razorpay_event_id: string;
+          event_type: string;
+          processing_status?: WebhookProcessingStatus;
+          processed_at?: string | null;
+          payload?: Json;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          razorpay_event_id?: string;
+          event_type?: string;
+          processing_status?: WebhookProcessingStatus;
+          processed_at?: string | null;
+          payload?: Json;
+          error_message?: string | null;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1326,6 +1515,20 @@ export interface Database {
       get_current_staff_role: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      get_hotel_subscription_status: {
+        Args: {
+          target_hotel_id: string;
+        };
+        Returns: {
+          subscription_id: string;
+          plan_name: string;
+          status: string;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          next_billing_at: string | null;
+          is_active: boolean;
+        }[];
       };
     };
     Enums: {

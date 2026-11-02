@@ -155,7 +155,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
         />
 
         {/* ── Product Chrome Header Bar ── */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-3 sm:py-3.5 border-b border-white/60 bg-white/40 backdrop-blur-md relative z-10">
+        <div className="flex items-center justify-between px-5 sm:px-7 py-3 sm:py-3.5 mb-2 relative z-10">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-white/80 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90 flex items-center justify-center shrink-0">
               <Image

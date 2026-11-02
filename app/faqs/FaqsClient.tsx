@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import { HelpCircle, ChevronDown } from 'lucide-react';
@@ -21,11 +22,17 @@ export default function FaqsClient() {
       <main className="pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Header */}
         <div className="mb-10 pb-8 border-b border-border-subtle">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-4">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>Frequently Asked Questions</span>
+          <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-4 shadow-2xs">
+            <Image
+              src="/Grove.png"
+              alt="Grove Logo"
+              width={16}
+              height={16}
+              className="w-4 h-4 object-contain shrink-0"
+            />
+            <span>Grove PMS — Frequently Asked Questions</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-brand-forest tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-black tracking-tight">
             Frequently Asked Questions
           </h1>
           <p className="text-sm sm:text-base text-ink-muted mt-3 max-w-2xl leading-relaxed">

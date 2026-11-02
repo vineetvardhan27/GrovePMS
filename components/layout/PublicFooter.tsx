@@ -276,8 +276,8 @@ export default function PublicFooter() {
           </span>
         </div>
 
-        {/* Bottom Bar Divider and Copyright */}
-        <div className="relative z-10 border-t border-border-subtle/70 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-ink-muted">
+        {/* Bottom Bar Copyright */}
+        <div className="relative z-10 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-ink-muted">
           <p>© 2026 {PRODUCT_NAME}. All rights reserved.</p>
           <div className="flex items-center gap-2 text-ink-muted text-[11px] sm:text-xs">
             <Lock className="w-3.5 h-3.5 text-brand-forest/70 shrink-0" aria-hidden="true" />

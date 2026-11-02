@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
   Hotel,
@@ -34,6 +35,7 @@ import {
   Receipt,
   Check,
   Clock,
+  ArrowUpRight,
 } from 'lucide-react';
 import {
   useInView,
@@ -217,6 +219,9 @@ const caseStudyProperty = {
   locationTag: 'Gangtok, Sikkim',
   title: 'Hotel Greenery View',
   description: 'One platform for reservations, billing, housekeeping and dining.',
+  websiteUrl: 'https://hotelgreeneryview.com',
+  websiteDisplay: 'hotelgreeneryview.com',
+  logoSrc: '/images/hotel/hotel-greenery-view-logo.png',
   sectionLabel: 'Active modules',
   modules: [
     'Front Desk',
@@ -297,17 +302,23 @@ export default function LandingPageClient({
           {/* Badge */}
           <FadeIn inView={hero.inView} delay={0} direction="up" distance={12}>
             <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
-              <Layers className="w-3.5 h-3.5 text-brand-forest/80" />
+              <Image
+                src="/Grove.png"
+                alt="Grove Logo"
+                width={16}
+                height={16}
+                className="w-4 h-4 object-contain shrink-0"
+              />
               <span>Grove PMS — Unified Property Management</span>
             </div>
           </FadeIn>
 
           {/* Headline */}
           <FadeIn inView={hero.inView} delay={80} direction="up" distance={16}>
-            <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-serif font-bold text-brand-forest tracking-tight max-w-4xl mx-auto leading-[1.12]">
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-serif font-bold text-black tracking-tight max-w-4xl mx-auto leading-[1.12]">
               Hotel Property Management Software
               <br />
-              <span className="text-brand-forest-light">for Modern Hospitality.</span>
+              <span className="text-black">for Modern Hospitality.</span>
             </h1>
           </FadeIn>
 
@@ -353,10 +364,10 @@ export default function LandingPageClient({
       <section ref={productIntro.ref} className="py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeIn inView={productIntro.inView} delay={0} direction="up">
-            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-brand-forest max-w-3xl mx-auto leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold text-black max-w-3xl mx-auto leading-tight">
               Everything Your Property Needs.
               <br />
-              <span className="text-brand-forest-light">One Connected System.</span>
+              <span className="text-black">One Connected System.</span>
             </h2>
           </FadeIn>
           <FadeIn inView={productIntro.inView} delay={100} direction="up">
@@ -382,7 +393,7 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={modulesSection.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
                 Comprehensive Hospitality Modules
               </h2>
             </FadeIn>
@@ -474,10 +485,10 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={workflowSection.inView} delay={0}>
-              <h2 className="text-[clamp(1.75rem,3.2vw+0.6rem,2.5rem)] font-serif font-bold text-brand-forest leading-[1.18] tracking-tight">
+              <h2 className="text-[clamp(1.75rem,3.2vw+0.6rem,2.5rem)] font-serif font-bold text-black leading-[1.18] tracking-tight">
                 One Platform.
                 <br />
-                <span className="text-brand-forest-light">Every Operation Connected.</span>
+                <span className="text-black">Every Operation Connected.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={workflowSection.inView} delay={80}>
@@ -513,7 +524,7 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={dashboardShowcase.inView} delay={0} direction="up" distance={16}>
-              <h2 className="text-[clamp(1.5rem,3.2vw+0.6rem,2.25rem)] font-serif font-bold text-brand-forest leading-tight tracking-tight">
+              <h2 className="text-[clamp(1.5rem,3.2vw+0.6rem,2.25rem)] font-serif font-bold text-black leading-tight tracking-tight">
                 See Your Property at a Glance.
               </h2>
             </FadeIn>
@@ -566,10 +577,10 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
             <FadeIn inView={multiTenant.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-brand-forest tracking-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black tracking-tight">
                 Built for Multiple Properties.
                 <br />
-                <span className="text-brand-forest-light">Isolated by Design.</span>
+                <span className="text-black">Isolated by Design.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={multiTenant.inView} delay={80}>
@@ -610,7 +621,7 @@ export default function LandingPageClient({
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-forest/80" />
                 <span>Enterprise Trust & Reliability</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
                 Security & Data Protection
               </h2>
             </FadeIn>
@@ -701,7 +712,7 @@ export default function LandingPageClient({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Built for Real Hotel Operations</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-brand-forest tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-black tracking-tight leading-[1.15]">
                 Powering Live Properties Today.
               </h2>
             </FadeIn>
@@ -733,10 +744,32 @@ export default function LandingPageClient({
                     </span>
                   </div>
 
-                  {/* Hotel Title */}
-                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-brand-forest tracking-tight">
-                    {caseStudyProperty.title}
-                  </h3>
+                  {/* Hotel Header with Logo & Direct Website Link */}
+                  <div className="flex items-center gap-3.5 sm:gap-4 pt-1">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#FAF8F5] border border-border-subtle/80 shadow-2xs overflow-hidden flex items-center justify-center shrink-0 p-1.5 transition-transform duration-200 hover:scale-105">
+                      <Image
+                        src={caseStudyProperty.logoSrc}
+                        alt="Hotel Greenery View Logo"
+                        width={56}
+                        height={56}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-2xl sm:text-3xl text-black tracking-tight leading-tight">
+                        {caseStudyProperty.title}
+                      </h3>
+                      <a
+                        href={caseStudyProperty.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11.5px] sm:text-xs text-brand-forest hover:text-brand-forest-light font-medium transition-colors mt-0.5 group/link"
+                      >
+                        <span className="underline underline-offset-2">{caseStudyProperty.websiteDisplay}</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-brand-forest/70 transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                      </a>
+                    </div>
+                  </div>
 
                   {/* Refined Concise Description */}
                   <p className="text-sm sm:text-[15px] text-ink-muted leading-relaxed">
@@ -763,8 +796,8 @@ export default function LandingPageClient({
                     </div>
                   </div>
 
-                  {/* Upgraded Premium Emerald Button CTA */}
-                  <div className="pt-1 sm:pt-2">
+                  {/* Upgraded Premium Emerald Button CTA + External Website Link Button */}
+                  <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3">
                     <Link
                       href="/#features"
                       className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-forest text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow-md hover:bg-brand-forest-light hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
@@ -772,6 +805,16 @@ export default function LandingPageClient({
                       <span>{caseStudyProperty.ctaLabel}</span>
                       <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 text-emerald-300" />
                     </Link>
+
+                    <a
+                      href={caseStudyProperty.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white border border-[#1C2D29]/15 text-xs sm:text-sm font-semibold text-brand-forest hover:bg-brand-sand/60 hover:border-brand-forest/30 transition-all duration-200"
+                    >
+                      <span>Visit Hotel Website</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-brand-forest/70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </a>
                   </div>
                 </div>
 
@@ -861,7 +904,7 @@ export default function LandingPageClient({
                 <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
                 <span>Transparent Hospitality Pricing</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-brand-forest tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-black tracking-tight leading-[1.15]">
                 Simple, Predictable Pricing.
               </h2>
             </FadeIn>
@@ -893,7 +936,7 @@ export default function LandingPageClient({
                     </span>
                   </div>
 
-                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-brand-forest">
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-black">
                     Grove Operating System
                   </h3>
                   <p className="text-xs sm:text-sm text-ink-muted mt-2 leading-relaxed">
@@ -956,7 +999,7 @@ export default function LandingPageClient({
                     <span className="text-[11px] font-mono text-ink-muted font-medium">48-72h Go-Live</span>
                   </div>
 
-                  <h3 className="font-serif font-bold text-xl sm:text-2xl text-brand-forest">
+                  <h3 className="font-serif font-bold text-xl sm:text-2xl text-black">
                     White-Glove Implementation
                   </h3>
                   <p className="text-xs text-ink-muted mt-2 leading-relaxed">
@@ -1012,7 +1055,7 @@ export default function LandingPageClient({
                 <Scale className="w-3.5 h-3.5 text-brand-forest/80" />
                 <span>Operational Compliance</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-brand-forest tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-black tracking-tight leading-[1.15]">
                 Built for Responsible Hospitality Operations.
               </h2>
             </FadeIn>
@@ -1052,7 +1095,7 @@ export default function LandingPageClient({
                       <div className="w-10 h-10 rounded-xl bg-brand-forest text-white flex items-center justify-center mb-4 shadow-xs">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <h3 className="font-serif font-bold text-lg text-brand-forest mb-2">
+                      <h3 className="font-serif font-bold text-lg text-black mb-2">
                         {item.title}
                       </h3>
                       <p className="text-xs text-ink-muted leading-relaxed">
@@ -1101,7 +1144,7 @@ export default function LandingPageClient({
                   <Sparkles className="w-3.5 h-3.5 text-brand-forest" />
                   <span>About Grove</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-brand-forest tracking-tight leading-snug">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black tracking-tight leading-snug">
                   Technology Crafted to Bring Calm to Hotel Operations.
                 </h2>
                 <p className="mt-4 text-xs sm:text-sm text-ink-muted leading-relaxed">
@@ -1130,7 +1173,7 @@ export default function LandingPageClient({
                 <HelpCircle className="w-3.5 h-3.5 text-brand-forest/80" />
                 <span>Frequently Asked Questions</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-brand-forest">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
                 Got Questions? We Have Answers.
               </h2>
             </FadeIn>
@@ -1149,7 +1192,7 @@ export default function LandingPageClient({
                   <div className="grove-glass-card rounded-2xl overflow-hidden transition-all">
                     <button
                       onClick={() => setOpenFaqIndex(isOpen ? null : i)}
-                      className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-serif font-bold text-sm sm:text-base text-brand-forest hover:text-brand-forest-light transition-colors"
+                      className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-serif font-bold text-sm sm:text-base text-black hover:text-black/80 transition-colors"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
@@ -1215,7 +1258,7 @@ export default function LandingPageClient({
 
               <div className="relative z-10">
                 {/* Balanced 2-line headline */}
-                <h2 className="font-serif font-bold text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] text-brand-forest tracking-tight leading-[1.2] max-w-2xl mx-auto">
+                <h2 className="font-serif font-bold text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] text-black tracking-tight leading-[1.2] max-w-2xl mx-auto">
                   Your Entire Property.
                   <br className="hidden sm:inline" />
                   <span className="block sm:inline sm:ml-2">One Powerful Platform.</span>

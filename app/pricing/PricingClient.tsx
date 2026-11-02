@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import {
@@ -846,10 +847,10 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
               }}
             >
               <Link
-                href="/register-hotel"
+                href="/subscription"
                 className="w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 sm:py-4 px-6 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base group cursor-pointer select-none hover:-translate-y-0.5"
               >
-                <span>Start with Grove</span>
+                <span>Get Started with Grove</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <div className="text-center pt-1">
@@ -1056,20 +1057,24 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             {/* Step 1: Small editorial eyebrow label */}
             <FadeIn inView={isHeroVisible} delay={0} direction="up" distance={12}>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-6 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
-                <span className="uppercase tracking-[0.16em] text-[11px] font-semibold">
-                  Transparent Hospitality Pricing
-                </span>
+              <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
+                <Image
+                  src="/Grove.png"
+                  alt="Grove Logo"
+                  width={16}
+                  height={16}
+                  className="w-4 h-4 object-contain shrink-0"
+                />
+                <span>Grove PMS — Transparent Hospitality Pricing</span>
               </div>
             </FadeIn>
 
             {/* Step 2: Main Display Serif Heading */}
             <FadeIn inView={isHeroVisible} delay={100} direction="up" distance={16}>
-              <h1 className="text-3xl sm:text-5xl lg:text-[3.75rem] font-serif font-bold text-brand-forest tracking-tight max-w-4xl mx-auto leading-[1.12]">
+              <h1 className="text-3xl sm:text-5xl lg:text-[3.75rem] font-serif font-bold text-black tracking-tight max-w-4xl mx-auto leading-[1.12]">
                 Simple, Powerful
                 <br />
-                <span className="text-brand-forest-light">Hotel Management.</span>
+                <span className="text-black">Hotel Management.</span>
               </h1>
             </FadeIn>
 
@@ -1122,10 +1127,10 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
             <FadeIn inView={isHeroVisible} delay={400} direction="up" distance={12}>
               <div className="mt-8 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
                 <Link
-                  href="/register-hotel"
+                  href="/subscription"
                   className="w-full sm:w-auto bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold px-8 py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] flex items-center justify-center gap-2 text-sm sm:text-base group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
                 >
-                  <span>Get Started</span>
+                  <span>Get Started with Grove</span>
                   <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
                 <Link
@@ -1685,10 +1690,10 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                 </div>
 
                 <Link
-                  href="/register-hotel"
+                  href="/subscription"
                   className="mt-6 w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm hover:-translate-y-0.5 group cursor-pointer"
                 >
-                  <span>Get Started</span>
+                  <span>Get Started with Grove</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
@@ -1904,10 +1909,10 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
           <FadeIn inView={ctaSection.inView} delay={300} direction="up" distance={12}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-md mx-auto mt-8">
               <Link
-                href="/register-hotel"
+                href="/subscription"
                 className="w-full sm:w-auto bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 px-8 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 group text-sm sm:text-base hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
               >
-                <span>Get Started</span>
+                <span>Get Started with Grove</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <Link

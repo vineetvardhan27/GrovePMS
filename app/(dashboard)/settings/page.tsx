@@ -1,4 +1,4 @@
-import { Percent, BedDouble, ArrowRight, UtensilsCrossed, Users, Settings } from 'lucide-react';
+import { Percent, BedDouble, ArrowRight, UtensilsCrossed, Users, Settings, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '../../../components/shared/PageHeader';
 
@@ -6,6 +6,34 @@ export const dynamic = 'force-dynamic';
 
 export default function SettingsPage() {
   const settingsModules = [
+    {
+      title: 'Billing & Subscription',
+      description:
+        'Manage your Grove PMS SaaS subscription, payment methods, recurring billing, and invoices',
+      actionText: 'Manage Billing & Subscription',
+      href: '/settings/billing',
+      icon: CreditCard,
+      illustration: (
+        <svg
+          className="w-20 h-20 sm:w-24 sm:h-24 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-0.5 select-none pointer-events-none"
+          viewBox="0 0 96 96"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          {/* Soft background circle */}
+          <circle cx="48" cy="48" r="36" fill="#EAF5EE" fillOpacity="0.85" />
+          {/* Card Shape */}
+          <rect x="22" y="32" width="52" height="34" rx="5" fill="#CDEBD6" stroke="#2E7D4F" strokeWidth="1.5" />
+          <rect x="22" y="40" width="52" height="7" fill="#85C799" />
+          {/* Chip */}
+          <rect x="28" y="52" width="8" height="6" rx="1.5" fill="#F8E5A7" stroke="#A8D8B6" strokeWidth="0.8" />
+          {/* Check badge */}
+          <circle cx="64" cy="55" r="5" fill="#2E7D4F" />
+          <path d="M62 55L63.5 56.5L66 53.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
     {
       title: 'Staff & Users',
       description:
