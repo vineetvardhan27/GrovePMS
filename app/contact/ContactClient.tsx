@@ -234,7 +234,7 @@ export default function ContactClient() {
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between relative overflow-x-hidden">
       {/* Subtle architectural grid pattern */}
       <div
-        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-50"
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-85"
         aria-hidden="true"
       />
 

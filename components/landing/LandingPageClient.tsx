@@ -1236,7 +1236,7 @@ export default function LandingPageClient({
             <div className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 lg:p-12 text-center bg-gradient-to-b from-white/95 via-white/90 to-[#FAF6F0]/90 backdrop-blur-xl border border-white/85 shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08),0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_24px_60px_-15px_rgba(31,61,58,0.11)]">
               {/* Delicate grid texture */}
               <div
-                className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-30"
+                className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-70"
                 aria-hidden="true"
               />
 

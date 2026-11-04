@@ -57,7 +57,7 @@ export default function PublicFooter() {
     >
       {/* Subtle Architectural Grid Texture Consistent with Grove Aesthetic */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 grove-grid-texture opacity-45"
+        className="pointer-events-none absolute inset-0 z-0 grove-grid-texture opacity-80"
         aria-hidden="true"
       />
 

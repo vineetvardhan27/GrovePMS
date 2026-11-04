@@ -44,9 +44,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["var(--font-fraunces)", "Georgia", "serif"],
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
-        sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        sans: ["'Google Sans'", "var(--font-google-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        serif: ["'Google Sans'", "var(--font-google-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        display: ["'Google Sans'", "var(--font-google-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       fontSize: {
         display: ["2rem", { lineHeight: "2.5rem", fontWeight: "600" }],     // 32px

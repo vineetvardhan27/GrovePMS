@@ -153,7 +153,7 @@ export default function SecurityPage() {
 
       {/* Subtle Architectural Grid Texture */}
       <div
-        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-50"
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-85"
         aria-hidden="true"
       />
 

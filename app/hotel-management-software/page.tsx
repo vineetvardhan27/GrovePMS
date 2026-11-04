@@ -56,6 +56,11 @@ export default function HotelManagementSoftwarePage() {
 
   return (
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 flex flex-col justify-between relative overflow-x-hidden">
+      {/* Page-wide subtle architectural grid texture */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-85"
+        aria-hidden="true"
+      />
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={softwareSchema} />
       <PublicHeader />

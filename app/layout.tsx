@@ -1,21 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Inter } from 'next/font/google';
+import '@fontsource/google-sans/400.css';
+import '@fontsource/google-sans/500.css';
+import '@fontsource/google-sans/600.css';
+import '@fontsource/google-sans/700.css';
 import './globals.css';
 import { AuthProvider } from '../components/providers/AuthProvider';
 import JsonLd from '@/components/seo/JsonLd';
 import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/structuredData';
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
 
 export const viewport: Viewport = {
   themeColor: '#1F3D3A',
@@ -109,8 +100,15 @@ export default function RootLayout({
   const websiteSchema = getWebSiteSchema();
 
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
-      <body className="bg-brand-sand text-ink antialiased">
+    <html lang="en" className="font-sans">
+      <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/mortezaom/google-sans-cdn@master/fonts.css"
+        />
+      </head>
+      <body className="bg-brand-sand text-ink antialiased font-sans">
         <JsonLd data={[orgSchema, websiteSchema]} />
         <AuthProvider>
           {children}

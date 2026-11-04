@@ -64,7 +64,7 @@ export default function ConnectedWorkflowSection() {
     <section className="py-20 sm:py-28 bg-[#FAF8F5] border-y border-[#1C2D29]/8 relative overflow-hidden">
       {/* Background Architectural Grid */}
       <div
-        className="pointer-events-none absolute inset-0 grove-grid-texture opacity-30"
+        className="pointer-events-none absolute inset-0 grove-grid-texture opacity-75"
         aria-hidden="true"
       />
 

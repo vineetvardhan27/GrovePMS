@@ -24,7 +24,7 @@ export default function SubscriptionClient({
     <div className="min-h-screen bg-brand-sand text-ink selection:bg-brand-forest/20 overflow-x-hidden relative flex flex-col justify-between">
       {/* Subtle background grid texture */}
       <div
-        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-40"
+        className="pointer-events-none fixed inset-0 z-0 grove-grid-texture opacity-85"
         aria-hidden="true"
       />
 

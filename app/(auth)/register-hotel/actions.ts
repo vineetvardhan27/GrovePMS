@@ -10,6 +10,14 @@ export interface RegisterHotelState {
   message?: string;
   hotelName?: string;
   ownerEmail?: string;
+  hotelId?: string;
+  ownerFullName?: string;
+  propertyType?: string;
+  totalRooms?: number;
+  totalFloors?: number;
+  selectedPlan?: string;
+  city?: string;
+  state?: string;
   code?: 'EMAIL_EXISTS' | 'VALIDATION_ERROR' | 'CREATION_ERROR';
 }
 
@@ -40,22 +48,49 @@ export async function registerHotelAndOwner(
   prevState: RegisterHotelState | null,
   formData: FormData
 ): Promise<RegisterHotelState> {
+  // ── Step 1: Property Identity ──
   const hotelName = (formData.get('hotel_name') as string)?.trim();
-  const ownerFullName = (formData.get('owner_full_name') as string)?.trim();
-  const email = (formData.get('email') as string)?.trim().toLowerCase();
-  const password = (formData.get('password') as string)?.trim();
-  const confirmPassword = (formData.get('confirm_password') as string)?.trim();
-  const phone = (formData.get('phone') as string)?.trim();
-  const address = (formData.get('address') as string)?.trim();
-  const city = (formData.get('city') as string)?.trim() || 'New Delhi';
-  const state = (formData.get('state') as string)?.trim() || 'Delhi';
-  const pinCode = (formData.get('pin_code') as string)?.trim() || '110001';
+  const propertyType = (formData.get('property_type') as string)?.trim() || 'boutique';
+  const propertyDescription = (formData.get('property_description') as string)?.trim() || '';
+
+  // ── Step 2: Location & Contact ──
+  const country = (formData.get('country') as string)?.trim() || 'India';
+  const state = (formData.get('state') as string)?.trim() || 'Sikkim';
+  const city = (formData.get('city') as string)?.trim() || 'Gangtok';
+  const address = (formData.get('address') as string)?.trim() || '';
+  const pinCode = (formData.get('pin_code') as string)?.trim() || '737101';
+  const phone = (formData.get('phone') as string)?.trim() || '';
+  const businessEmail = (formData.get('business_email') as string)?.trim() || '';
+  const website = (formData.get('website') as string)?.trim() || '';
   const gstNumber = (formData.get('gst_number') as string)?.trim() || '';
 
+  // ── Step 3: Rooms & Operations (Visual Builder Payload) ──
+  const propertyLayoutJson = (formData.get('property_layout_json') as string)?.trim() || '';
+  const totalFloors = Math.max(1, Math.min(30, parseInt((formData.get('total_floors') as string) || '3', 10) || 3));
+  const totalRooms = Math.max(1, Math.min(250, parseInt((formData.get('total_rooms') as string) || '15', 10) || 15));
+  const checkInTime = (formData.get('check_in_time') as string)?.trim() || '12:00';
+  const checkOutTime = (formData.get('check_out_time') as string)?.trim() || '11:00';
+  const facilitiesRaw = (formData.get('facilities') as string) || '';
+
+  // ── Step 4: Owner Account & Subscription ──
+  const ownerFullName = (formData.get('owner_full_name') as string)?.trim();
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+  const ownerPhone = (formData.get('owner_phone') as string)?.trim() || phone;
+  const password = (formData.get('password') as string)?.trim();
+  const confirmPassword = (formData.get('confirm_password') as string)?.trim();
+  const selectedPlan = (formData.get('selected_plan') as string)?.trim() || 'monthly_999';
+
   // 1. Validation
-  if (!hotelName || !ownerFullName || !email || !password) {
+  if (!hotelName) {
     return {
-      error: 'Please provide all required fields: Hotel Name, Owner Name, Work Email, and Password.',
+      error: 'Please enter your Hotel or Property Name.',
+      code: 'VALIDATION_ERROR',
+    };
+  }
+
+  if (!ownerFullName || !email || !password) {
+    return {
+      error: 'Please provide all required owner fields: Owner Name, Login Email, and Password.',
       code: 'VALIDATION_ERROR',
     };
   }
@@ -103,6 +138,65 @@ export async function registerHotelAndOwner(
       };
     }
 
+    // Parse facilities
+    let parsedFacilities: string[] = ['wifi', 'room_service', 'housekeeping'];
+    if (facilitiesRaw) {
+      try {
+        const parsed = JSON.parse(facilitiesRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsedFacilities = parsed;
+        }
+      } catch {
+        const split = facilitiesRaw.split(',').map((s) => s.trim()).filter(Boolean);
+        if (split.length > 0) parsedFacilities = split;
+      }
+    }
+
+    // Parse Visual Room Builder Layout JSON if available
+    let parsedLayout: {
+      categories?: Array<{
+        id: string;
+        name: string;
+        description: string;
+        base_rate: number;
+        weekend_rate: number | null;
+        max_occupancy: number;
+        extra_bed_rate: number;
+        child_charge: number;
+        adult_capacity: number;
+        child_capacity: number;
+        bed_count: number;
+        bed_type: string;
+        amenities: string[];
+        color: string;
+      }>;
+      floors?: Array<{
+        id: string;
+        floorNumber: number;
+        name: string;
+        startingRoomNumber: number;
+        allocations: Array<{ id: string; categoryId: string; quantity: number }>;
+      }>;
+      generatedRooms?: Array<{
+        id: string;
+        roomNumber: string;
+        floor: number;
+        floorName: string;
+        categoryId: string;
+        categoryName: string;
+        baseRate: number;
+        weekendRate: number | null;
+      }>;
+    } | null = null;
+
+    if (propertyLayoutJson) {
+      try {
+        parsedLayout = JSON.parse(propertyLayoutJson);
+      } catch (parseErr) {
+        console.warn('Could not parse property_layout_json:', parseErr);
+      }
+    }
+
     // 3. Step A: Create Hotel Record First (to establish tenant ID)
     const hotelSlug = generateSlug(hotelName);
     const initialSettings = {
@@ -114,24 +208,39 @@ export async function registerHotelAndOwner(
       address: address || hotelName,
       city,
       state,
+      country,
       pin_code: pinCode,
-      phone: phone || '+91 98000 00000',
-      email,
-      check_in_time: '12:00',
-      check_out_time: '11:00',
+      phone: phone || ownerPhone || '+91 98000 00000',
+      email: businessEmail || email,
+      website: website || null,
+      property_type: propertyType,
+      property_description: propertyDescription,
+      total_floors: totalFloors,
+      total_rooms: totalRooms,
+      facilities: parsedFacilities,
+      selected_plan: selectedPlan,
+      check_in_time: checkInTime,
+      check_out_time: checkOutTime,
+      checkin_time: checkInTime,
+      checkout_time: checkOutTime,
       currency_symbol: '₹',
       currency_code: 'INR',
       logo_url: null,
+      property_layout: parsedLayout || null,
     };
+
+    const formattedAddress = address
+      ? `${address}, ${city}, ${state} - ${pinCode}, ${country}`
+      : `${city}, ${state}, ${country}`;
 
     const { data: newHotel, error: hotelErr } = (await admin
       .from('hotels')
       .insert({
         name: hotelName,
         slug: hotelSlug,
-        address: address || `${city}, ${state}`,
-        phone: phone || '+91 98000 00000',
-        email,
+        address: formattedAddress,
+        phone: phone || ownerPhone || '+91 98000 00000',
+        email: businessEmail || email,
         settings: initialSettings,
       })
       .select('id, name, slug')
@@ -156,6 +265,7 @@ export async function registerHotelAndOwner(
         full_name: ownerFullName,
         role: 'owner',
         hotel_id: createdHotelId,
+        phone: ownerPhone,
       },
     });
 
@@ -205,57 +315,126 @@ export async function registerHotelAndOwner(
       };
     }
 
-    // 6. Step D: Seed initial categories and rooms
+    // 6. Step D: Seed initial categories and rooms matching the visual builder layout
     try {
-      const defaultCategories = [
-        {
+      if (
+        parsedLayout?.categories &&
+        parsedLayout.categories.length > 0 &&
+        parsedLayout.generatedRooms &&
+        parsedLayout.generatedRooms.length > 0
+      ) {
+        // ── 6A. Insert configured categories from Visual Room Builder ──
+        const categoryInsertions = parsedLayout.categories.map((c) => ({
           hotel_id: createdHotelId,
-          name: 'Deluxe Room',
-          description: 'Spacious room with king bed and scenic view',
-          base_rate: 3500,
-          weekend_rate: 4200,
-          max_occupancy: 2,
-          extra_bed_rate: 800,
-        },
-        {
-          hotel_id: createdHotelId,
-          name: 'Super Deluxe Room',
-          description: 'Premium luxury room with balcony',
-          base_rate: 5000,
-          weekend_rate: 6000,
-          max_occupancy: 3,
-          extra_bed_rate: 1000,
-        },
-        {
-          hotel_id: createdHotelId,
-          name: 'Executive Suite',
-          description: 'Ultra-luxurious suite with private lounge',
-          base_rate: 8500,
-          weekend_rate: 10000,
-          max_occupancy: 4,
-          extra_bed_rate: 1500,
-        },
-      ];
+          name: c.name,
+          description: c.description || null,
+          base_rate: Number(c.base_rate) || 2500,
+          weekend_rate: c.weekend_rate ? Number(c.weekend_rate) : null,
+          max_occupancy: Number(c.max_occupancy) || 2,
+          extra_bed_rate: c.extra_bed_rate ? Number(c.extra_bed_rate) : 0,
+        }));
 
-      const { data: createdCategories } = (await admin
-        .from('room_categories')
-        .insert(defaultCategories)
-        .select('id, name')) as { data: Array<{ id: string; name: string }> | null; error: any };
+        const { data: createdCategories, error: catInsertErr } = (await admin
+          .from('room_categories')
+          .insert(categoryInsertions)
+          .select('id, name')) as { data: Array<{ id: string; name: string }> | null; error: any };
 
-      if (createdCategories && createdCategories.length > 0) {
-        const deluxeId = createdCategories[0].id;
-        const superDeluxeId = createdCategories[1]?.id || deluxeId;
-        const suiteId = createdCategories[2]?.id || deluxeId;
+        if (createdCategories && createdCategories.length > 0) {
+          // Map client category ID/Name to database UUID
+          const categoryMap = new Map<string, string>();
+          parsedLayout.categories.forEach((catObj) => {
+            const match =
+              createdCategories.find(
+                (cc) => cc.name.trim().toLowerCase() === catObj.name.trim().toLowerCase()
+              ) || createdCategories[0];
+            categoryMap.set(catObj.id, match.id);
+            categoryMap.set(catObj.name, match.id);
+          });
 
-        const initialRooms = [
-          { hotel_id: createdHotelId, category_id: deluxeId, room_number: '101', floor: 1, status: 'available' },
-          { hotel_id: createdHotelId, category_id: deluxeId, room_number: '102', floor: 1, status: 'available' },
-          { hotel_id: createdHotelId, category_id: superDeluxeId, room_number: '201', floor: 2, status: 'available' },
-          { hotel_id: createdHotelId, category_id: superDeluxeId, room_number: '202', floor: 2, status: 'available' },
-          { hotel_id: createdHotelId, category_id: suiteId, room_number: '301', floor: 3, status: 'available' },
+          // ── 6B. Insert exact generated rooms from Visual Room Builder ──
+          const roomsToInsert = parsedLayout.generatedRooms.map((gr) => {
+            const dbCatId =
+              categoryMap.get(gr.categoryId) ||
+              categoryMap.get(gr.categoryName) ||
+              createdCategories[0].id;
+
+            return {
+              hotel_id: createdHotelId,
+              category_id: dbCatId,
+              room_number: gr.roomNumber,
+              floor: gr.floor || 1,
+              status: 'available' as const,
+              housekeeping_status: 'clean' as const,
+            };
+          });
+
+          await admin.from('rooms').insert(roomsToInsert);
+        }
+      } else {
+        // ── 6B. Fallback Standard Seeding ──
+        const defaultCategories = [
+          {
+            hotel_id: createdHotelId,
+            name: 'Deluxe Room',
+            description: 'Spacious guest room with scenic mountain views and king-size bedding.',
+            base_rate: 3500,
+            weekend_rate: 4200,
+            max_occupancy: 3,
+            extra_bed_rate: 800,
+          },
+          {
+            hotel_id: createdHotelId,
+            name: 'Super Deluxe Room',
+            description: 'Upgraded luxury room with private balcony and premium hospitality amenities.',
+            base_rate: 5000,
+            weekend_rate: 6000,
+            max_occupancy: 3,
+            extra_bed_rate: 1000,
+          },
+          {
+            hotel_id: createdHotelId,
+            name: 'Executive Suite',
+            description: 'Ultra-luxurious suite featuring private lounge, panoramic valley views, and master bath.',
+            base_rate: 8500,
+            weekend_rate: 10200,
+            max_occupancy: 4,
+            extra_bed_rate: 1500,
+          },
         ];
 
-        await admin.from('rooms').insert(initialRooms);
+        const { data: createdCategories } = (await admin
+          .from('room_categories')
+          .insert(defaultCategories)
+          .select('id, name')) as { data: Array<{ id: string; name: string }> | null; error: any };
+
+        if (createdCategories && createdCategories.length > 0) {
+          const roomsToCreate = [];
+          const roomsPerFloor = Math.ceil(totalRooms / totalFloors);
+
+          let currentRoomCount = 0;
+          for (let floor = 1; floor <= totalFloors && currentRoomCount < totalRooms; floor++) {
+            const roomsOnThisFloor = Math.min(roomsPerFloor, totalRooms - currentRoomCount);
+            for (let r = 1; r <= roomsOnThisFloor; r++) {
+              const roomNum = `${floor}${r < 10 ? '0' + r : r}`;
+              const catIndex = currentRoomCount % createdCategories.length;
+              const categoryId = createdCategories[catIndex].id;
+
+              roomsToCreate.push({
+                hotel_id: createdHotelId,
+                category_id: categoryId,
+                room_number: roomNum,
+                floor: floor,
+                status: 'available' as const,
+                housekeeping_status: 'clean' as const,
+              });
+              currentRoomCount++;
+            }
+          }
+
+          if (roomsToCreate.length > 0) {
+            await admin.from('rooms').insert(roomsToCreate);
+          }
+        }
       }
     } catch (seedErr) {
       console.warn('Non-fatal initial room seeding note:', seedErr);
@@ -276,6 +455,14 @@ export async function registerHotelAndOwner(
       success: true,
       hotelName,
       ownerEmail: email,
+      hotelId: createdHotelId,
+      ownerFullName,
+      propertyType,
+      totalRooms,
+      totalFloors,
+      selectedPlan,
+      city,
+      state,
       message: 'Hotel workspace created successfully! Your owner account is ready.',
     };
   } catch (err: any) {
@@ -302,4 +489,3 @@ export async function registerHotelAndOwner(
     };
   }
 }
-

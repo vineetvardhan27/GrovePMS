@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   BedDouble,
   Plus,
@@ -19,6 +19,7 @@ import {
   Tag,
   ShieldCheck,
   Info,
+  Sliders,
 } from 'lucide-react';
 import {
   RoomCategory,
@@ -29,7 +30,16 @@ import {
 import {
   saveRoomCategoryAction,
   saveRoomRateOverrideAction,
+  saveVisualRoomLayoutAction,
 } from '../../../../lib/rooms/actions';
+import VisualRoomBuilder from '@/components/rooms/visual-builder/VisualRoomBuilder';
+import {
+  BuilderCategory,
+  BuilderFloor,
+  GeneratedRoom,
+  PropertySummaryStats,
+  DEFAULT_PRESET_FLOORS,
+} from '@/components/rooms/visual-builder/types';
 import { formatCurrency } from '../../../../lib/utils/currency';
 import { StaffRole } from '../../../../lib/types/database.types';
 
@@ -75,7 +85,7 @@ export default function RoomCategoriesManager({
   initialResources = [],
   userRole,
 }: RoomCategoriesManagerProps) {
-  const [activeTab, setActiveTab] = useState<'categories' | 'property'>('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'builder' | 'property'>('categories');
   const [categories, setCategories] = useState<RoomCategory[]>(initialCategories);
   const [rooms, setRooms] = useState<RoomWithCategory[]>(initialRooms);
   const [editingCategory, setEditingCategory] = useState<RoomCategory | null>(null);
@@ -84,6 +94,83 @@ export default function RoomCategoriesManager({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Visual Room Builder state
+  const initialBuilderCategories: BuilderCategory[] = useMemo(() => {
+    const palette: BuilderCategory['color'][] = ['forest', 'emerald', 'amber', 'indigo', 'rose', 'slate'];
+    return categories.map((cat, idx) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description || '',
+      base_rate: Number(cat.base_rate),
+      weekend_rate: cat.weekend_rate ? Number(cat.weekend_rate) : null,
+      weekend_adjustment_type: 'fixed',
+      weekend_adjustment_val: cat.weekend_rate ? Math.max(0, Number(cat.weekend_rate) - Number(cat.base_rate)) : 0,
+      extra_bed_rate: Number(cat.extra_bed_rate) || 0,
+      child_charge: 0,
+      max_occupancy: Number(cat.max_occupancy) || 2,
+      adult_capacity: Number(cat.max_occupancy) || 2,
+      child_capacity: 1,
+      bed_count: 1,
+      bed_type: 'King',
+      amenities: ['High-Speed Wi-Fi', 'Smart LED TV', 'Air Conditioning'],
+      color: palette[idx % palette.length],
+    }));
+  }, [categories]);
+
+  const initialBuilderFloors: BuilderFloor[] = useMemo(() => {
+    if (rooms.length === 0) {
+      return DEFAULT_PRESET_FLOORS;
+    }
+    const floorNums = Array.from(new Set(rooms.map((r) => r.floor))).sort((a, b) => a - b);
+    return floorNums.map((floorNum) => {
+      const floorRooms = rooms.filter((r) => r.floor === floorNum);
+      const catCountMap = new Map<string, number>();
+      floorRooms.forEach((r) => {
+        catCountMap.set(r.category_id, (catCountMap.get(r.category_id) || 0) + 1);
+      });
+      const allocations = Array.from(catCountMap.entries()).map(([catId, qty]) => ({
+        id: `alloc-${floorNum}-${catId}`,
+        categoryId: catId,
+        quantity: qty,
+      }));
+      return {
+        id: `floor-${floorNum}`,
+        floorNumber: floorNum,
+        name: floorNum === 0 ? 'Ground / Basement' : `Floor ${floorNum}`,
+        startingRoomNumber: 1,
+        allocations,
+      };
+    });
+  }, [rooms]);
+
+  const [builderLayout, setBuilderLayout] = useState<{
+    categories: BuilderCategory[];
+    floors: BuilderFloor[];
+    generatedRooms: GeneratedRoom[];
+    stats: PropertySummaryStats;
+  } | null>(null);
+  const [isSavingBuilder, setIsSavingBuilder] = useState(false);
+
+  const handleSaveVisualLayout = async () => {
+    if (!builderLayout || !canEdit) return;
+    setIsSavingBuilder(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await saveVisualRoomLayoutAction(builderLayout);
+      if (result.success) {
+        setSuccessNotice(result.message || 'Property floor layout and room configuration saved successfully.');
+        setTimeout(() => setSuccessNotice(null), 6000);
+      } else {
+        setErrorMessage(result.error || 'Failed to save property layout.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'An error occurred while saving.');
+    } finally {
+      setIsSavingBuilder(false);
+    }
+  };
 
   const canEdit = userRole === 'owner' || userRole === 'manager';
 
@@ -247,7 +334,7 @@ export default function RoomCategoriesManager({
 
       {/* Top Navigation Tabs & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border-subtle">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('categories')}
@@ -263,6 +350,22 @@ export default function RoomCategoriesManager({
 
           <button
             type="button"
+            onClick={() => setActiveTab('builder')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer min-h-touch ${
+              activeTab === 'builder'
+                ? 'bg-brand-forest text-white shadow-xs'
+                : 'bg-white text-ink-muted hover:text-ink hover:bg-brand-sand border border-border-subtle'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            <span>Visual Floor &amp; Room Builder</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
+              Builder
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('property')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer min-h-touch ${
               activeTab === 'property'
@@ -271,7 +374,7 @@ export default function RoomCategoriesManager({
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>Physical Property (19 Units)</span>
+            <span>Room Manifest ({rooms.length} Units)</span>
           </button>
         </div>
 
@@ -283,6 +386,27 @@ export default function RoomCategoriesManager({
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
+          </button>
+        )}
+
+        {activeTab === 'builder' && canEdit && (
+          <button
+            type="button"
+            onClick={handleSaveVisualLayout}
+            disabled={isSavingBuilder || !builderLayout}
+            className="flex items-center justify-center gap-2 bg-brand-forest hover:bg-brand-forest-light text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer min-h-touch w-full sm:w-auto shadow-xs disabled:opacity-60"
+          >
+            {isSavingBuilder ? (
+              <>
+                <Sparkles className="w-4 h-4 animate-spin text-emerald-300" />
+                <span>Saving Matrix...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4 text-emerald-300" />
+                <span>Save Property Layout</span>
+              </>
+            )}
           </button>
         )}
       </div>
@@ -391,7 +515,56 @@ export default function RoomCategoriesManager({
       )}
 
       {/* ----------------------------------------------------
-       * TAB 2: PHYSICAL PROPERTY VIEW (EXACT 19 ACCOMMODATION UNITS)
+       * TAB 2: VISUAL CATEGORY & FLOOR-BASED BUILDER
+       * ---------------------------------------------------- */}
+      {activeTab === 'builder' && (
+        <div className="space-y-6">
+          <div className="p-5 rounded-2xl bg-white border border-border-subtle shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="font-serif font-bold text-lg text-black">
+                  Visual Category &amp; Floor-Based Room Builder
+                </h3>
+              </div>
+              <p className="text-xs text-ink-muted leading-relaxed max-w-3xl">
+                Configure your entire property using movable building blocks: adjust central category pricing, drag &amp; drop categories into floors, and let Grove automatically generate room numbers and manifest.
+              </p>
+            </div>
+
+            {canEdit && (
+              <button
+                type="button"
+                onClick={handleSaveVisualLayout}
+                disabled={isSavingBuilder || !builderLayout}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand-forest hover:bg-brand-forest-light text-white font-semibold text-xs sm:text-sm shadow-sm transition-all cursor-pointer disabled:opacity-60 shrink-0"
+              >
+                {isSavingBuilder ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-emerald-300" />
+                    <span>Synchronizing Database...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-300" />
+                    <span>Save Layout &amp; Room Matrix</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          <VisualRoomBuilder
+            initialCategories={initialBuilderCategories}
+            initialFloors={initialBuilderFloors}
+            onChange={(data) => setBuilderLayout(data)}
+            readOnly={!canEdit}
+          />
+        </div>
+      )}
+
+      {/* ----------------------------------------------------
+       * TAB 3: PHYSICAL PROPERTY VIEW (ROOM INVENTORY)
        * ---------------------------------------------------- */}
       {activeTab === 'property' && (
         <div className="space-y-8">
