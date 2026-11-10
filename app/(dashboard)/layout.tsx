@@ -128,24 +128,44 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* ================================================================
             DESKTOP SIDEBAR — hidden on mobile & print
             ================================================================ */}
-        <aside className="print:hidden hidden md:flex md:w-60 bg-brand-forest text-white flex-col shrink-0">
+        <aside
+          className="print:hidden hidden md:flex md:w-60 md:sticky md:top-0 md:h-screen md:max-h-screen text-white flex-col shrink-0 z-30 select-none relative overflow-hidden border-r border-white/[0.08] shadow-[2px_0_16px_rgba(0,0,0,0.22)]"
+          style={{ background: 'linear-gradient(180deg, #163C36 0%, #102F2B 55%, #0B2623 100%)' }}
+        >
+          {/* Subtle luminous ambient highlight */}
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/[0.05] via-transparent to-black/20"
+            aria-hidden="true"
+          />
 
           {/* Brand header */}
-          <div className="px-4 py-4 flex items-center gap-3 border-b border-white/8">
-            <div className="h-10 w-10 bg-white/95 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
-              {staff.hotel_logo_url ? (
-                <img src={staff.hotel_logo_url} alt={staff.hotel_name} className="max-h-8 max-w-full w-auto object-contain" />
-              ) : (
-                <div className="w-8 h-8 rounded-md bg-brand-forest text-white font-bold font-serif text-xs flex items-center justify-center">
-                  {staff.hotel_name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
+          <div className="px-4 py-4 flex items-center gap-3 border-b border-white/[0.09] relative z-10 shrink-0">
+            {/* Hotel logo with premium framed appearance */}
+            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-white/[0.14] to-white/[0.04] p-[1.5px] ring-1 ring-white/[0.14] shadow-[0_4px_12px_rgba(0,0,0,0.3)] shrink-0 overflow-hidden flex items-center justify-center">
+              <div className="h-full w-full rounded-[10px] bg-[#0E2824]/90 backdrop-blur-xs flex items-center justify-center p-1 overflow-hidden">
+                {staff.hotel_logo_url ? (
+                  <img
+                    src={staff.hotel_logo_url}
+                    alt={staff.hotel_name}
+                    className="max-h-7 max-w-full w-auto object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-md bg-gradient-to-br from-[#24584B] to-[#102F2B] text-white font-bold text-xs flex items-center justify-center tracking-wider">
+                    {staff.hotel_name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="font-serif text-[14px] font-bold tracking-tight truncate leading-tight text-white">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[14px] font-semibold tracking-tight text-white truncate leading-tight">
                 {staff.hotel_name}
               </h2>
-              <p className="text-[10px] text-brand-sand/60 truncate">Control Centre</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#6CBF91] shadow-[0_0_6px_rgba(108,191,145,0.7)] shrink-0 animate-pulse" />
+                <span className="text-[10px] font-medium tracking-wider uppercase text-[#B7C9C3]/75 truncate">
+                  Control Centre
+                </span>
+              </div>
             </div>
           </div>
 
@@ -153,20 +173,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <SidebarNav authorizedPaths={authorizedPaths} />
 
           {/* Staff profile & sign-out footer */}
-          <div className="px-3 py-4 border-t border-white/8 space-y-3">
+          <div className="px-3.5 py-4 border-t border-white/[0.09] bg-black/15 backdrop-blur-xs space-y-3 shrink-0 relative z-10">
             {/* Avatar + name + role */}
-            <div className="flex items-center gap-3 px-2">
+            <div className="flex items-center gap-3 px-1.5">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${roleMeta.avatarBg}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ring-1 ring-white/15 shadow-sm ${roleMeta.avatarBg}`}
                 aria-label={`${staff.full_name} avatar`}
               >
                 {initials(staff.full_name)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-white truncate leading-tight">{staff.full_name}</p>
+                <p className="text-[13px] font-semibold text-white truncate leading-tight">
+                  {staff.full_name}
+                </p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <RoleIcon className="w-3 h-3 text-brand-sand/50 shrink-0" />
-                  <span className="text-[11px] text-brand-sand/50">{roleMeta.title}</span>
+                  <RoleIcon className="w-3 h-3 text-[#6CBF91] shrink-0" />
+                  <span className="text-[11px] font-medium text-[#B7C9C3]/75 capitalize">
+                    {roleMeta.title}
+                  </span>
                 </div>
               </div>
             </div>
@@ -175,9 +199,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <form action={signOut}>
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/14 text-brand-sand/80 hover:text-brand-sand text-xs font-medium py-2 px-3 rounded-lg transition-colors duration-150 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] text-[#B7C9C3] hover:text-white text-xs font-medium py-2 px-3 rounded-xl border border-white/[0.07] hover:border-white/15 transition-all duration-200 cursor-pointer shadow-xs group"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5 text-[#B7C9C3]/80 group-hover:text-[#6CBF91] transition-colors" />
                 <span>Sign Out</span>
               </button>
             </form>
