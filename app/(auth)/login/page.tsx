@@ -3,6 +3,7 @@
 import { useFormState, useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import PasswordInput from '../../../components/shared/PasswordInput';
+import ThemeToggle from '../../../components/shared/ThemeToggle';
 import { Mail, AlertCircle, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { signIn } from './actions';
@@ -29,7 +30,10 @@ export default function LoginPage() {
   const [signInState, signInAction] = useFormState(signIn, null);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-brand-sand">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-brand-sand relative">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <ThemeToggle variant="icon" />
+      </div>
       <div className="w-full max-w-md bg-white border border-border-subtle rounded-2xl shadow-sm overflow-hidden p-6 sm:p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">

@@ -215,7 +215,7 @@ export default function RoomDetailDrawer({
                     </div>
 
                     {/* Dates */}
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-black/5">
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-black/5 dark:border-white/[0.08]">
                       <div>
                         <p className="text-xs text-ink-muted">Check-in</p>
                         <p className="text-xs font-semibold text-ink">{formatDate(bookingInfo.check_in_date)}</p>
@@ -238,7 +238,7 @@ export default function RoomDetailDrawer({
                     </div>
 
                     {/* Financials */}
-                    <div className="pt-2 border-t border-black/5 space-y-1">
+                    <div className="pt-2 border-t border-black/5 dark:border-white/[0.08] space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-ink-muted">Total</span>
                         <span className="font-semibold tabular-nums">{formatCurrency(bookingInfo.total_amount)}</span>
@@ -247,7 +247,7 @@ export default function RoomDetailDrawer({
                         <span className="text-ink-muted">Advance Paid</span>
                         <span className="font-semibold text-status-green tabular-nums">− {formatCurrency(bookingInfo.advance_amount)}</span>
                       </div>
-                      <div className="flex justify-between text-xs font-bold border-t border-black/5 pt-1">
+                      <div className="flex justify-between text-xs font-bold border-t border-black/5 dark:border-white/[0.08] pt-1">
                         <span className="text-ink">Balance Due</span>
                         <span className={`tabular-nums ${balance > 0 ? 'text-status-red' : 'text-status-green'}`}>
                           {formatCurrency(balance)}
@@ -270,7 +270,7 @@ export default function RoomDetailDrawer({
 
                     {/* Remarks */}
                     {bookingInfo.remarks && (
-                      <p className="text-[11px] text-ink-muted italic border-t border-black/5 pt-2">
+                      <p className="text-[11px] text-ink-muted italic border-t border-black/5 dark:border-white/[0.08] pt-2">
                         &quot;{bookingInfo.remarks}&quot;
                       </p>
                     )}

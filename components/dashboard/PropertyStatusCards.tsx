@@ -304,7 +304,7 @@ export default function PropertyStatusCards({ stats }: PropertyStatusCardsProps)
               </div>
 
               {/* Contextual Illustration in Bottom Right */}
-              <div className="absolute right-1.5 bottom-1 opacity-80 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-0">
+              <div className="absolute right-1.5 bottom-1 opacity-80 group-hover:opacity-100 dark:opacity-35 dark:group-hover:opacity-60 transition-opacity duration-300 pointer-events-none z-0">
                 {card.illustration}
               </div>
             </Link>

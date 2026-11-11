@@ -80,37 +80,35 @@ export default function HeroProductShowcase() {
       <div
         className="rounded-[28px] sm:rounded-[34px] overflow-hidden text-left relative p-5 sm:p-7 lg:p-8"
         style={{
-          background:
-            'linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 253, 249, 0.52) 50%, rgba(255, 255, 255, 0.65) 100%)',
+          background: 'var(--dashboard-glass-bg)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.88)',
-          boxShadow:
-            '0 28px 70px -16px rgba(15, 36, 33, 0.12), 0 8px 24px -6px rgba(15, 36, 33, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.06), inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.04)',
+          border: '1px solid var(--dashboard-glass-border)',
+          boxShadow: 'var(--dashboard-glass-shadow)',
         }}
       >
         {/* Subtle architectural grid texture visible through translucent glass */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
+          className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60 dark:opacity-85"
           aria-hidden="true"
         />
 
         {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent z-20"
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 dark:via-white/20 to-transparent z-20"
           aria-hidden="true"
         />
 
         {/* Upper curved glass glare reflection */}
         <div
-          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 via-white/5 to-transparent rounded-t-[28px] sm:rounded-t-[34px] z-20"
+          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 dark:from-white/10 via-white/5 dark:via-transparent to-transparent rounded-t-[28px] sm:rounded-t-[34px] z-20"
           aria-hidden="true"
         />
 
         {/* ── Top Header: Logo + Title (Left) and Live Badge (Right) — Seamless without dividing border ── */}
         <div className="flex items-center justify-between relative z-10 mb-4 sm:mb-5">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-white/80 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90 flex items-center justify-center shrink-0">
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-white/80 dark:bg-white/10 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] dark:shadow-none border border-white/90 dark:border-white/15 flex items-center justify-center shrink-0">
               <Image
                 src="/Grove.png"
                 alt="Grove Logo"
@@ -121,21 +119,21 @@ export default function HeroProductShowcase() {
               />
             </div>
             <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="font-serif font-bold text-brand-forest text-sm sm:text-base tracking-tight leading-none">
+              <span className="font-serif font-bold text-brand-forest dark:text-[#F1F5F2] text-sm sm:text-base tracking-tight leading-none">
                 {PRODUCT_NAME}
               </span>
-              <span className="text-[11px] sm:text-xs text-ink-muted/80 font-medium tracking-normal leading-none">
+              <span className="text-[11px] sm:text-xs text-ink-muted/80 dark:text-[#A3B5AC] font-medium tracking-normal leading-none">
                 — Control Centre
               </span>
             </div>
           </div>
 
           <div
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAF5EE] border border-[#D1EBD9] shadow-[0_1px_3px_rgba(46,125,79,0.08),inset_0_1px_1px_rgba(255,255,255,0.85)]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAF5EE] dark:bg-emerald-500/15 border border-[#D1EBD9] dark:border-emerald-500/30 shadow-[0_1px_3px_rgba(46,125,79,0.08),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-none"
             title="Real-time operational status"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" aria-hidden="true" />
-            <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#1F5C3A] tracking-wider uppercase">
+            <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#1F5C3A] dark:text-[#42C995] tracking-wider uppercase">
               Live
             </span>
           </div>
@@ -151,20 +149,20 @@ export default function HeroProductShowcase() {
           ].map((kpi, i) => (
             <div
               key={kpi.label}
-              className="relative group bg-white/70 hover:bg-white/85 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 border border-white/85 hover:border-white shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.95)] hover:shadow-[0_8px_26px_-6px_rgba(15,36,33,0.09),0_2px_6px_rgba(0,0,0,0.03),inset_0_1.5px_1.5px_rgba(255,255,255,1)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+              className="relative group bg-white/70 hover:bg-white/85 dark:!bg-[#10231D]/80 dark:hover:!bg-[#142A23]/90 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 border border-white/85 hover:border-white dark:border-white/[0.09] dark:hover:border-emerald-500/30 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.95)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
               style={{
                 transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${400 + i * (isMobile ? 50 : 90)}ms`,
               }}
             >
               {/* Subtle top edge specular reflection */}
               <div
-                className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
                 aria-hidden="true"
               />
-              <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.14em] font-semibold text-ink-muted/80 block">
+              <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.14em] font-semibold text-ink-muted/80 dark:text-[#A3B5AC] block">
                 {kpi.label}
               </span>
-              <div className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-brand-forest mt-1 sm:mt-1.5 tracking-tight flex items-baseline leading-none">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-brand-forest dark:text-[#42C995] mt-1 sm:mt-1.5 tracking-tight flex items-baseline leading-none">
                 <AnimatedCounter
                   target={kpi.value}
                   suffix={kpi.suffix}
@@ -180,17 +178,17 @@ export default function HeroProductShowcase() {
         {/* ── Room Matrix & Recent Activity Row ── */}
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 sm:gap-4 relative z-10">
           {/* Room Matrix Panel */}
-          <div className="sm:col-span-3 bg-white/60 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/80 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] relative overflow-hidden flex flex-col justify-between">
+          <div className="sm:col-span-3 bg-white/60 dark:!bg-[#10231D]/75 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/80 dark:border-white/[0.09] shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col justify-between">
             <div
-              className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+              className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
               aria-hidden="true"
             />
             <div>
               <div className="flex items-center justify-between mb-2.5 sm:mb-3.5">
-                <span className="text-[11px] sm:text-xs font-bold text-brand-forest uppercase tracking-[0.14em]">
+                <span className="text-[11px] sm:text-xs font-bold text-brand-forest dark:text-[#F1F5F2] uppercase tracking-[0.14em]">
                   Room Matrix
                 </span>
-                <span className="text-[10px] sm:text-[10.5px] font-medium text-ink-muted/75">
+                <span className="text-[10px] sm:text-[10.5px] font-medium text-ink-muted/75 dark:text-[#A3B5AC]">
                   Floor 1–3
                 </span>
               </div>
@@ -209,12 +207,12 @@ export default function HeroProductShowcase() {
                   const isCleaning = room.status === 'cleaning';
 
                   const statusClass = isOccupied
-                    ? 'bg-status-red/[0.08] hover:bg-status-red/[0.12] border-status-red/20 hover:border-status-red/35 text-status-red'
+                    ? 'bg-status-red/[0.08] hover:bg-status-red/[0.12] border-status-red/20 hover:border-status-red/35 text-status-red dark:bg-status-red/15 dark:border-status-red/30 dark:text-[#E16B6B]'
                     : isReserved
-                    ? 'bg-status-blue/[0.08] hover:bg-status-blue/[0.12] border-status-blue/20 hover:border-status-blue/35 text-status-blue'
+                    ? 'bg-status-blue/[0.08] hover:bg-status-blue/[0.12] border-status-blue/20 hover:border-status-blue/35 text-status-blue dark:bg-status-blue/15 dark:border-status-blue/30 dark:text-[#64A5E8]'
                     : isCleaning
-                    ? 'bg-status-amber/[0.08] hover:bg-status-amber/[0.12] border-status-amber/20 hover:border-status-amber/35 text-status-amber'
-                    : 'bg-status-green/[0.08] hover:bg-status-green/[0.12] border-status-green/22 hover:border-status-green/35 text-status-green';
+                    ? 'bg-status-amber/[0.08] hover:bg-status-amber/[0.12] border-status-amber/20 hover:border-status-amber/35 text-status-amber dark:bg-status-amber/15 dark:border-status-amber/30 dark:text-[#E8A84A]'
+                    : 'bg-status-green/[0.08] hover:bg-status-green/[0.12] border-status-green/22 hover:border-status-green/35 text-status-green dark:bg-status-green/15 dark:border-status-green/30 dark:text-[#42C995]';
 
                   const statusLabel = isOccupied
                     ? 'OCC'
@@ -228,7 +226,7 @@ export default function HeroProductShowcase() {
                     <div
                       key={room.num}
                       data-tile-idx={i}
-                      className={`relative p-2 sm:p-2.5 rounded-xl border text-center transition-all backdrop-blur-xs shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)] cursor-default select-none ${statusClass} ${
+                      className={`relative p-2 sm:p-2.5 rounded-xl border text-center transition-all backdrop-blur-xs shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-none cursor-default select-none ${statusClass} ${
                         isTransitioning ? 'ring-1.5 ring-status-green/40 ring-offset-1' : ''
                       }`}
                       style={{
@@ -241,7 +239,7 @@ export default function HeroProductShowcase() {
                           : 'transform 0.3s ease, box-shadow 0.3s ease',
                       }}
                     >
-                      <span className="text-xs sm:text-sm font-bold text-ink tracking-tight block">
+                      <span className="text-xs sm:text-sm font-bold text-ink dark:text-[#F1F5F2] tracking-tight block">
                         {room.num}
                       </span>
                       <span className="block text-[9px] sm:text-[9.5px] font-bold uppercase tracking-[0.14em] mt-0.5">
@@ -255,29 +253,29 @@ export default function HeroProductShowcase() {
           </div>
 
           {/* Recent Activity Panel */}
-          <div className="sm:col-span-2 bg-white/60 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/80 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] relative overflow-hidden flex flex-col justify-between">
+          <div className="sm:col-span-2 bg-white/60 dark:!bg-[#10231D]/75 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/80 dark:border-white/[0.09] shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col justify-between">
             <div
-              className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+              className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
               aria-hidden="true"
             />
             <div>
-              <span className="text-[11px] sm:text-xs font-bold text-brand-forest uppercase tracking-[0.14em] block mb-2.5 sm:mb-3.5">
+              <span className="text-[11px] sm:text-xs font-bold text-brand-forest dark:text-[#F1F5F2] uppercase tracking-[0.14em] block mb-2.5 sm:mb-3.5">
                 Recent Activity
               </span>
               <div className="space-y-2 sm:space-y-2.5">
                 {activities.map((act, i) => (
                   <div
                     key={i}
-                    className="group flex items-start gap-2.5 p-2 sm:p-2.5 rounded-xl bg-white/70 hover:bg-white/85 border border-white/80 hover:border-white shadow-[0_1px_3px_rgba(15,36,33,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all duration-150"
+                    className="group flex items-start gap-2.5 p-2 sm:p-2.5 rounded-xl bg-white/70 hover:bg-white/85 dark:!bg-white/[0.04] dark:hover:!bg-white/[0.08] border border-white/80 hover:border-white dark:border-white/[0.08] dark:hover:border-white/[0.14] shadow-[0_1px_3px_rgba(15,36,33,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-none transition-all duration-150"
                   >
-                    <div className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-status-green/10 border border-status-green/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-status-green" strokeWidth={2.2} />
+                    <div className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-status-green/10 dark:bg-emerald-500/15 border border-status-green/20 dark:border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-status-green dark:text-[#42C995]" strokeWidth={2.2} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="text-[11px] sm:text-xs font-medium text-ink leading-tight block truncate">
+                      <span className="text-[11px] sm:text-xs font-medium text-ink dark:text-[#F1F5F2] leading-tight block truncate">
                         {act.text}
                       </span>
-                      <span className="text-[9px] sm:text-[9.5px] text-ink-muted/80 font-normal mt-0.5 block">
+                      <span className="text-[9px] sm:text-[9.5px] text-ink-muted/80 dark:text-[#A3B5AC] font-normal mt-0.5 block">
                         {act.time}
                       </span>
                     </div>
@@ -294,7 +292,7 @@ export default function HeroProductShowcase() {
         className="absolute -inset-8 -z-10 rounded-[40px] pointer-events-none opacity-80"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 30%, rgba(31, 61, 58, 0.08) 0%, rgba(46, 90, 84, 0.03) 50%, transparent 75%)',
+            'radial-gradient(ellipse at 50% 30%, var(--dashboard-ambient-glow, rgba(31, 61, 58, 0.08)) 0%, transparent 75%)',
         }}
         aria-hidden="true"
       />

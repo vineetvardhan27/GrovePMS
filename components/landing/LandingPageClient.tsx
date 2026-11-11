@@ -295,7 +295,7 @@ export default function LandingPageClient({
           aria-hidden="true"
           style={{
             background:
-              'radial-gradient(ellipse at 50% 25%, rgba(31, 61, 58, 0.035) 0%, transparent 68%)',
+              'radial-gradient(ellipse at 50% 25%, var(--hero-radial-glow, rgba(31, 61, 58, 0.035)) 0%, transparent 68%)',
           }}
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -382,23 +382,27 @@ export default function LandingPageClient({
       {/* ───────────── 4. MODULES GRID ───────────── */}
       <section
         ref={modulesSection.ref}
-        className="bg-[#F8F5EE] border-y border-border-subtle/80 py-16 sm:py-24 relative overflow-hidden"
+        className="landing-section-flow border-y border-border-subtle/50 dark:border-[rgba(137,184,153,0.12)] py-16 sm:py-24 relative overflow-hidden"
         id="features"
       >
-        {/* Subtle architectural grid texture visible through translucent glass */}
+        {/* Soft hospitality ambient glow behind module grid */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture opacity-75"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 45% at 50% 18%, rgba(66, 201, 149, 0.065) 0%, transparent 68%)',
+          }}
           aria-hidden="true"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={modulesSection.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black dark:text-[#F1F5F2]">
                 Comprehensive Hospitality Modules
               </h2>
             </FadeIn>
             <FadeIn inView={modulesSection.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2">
+              <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB2] mt-2">
                 Twelve integrated modules engineered for boutique hotels, resorts, and premium
                 hospitality properties.
               </p>
@@ -419,32 +423,32 @@ export default function LandingPageClient({
                 >
                   {/* Delicate specular top-edge glass highlight */}
                   <div
-                    className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                    className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 dark:via-white/15 to-transparent z-10"
                     aria-hidden="true"
                   />
 
                   <div>
                     {/* 54-58px Icon container with deep forest-green gradient and subtle dark edge */}
-                    <div className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-[18px] bg-gradient-to-b from-[#224A45] to-[#153430] border border-[#142D2A]/30 shadow-[0_4px_12px_rgba(10,25,22,0.20),inset_0_1px_1px_rgba(255,255,255,0.25)] flex items-center justify-center shrink-0 transition-transform duration-250 ease-out group-hover:scale-[1.02] overflow-hidden">
+                    <div className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-[18px] bg-gradient-to-b from-[#224A45] to-[#153430] dark:from-[#1A3D36] dark:to-[#102722] border border-[#142D2A]/30 dark:border-[#42C995]/25 shadow-[0_4px_12px_rgba(10,25,22,0.20),inset_0_1px_1px_rgba(255,255,255,0.25)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.12)] flex items-center justify-center shrink-0 transition-transform duration-250 ease-out group-hover:scale-[1.02] overflow-hidden">
                       <div
                         className="pointer-events-none absolute inset-x-2 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/35 to-transparent"
                         aria-hidden="true"
                       />
-                      <Icon className="w-6 h-6 text-white" strokeWidth={1.85} />
+                      <Icon className="w-6 h-6 text-white dark:text-[#42C995]" strokeWidth={1.85} />
                     </div>
 
-                    {/* Feature Title - Refined serif typography in deep charcoal */}
-                    <h3 className="font-serif font-bold text-base sm:text-[17px] text-[#1A2624] mt-4 sm:mt-5 tracking-tight flex items-center justify-between w-full leading-snug">
+                    {/* Feature Title - Refined serif typography in bright ivory in dark mode */}
+                    <h3 className="font-serif font-bold text-base sm:text-[17px] text-[#1A2624] dark:text-[#F1F5F2] mt-4 sm:mt-5 tracking-tight flex items-center justify-between w-full leading-snug">
                       <span>{mod.name}</span>
                       {mod.href && (
-                        <div className="w-6 h-6 rounded-full bg-white/50 border border-[#1C2D29]/15 flex items-center justify-center opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 shrink-0 ml-2 shadow-2xs">
-                          <ArrowRight className="w-3.5 h-3.5 text-brand-forest" strokeWidth={2} />
+                        <div className="w-6 h-6 rounded-full bg-white/50 dark:bg-white/10 border border-[#1C2D29]/15 dark:border-white/15 flex items-center justify-center opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 shrink-0 ml-2 shadow-2xs">
+                          <ArrowRight className="w-3.5 h-3.5 text-brand-forest dark:text-[#42C995]" strokeWidth={2} />
                         </div>
                       )}
                     </h3>
 
-                    {/* Feature Description - Clean sans-serif in warm, muted dark grey */}
-                    <p className="text-xs sm:text-[13px] text-[#4A5451] leading-relaxed mt-2 font-normal">
+                    {/* Feature Description - Clean sans-serif in readable muted sage */}
+                    <p className="text-xs sm:text-[13px] text-[#4A5451] dark:text-[#A9BDB2] leading-relaxed mt-2 font-normal">
                       {mod.desc}
                     </p>
                   </div>
@@ -456,7 +460,7 @@ export default function LandingPageClient({
                   {mod.href ? (
                     <Link
                       href={mod.href}
-                      className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8F5EE] rounded-[26px]"
+                      className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8F5EE] dark:focus-visible:ring-offset-[#081410] rounded-[26px]"
                     >
                       {cardContent}
                     </Link>
@@ -485,14 +489,14 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={workflowSection.inView} delay={0}>
-              <h2 className="text-[clamp(1.75rem,3.2vw+0.6rem,2.5rem)] font-serif font-bold text-black leading-[1.18] tracking-tight">
+              <h2 className="text-[clamp(1.75rem,3.2vw+0.6rem,2.5rem)] font-serif font-bold text-black dark:text-[#F1F5F2] leading-[1.18] tracking-tight">
                 One Platform.
                 <br />
-                <span className="text-black">Every Operation Connected.</span>
+                <span className="text-black dark:text-[#F1F5F2]">Every Operation Connected.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={workflowSection.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB2] mt-2.5 max-w-xl mx-auto leading-relaxed">
                 From the moment a reservation is made to the final report, every step flows through one
                 system.
               </p>
@@ -515,21 +519,28 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 6. DASHBOARD SHOWCASE & ANALYTICS ───────────── */}
-      <section ref={dashboardShowcase.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden">
-        {/* Subtle architectural grid texture */}
+      <section
+        ref={dashboardShowcase.ref}
+        className="landing-section-flow border-y border-border-subtle/50 dark:border-[rgba(137,184,153,0.12)] py-16 sm:py-24 relative overflow-hidden"
+      >
+        {/* Soft hospitality ambient glow behind dashboard container */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 50% at 50% 35%, rgba(66, 201, 149, 0.08) 0%, rgba(16, 39, 30, 0.25) 50%, transparent 75%)',
+          }}
           aria-hidden="true"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <FadeIn inView={dashboardShowcase.inView} delay={0} direction="up" distance={16}>
-              <h2 className="text-[clamp(1.5rem,3.2vw+0.6rem,2.25rem)] font-serif font-bold text-black leading-tight tracking-tight">
+              <h2 className="text-[clamp(1.5rem,3.2vw+0.6rem,2.25rem)] font-serif font-bold text-black dark:text-[#F1F5F2] leading-tight tracking-tight">
                 See Your Property at a Glance.
               </h2>
             </FadeIn>
             <FadeIn inView={dashboardShowcase.inView} delay={90} direction="up" distance={14}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB2] mt-2.5 max-w-xl mx-auto leading-relaxed">
                 Real-time operational intelligence — occupancy, revenue, arrivals, room status, pending
                 payments, and booking activity — all on one dashboard.
               </p>
@@ -577,14 +588,14 @@ export default function LandingPageClient({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
             <FadeIn inView={multiTenant.inView} delay={0}>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black tracking-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight">
                 Built for Multiple Properties.
                 <br />
-                <span className="text-black">Isolated by Design.</span>
+                <span className="text-black dark:text-[#F1F5F2]">Isolated by Design.</span>
               </h2>
             </FadeIn>
             <FadeIn inView={multiTenant.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2.5 max-w-xl mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB2] mt-2.5 max-w-xl mx-auto leading-relaxed">
                 Every property operates in its own secure workspace. Hotel data, staff, bookings,
                 billing, reports and settings remain strictly isolated through PostgreSQL Row-Level
                 Security.
@@ -608,10 +619,17 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 8. SECURITY & DATA PROTECTION TRUST SECTION ───────────── */}
-      <section ref={securityTrustSection.ref} className="bg-white border-y border-border-subtle py-16 sm:py-24 relative overflow-hidden">
-        {/* Subtle architectural grid texture */}
+      <section
+        ref={securityTrustSection.ref}
+        className="landing-section-flow border-y border-border-subtle/50 dark:border-[rgba(137,184,153,0.12)] py-16 sm:py-24 relative overflow-hidden"
+      >
+        {/* Soft hospitality ambient glow behind security cards */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 65% 45% at 50% 25%, rgba(66, 201, 149, 0.065) 0%, transparent 68%)',
+          }}
           aria-hidden="true"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -621,12 +639,12 @@ export default function LandingPageClient({
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-forest/80" />
                 <span>Enterprise Trust & Reliability</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-black dark:text-[#F1F5F2]">
                 Security & Data Protection
               </h2>
             </FadeIn>
             <FadeIn inView={securityTrustSection.inView} delay={80}>
-              <p className="text-xs sm:text-sm text-ink-muted mt-2">
+              <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB2] mt-2">
                 Your hotel&apos;s operational data is separated by property and protected through
                 authentication, role-based access controls and database-level tenant isolation.
               </p>
@@ -890,13 +908,20 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 10. PRICING & IMPLEMENTATION SECTION ───────────── */}
-      <section ref={pricingSection.ref} className="py-20 sm:py-28 bg-white border-y border-border-subtle relative overflow-hidden" id="pricing">
-        {/* Subtle architectural grid texture */}
+      <section
+        ref={pricingSection.ref}
+        className="py-20 sm:py-28 landing-section-flow border-y border-border-subtle/50 dark:border-[rgba(137,184,153,0.12)] relative overflow-hidden"
+        id="pricing"
+      >
+        {/* Soft hospitality ambient glow behind pricing cards */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 45% at 50% 20%, rgba(66, 201, 149, 0.07) 0%, transparent 70%)',
+          }}
           aria-hidden="true"
         />
-
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
             <FadeIn inView={pricingSection.inView} delay={0} direction="up" distance={12}>
@@ -904,12 +929,12 @@ export default function LandingPageClient({
                 <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
                 <span>Transparent Hospitality Pricing</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-black tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-[1.15]">
                 Simple, Predictable Pricing.
               </h2>
             </FadeIn>
             <FadeIn inView={pricingSection.inView} delay={60} direction="up" distance={12}>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-ink-muted leading-relaxed">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-ink-muted dark:text-[#A9BDB2] leading-relaxed">
                 No percentage cuts of hotel revenue, no surprise booking commissions. Complete software plus white-glove onboarding.
               </p>
             </FadeIn>
@@ -936,7 +961,7 @@ export default function LandingPageClient({
                     </span>
                   </div>
 
-                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-black">
+                  <h3 className="font-serif font-bold text-2xl sm:text-3xl text-black dark:text-[#F1F5F2]">
                     Grove Operating System
                   </h3>
                   <p className="text-xs sm:text-sm text-ink-muted mt-2 leading-relaxed">
@@ -990,10 +1015,10 @@ export default function LandingPageClient({
               distance={16}
               className="lg:col-span-5 flex"
             >
-              <div className="grove-glass-card w-full rounded-[28px] p-6 sm:p-8 border border-border-subtle/90 flex flex-col justify-between bg-white/70">
+              <div className="grove-glass-card w-full rounded-[28px] p-6 sm:p-8 border border-border-subtle/90 flex flex-col justify-between bg-white/70 dark:bg-transparent">
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-sand border border-border-subtle text-brand-forest text-[11px] font-bold uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-sand dark:bg-[#132D23] border border-border-subtle dark:border-[rgba(137,184,153,0.22)] text-brand-forest dark:text-[#55C995] text-[11px] font-bold uppercase tracking-wider">
                       Turnkey Setup
                     </span>
                     <span className="text-[11px] font-mono text-ink-muted font-medium">48-72h Go-Live</span>
@@ -1129,25 +1154,37 @@ export default function LandingPageClient({
       </section>
 
       {/* ───────────── 12. ABOUT & MISSION SPOTLIGHT ───────────── */}
-      <section ref={aboutSection.ref} className="py-16 sm:py-24 bg-white border-y border-border-subtle relative overflow-hidden" id="about">
-        {/* Subtle architectural grid texture */}
+      <section
+        ref={aboutSection.ref}
+        className="py-16 sm:py-24 landing-section-flow border-y border-border-subtle/50 dark:border-[rgba(137,184,153,0.12)] relative overflow-hidden"
+        id="about"
+      >
+        {/* Soft hospitality ambient glow behind about panel */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(66, 201, 149, 0.06) 0%, transparent 70%)',
+          }}
           aria-hidden="true"
         />
-
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeIn inView={aboutSection.inView} delay={0} direction="up" distance={16}>
-            <div className="grove-glass-panel rounded-[32px] p-8 sm:p-12 lg:p-14 border border-white/90 shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08)] relative overflow-hidden">
+            <div className="grove-glass-panel rounded-[32px] p-8 sm:p-12 lg:p-14 border border-white/90 dark:border-[rgba(137,184,153,0.20)] shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08)] dark:shadow-[0_24px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden">
+              {/* Delicate specular top-edge glass highlight */}
+              <div
+                className="pointer-events-none absolute inset-x-8 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 dark:via-white/20 to-transparent"
+                aria-hidden="true"
+              />
               <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/6 border border-brand-forest/15 text-brand-forest text-[11px] font-semibold uppercase tracking-widest mb-4">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-forest" />
+                <div className="grove-glass-badge inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-widest mb-4">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-forest dark:text-[#55C995]" />
                   <span>About Grove</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black tracking-tight leading-snug">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-snug">
                   Technology Crafted to Bring Calm to Hotel Operations.
                 </h2>
-                <p className="mt-4 text-xs sm:text-sm text-ink-muted leading-relaxed">
+                <p className="mt-4 text-xs sm:text-sm text-ink-muted dark:text-[#A8BBAF] leading-relaxed">
                   Traditional hospitality software is often fragmented across separate point solutions — paper registers, legacy desktop programs, and disconnected spreadsheets. Grove was created to unify every operational department into one intuitive, cloud-connected operating system.
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
@@ -1227,13 +1264,13 @@ export default function LandingPageClient({
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 50% 60%, rgba(31,61,58,0.035) 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse at 50% 60%, var(--hero-radial-glow, rgba(31,61,58,0.035)) 0%, transparent 65%)',
           }}
         />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeIn inView={ctaSection.inView} delay={0} direction="up" distance={16}>
-            <div className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 lg:p-12 text-center bg-gradient-to-b from-white/95 via-white/90 to-[#FAF6F0]/90 backdrop-blur-xl border border-white/85 shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08),0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_24px_60px_-15px_rgba(31,61,58,0.11)]">
+            <div className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 lg:p-12 text-center bg-gradient-to-b from-white/95 via-white/90 to-[#FAF6F0]/90 dark:from-[#10231D]/95 dark:via-[#10231D]/90 dark:to-[#0B1915]/90 backdrop-blur-xl border border-white/85 dark:border-white/[0.09] shadow-[0_20px_50px_-15px_rgba(31,61,58,0.08),0_1px_3px_rgba(0,0,0,0.02)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:shadow-[0_24px_60px_-15px_rgba(31,61,58,0.11)]">
               {/* Delicate grid texture */}
               <div
                 className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-70"

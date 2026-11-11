@@ -68,19 +68,19 @@ export default function HotelManagementSoftwarePage() {
       <main className="pt-28 sm:pt-36 pb-12">
         {/* ── BREADCRUMB BAR ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8">
-          <nav aria-label="Breadcrumb" className="text-xs text-ink-muted flex items-center gap-1.5 font-medium">
-            <Link href="/" className="hover:text-brand-forest transition-colors">
+          <nav aria-label="Breadcrumb" className="text-xs text-ink-muted dark:text-[#A9BDB1] flex items-center gap-1.5 font-medium">
+            <Link href="/" className="hover:text-brand-forest dark:hover:text-[#42C995] transition-colors">
               Home
             </Link>
             <span>/</span>
-            <span className="text-brand-forest font-semibold">Hotel Management Software</span>
+            <span className="text-brand-forest dark:text-[#42C995] font-semibold">Hotel Management Software</span>
           </nav>
         </div>
 
         {/* ── HERO SECTION ── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-8 sm:pb-12">
           {/* Eyebrow Pill */}
-          <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
+          <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest dark:text-[#42C995] text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
             <Image
               src="/Grove.png"
               alt="Grove Logo"
@@ -92,14 +92,14 @@ export default function HotelManagementSoftwarePage() {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-black tracking-tight max-w-4xl mx-auto leading-[1.10]">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight max-w-4xl mx-auto leading-[1.10]">
             Run Your Entire Hotel.
             <br />
             From One Intelligent Platform.
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-5 sm:mt-7 text-base sm:text-xl text-ink-muted max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-5 sm:mt-7 text-base sm:text-xl text-ink-muted dark:text-[#A9BDB1] max-w-3xl mx-auto leading-relaxed">
             Manage reservations, room allocation, guest billing, housekeeping, restaurant orders and hotel operations through one connected cloud-based platform.
           </p>
 
@@ -125,17 +125,17 @@ export default function HotelManagementSoftwarePage() {
           </div>
 
           {/* Trust Highlights */}
-          <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs text-ink-muted">
+          <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs text-ink-muted dark:text-[#A9BDB1]">
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-green" />
+              <CheckCircle2 className="w-4 h-4 text-status-green dark:text-emerald-400" />
               <span>Full ₹999/month Transparent Plan</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-green" />
+              <CheckCircle2 className="w-4 h-4 text-status-green dark:text-emerald-400" />
               <span>Zero Hardware Installation</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-green" />
+              <CheckCircle2 className="w-4 h-4 text-status-green dark:text-emerald-400" />
               <span>Free Guided White-Glove Onboarding</span>
             </div>
           </div>

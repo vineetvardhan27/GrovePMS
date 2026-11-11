@@ -40,35 +40,35 @@ export default function SecurityArchitectureSection() {
 
   return (
     <section className="py-20 sm:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="rounded-[36px] bg-white/75 backdrop-blur-xl border border-[#1C2D29]/12 p-8 sm:p-12 lg:p-16 shadow-[0_24px_70px_-12px_rgba(20,38,34,0.08)] relative overflow-hidden">
+      <div className="rounded-[36px] bg-white/75 backdrop-blur-xl border border-[#1C2D29]/12 p-8 sm:p-12 lg:p-16 shadow-[0_24px_70px_-12px_rgba(20,38,34,0.08)] dark:bg-[#10271F]/80 dark:border-[rgba(130,180,150,0.18)] dark:shadow-[0_24px_70px_-12px_rgba(0,0,0,0.45)] dark:backdrop-blur-none relative overflow-hidden">
         {/* Ambient Top Glow */}
         <div
-          className="pointer-events-none absolute inset-x-12 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-forest/30 to-transparent"
+          className="pointer-events-none absolute inset-x-12 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-forest/30 dark:via-[#42C995]/30 to-transparent"
           aria-hidden="true"
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Heading & Description */}
           <div className="lg:col-span-5 space-y-5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold tracking-wider uppercase">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest dark:bg-[#17352A] dark:border-[#42C995]/25 dark:text-[#42C995] text-xs font-semibold tracking-wider uppercase">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Enterprise Data Architecture</span>
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-black tracking-tight leading-[1.15]">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-[1.15]">
               Every Property.
               <br />
               Its Own Secure Operational Space.
             </h2>
 
-            <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+            <p className="text-sm sm:text-base text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
               Grove PMS delivers modern cloud flexibility with enterprise-grade data isolation. Powered by Supabase PostgreSQL and kernel-level Row-Level Security, your hotel records remain private, audited, and strictly isolated.
             </p>
 
             <div className="pt-2">
               <Link
                 href="/security"
-                className="inline-flex items-center gap-2 text-xs font-semibold text-brand-forest hover:text-brand-forest-light group cursor-pointer"
+                className="inline-flex items-center gap-2 text-xs font-semibold text-brand-forest hover:text-brand-forest-light dark:text-[#42C995] dark:hover:text-[#6EE7B7] group cursor-pointer"
               >
                 <span>Read Full Security &amp; Compliance Whitepaper</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -83,16 +83,16 @@ export default function SecurityArchitectureSection() {
               return (
                 <div
                   key={i}
-                  className="rounded-2xl bg-brand-sand/35 border border-[#1C2D29]/10 p-5 space-y-3 hover:bg-brand-sand/50 transition-colors"
+                  className="rounded-2xl bg-brand-sand/35 border border-[#1C2D29]/10 p-5 space-y-3 hover:bg-brand-sand/50 dark:bg-[#132D23]/70 dark:border-[rgba(130,180,150,0.18)] dark:hover:bg-[#163529]/70 transition-colors"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-brand-forest/10 border border-brand-forest/20 text-brand-forest flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-brand-forest/10 border border-brand-forest/20 text-brand-forest dark:bg-[#17352A] dark:border-[#42C995]/25 dark:text-[#42C995] flex items-center justify-center">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-serif font-bold text-sm sm:text-base text-[#142320]">
+                    <h3 className="font-serif font-bold text-sm sm:text-base text-[#142320] dark:text-[#F1F5F2]">
                       {pillar.title}
                     </h3>
-                    <p className="text-xs text-ink-muted leading-relaxed mt-1">
+                    <p className="text-xs text-ink-muted dark:text-[#A9BDB1] leading-relaxed mt-1">
                       {pillar.desc}
                     </p>
                   </div>

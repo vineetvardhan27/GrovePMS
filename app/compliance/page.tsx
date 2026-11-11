@@ -129,7 +129,7 @@ export default function CompliancePage() {
           {/* ── 1. HERO SECTION ── */}
           <section className="text-center max-w-4xl mx-auto mb-16 sm:mb-24">
             {/* Eyebrow Badge */}
-            <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
+            <div className="grove-glass-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-brand-forest dark:text-[#42C995] text-xs font-semibold mb-5 sm:mb-6 shadow-2xs">
               <Image
                 src="/Grove.png"
                 alt="Grove Logo"
@@ -141,31 +141,31 @@ export default function CompliancePage() {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-black tracking-tight leading-[1.10]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-[1.10]">
               Compliance, GST Invoicing &amp; Statutory Governance.
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-6 sm:mt-8 text-base sm:text-xl text-ink-muted leading-relaxed max-w-3xl mx-auto">
+            <p className="mt-6 sm:mt-8 text-base sm:text-xl text-ink-muted dark:text-[#A9BDB1] leading-relaxed max-w-3xl mx-auto">
               Standardized cloud workflows engineered for Indian hotel regulations — from dual-slab GST sequential invoicing and accountant GSTR filing exports, to digital guest police registers and immutable shift audit trails.
             </p>
 
             {/* Statutory Assurance Badges */}
-            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-semibold text-ink-muted">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-status-green" />
+            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-semibold text-ink-muted dark:text-[#A9BDB1]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs dark:bg-[#10271F] dark:border-[rgba(130,180,150,0.18)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-status-green dark:text-emerald-400" />
                 <span>Sequential GST Tax Invoicing</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-status-green" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs dark:bg-[#10271F] dark:border-[rgba(130,180,150,0.18)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-status-green dark:text-emerald-400" />
                 <span>SAC 996311 &amp; 996331 Automation</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-status-green" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs dark:bg-[#10271F] dark:border-[rgba(130,180,150,0.18)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-status-green dark:text-emerald-400" />
                 <span>Digital Form-C Foreign Guest Ledger</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-status-green" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 border border-border-subtle shadow-2xs dark:bg-[#10271F] dark:border-[rgba(130,180,150,0.18)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-status-green dark:text-emerald-400" />
                 <span>Accountant GSTR-1 &amp; GSTR-3B Sync</span>
               </span>
             </div>
@@ -173,16 +173,16 @@ export default function CompliancePage() {
 
           {/* ── 2. STATUTORY RESPONSIBILITY ADVISORY BANNER ── */}
           <section className="mb-16 sm:mb-20">
-            <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-w-4xl mx-auto text-ink">
+            <div className="bg-amber-500/10 border border-amber-500/25 dark:bg-amber-500/10 dark:border-amber-400/30 rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-w-4xl mx-auto text-ink">
               <div className="flex items-start gap-4">
-                <div className="p-2 rounded-xl bg-amber-500/15 text-amber-900 shrink-0 mt-0.5">
-                  <AlertCircle className="w-5 h-5 text-amber-800" />
+                <div className="p-2 rounded-xl bg-amber-500/15 text-amber-900 dark:bg-amber-400/15 dark:text-amber-300 shrink-0 mt-0.5">
+                  <AlertCircle className="w-5 h-5 text-amber-800 dark:text-amber-300" />
                 </div>
                 <div className="text-xs sm:text-sm text-ink leading-relaxed">
-                  <h3 className="font-serif font-bold text-base text-amber-950 mb-1">
+                  <h3 className="font-serif font-bold text-base text-amber-950 dark:text-amber-300 mb-1">
                     Regulatory Advisory for Hoteliers
                   </h3>
-                  <p className="text-ink-muted">
+                  <p className="text-ink-muted dark:text-[#D5E2DA]">
                     Grove provides high-precision operational software designed to assist hotel owners and staff in maintaining statutory records, tax folios, and guest logs. Individual properties remain solely responsible for local Sarai Act registrations, municipal trade licenses, fire NOCs, and state tourism certifications applicable to their jurisdiction. Hotels should verify their tax categorization with their certified chartered accountants.
                   </p>
                 </div>
@@ -193,14 +193,14 @@ export default function CompliancePage() {
           {/* ── 3. FOUR COMPLIANCE PILLARS ── */}
           <section className="mb-20 sm:mb-28">
             <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold tracking-wider uppercase">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest dark:bg-[#17352A] dark:border-[#42C995]/25 dark:text-[#42C995] text-xs font-semibold tracking-wider uppercase">
                 <Scale className="w-3.5 h-3.5" />
                 <span>Regulatory Foundation</span>
               </span>
-              <h2 className="text-3xl sm:text-5xl font-serif font-bold text-black tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-5xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-[1.15]">
                 Four Built-In Statutory Safeguards.
               </h2>
-              <p className="text-base sm:text-lg text-ink-muted leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-ink-muted dark:text-[#A9BDB1] leading-relaxed max-w-2xl mx-auto">
                 Built from the ground up to ensure boutique resorts and independent properties operate without compliance exposure.
               </p>
             </div>
@@ -211,29 +211,29 @@ export default function CompliancePage() {
                 return (
                   <div
                     key={pillar.title}
-                    className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 p-7 sm:p-9 shadow-[0_12px_32px_-6px_rgba(20,38,34,0.05)] hover:shadow-[0_18px_44px_-8px_rgba(20,38,34,0.10)] transition-all duration-300 flex flex-col justify-between group"
+                    className="rounded-[28px] bg-white/75 backdrop-blur-md border border-white/80 dark:bg-[#10271F]/80 dark:border-[rgba(130,180,150,0.18)] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.4)] p-7 sm:p-9 shadow-[0_12px_32px_-6px_rgba(20,38,34,0.05)] hover:shadow-[0_18px_44px_-8px_rgba(20,38,34,0.10)] transition-all duration-300 flex flex-col justify-between group"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-3 mb-5">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-forest/8 text-brand-forest flex items-center justify-center border border-brand-forest/10 group-hover:scale-105 transition-transform duration-200">
-                          <Icon className="w-6 h-6 text-brand-forest" />
+                        <div className="w-12 h-12 rounded-2xl bg-brand-forest/8 text-brand-forest dark:bg-[#17352A] dark:text-[#42C995] dark:border dark:border-[#42C995]/25 flex items-center justify-center border border-brand-forest/10 group-hover:scale-105 transition-transform duration-200">
+                          <Icon className="w-6 h-6 text-brand-forest dark:text-[#42C995]" />
                         </div>
-                        <span className="font-mono text-xs font-bold text-brand-forest/60 bg-brand-sand px-2.5 py-1 rounded-full border border-border-subtle/60">
+                        <span className="font-mono text-xs font-bold text-brand-forest/60 bg-brand-sand px-2.5 py-1 rounded-full border border-border-subtle/60 dark:bg-[#17352A] dark:text-[#42C995] dark:border-[#42C995]/20">
                           {pillar.number}
                         </span>
                       </div>
 
-                      <h3 className="font-serif font-bold text-xl sm:text-2xl text-black mb-3">
+                      <h3 className="font-serif font-bold text-xl sm:text-2xl text-black dark:text-[#F1F5F2] mb-3">
                         {pillar.title}
                       </h3>
 
-                      <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+                      <p className="text-sm sm:text-base text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                         {pillar.description}
                       </p>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-[#1C2D29]/8 flex items-center gap-2 text-xs font-semibold text-brand-forest">
-                      <Check className="w-4 h-4 text-status-green stroke-[3] shrink-0" />
+                    <div className="mt-6 pt-4 border-t border-[#1C2D29]/8 dark:border-[rgba(130,180,150,0.15)] flex items-center gap-2 text-xs font-semibold text-brand-forest dark:text-[#42C995]">
+                      <Check className="w-4 h-4 text-status-green dark:text-emerald-400 stroke-[3] shrink-0" />
                       <span>{pillar.benefit}</span>
                     </div>
                   </div>
@@ -244,15 +244,15 @@ export default function CompliancePage() {
 
           {/* ── 4. GST INVOICE COMPLIANCE ANATOMY ── */}
           <section className="mb-20 sm:mb-28">
-            <div className="rounded-[28px] sm:rounded-[36px] bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_24px_70px_-12px_rgba(20,38,34,0.09)] p-6 sm:p-10 lg:p-14 text-left">
+            <div className="rounded-[28px] sm:rounded-[36px] bg-white/80 backdrop-blur-xl border border-white/90 dark:bg-[#10271F]/80 dark:border-[rgba(130,180,150,0.18)] dark:shadow-[0_24px_70px_-12px_rgba(0,0,0,0.5)] shadow-[0_24px_70px_-12px_rgba(20,38,34,0.09)] p-6 sm:p-10 lg:p-14 text-left">
               <div className="max-w-3xl mx-auto space-y-6">
-                <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 block">
+                <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 dark:text-[#42C995] block">
                   Tax Architecture
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-black tracking-tight leading-tight">
+                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-tight">
                   The Anatomy of a Statutory Grove GST Invoice
                 </h2>
-                <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+                <p className="text-sm sm:text-base text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                   Every tax invoice generated by Grove PMS adheres strictly to Indian Goods and Services Tax Act specifications. The layout ensures flawless reconciliation for both your hotel and corporate business travelers claiming input tax credits.
                 </p>
 
@@ -260,13 +260,13 @@ export default function CompliancePage() {
                   {gstInvoiceElements.map((item) => (
                     <div
                       key={item.label}
-                      className="p-5 rounded-2xl bg-brand-sand/40 border border-[#1C2D29]/8 space-y-1.5"
+                      className="p-5 rounded-2xl bg-brand-sand/40 border border-[#1C2D29]/8 dark:bg-[#132D23]/70 dark:border-[rgba(130,180,150,0.15)] space-y-1.5"
                     >
-                      <div className="flex items-center gap-2 text-brand-forest font-semibold text-xs sm:text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-status-green shrink-0" />
+                      <div className="flex items-center gap-2 text-brand-forest dark:text-[#42C995] font-semibold text-xs sm:text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-status-green dark:text-emerald-400 shrink-0" />
                         <span>{item.label}</span>
                       </div>
-                      <p className="text-xs text-ink-muted leading-relaxed pl-6">
+                      <p className="text-xs text-ink-muted dark:text-[#A9BDB1] leading-relaxed pl-6">
                         {item.detail}
                       </p>
                     </div>
@@ -306,45 +306,45 @@ export default function CompliancePage() {
           {/* ── 5. ACCOUNTANT GSTR FILING RECONCILIATION WORKFLOW ── */}
           <section className="mb-20 sm:mb-28 text-center">
             <div className="max-w-3xl mx-auto mb-12 sm:mb-16 space-y-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold tracking-wider uppercase">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest dark:bg-[#17352A] dark:border-[#42C995]/25 dark:text-[#42C995] text-xs font-semibold tracking-wider uppercase">
                 <Calculator className="w-3.5 h-3.5" />
                 <span>Accountant Synchronization</span>
               </span>
-              <h2 className="text-3xl sm:text-5xl font-serif font-bold text-black tracking-tight leading-[1.15]">
+              <h2 className="text-3xl sm:text-5xl font-serif font-bold text-black dark:text-[#F1F5F2] tracking-tight leading-[1.15]">
                 How Your Accountant Prepares GSTR-1 &amp; GSTR-3B.
               </h2>
-              <p className="text-base sm:text-lg text-ink-muted leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-ink-muted dark:text-[#A9BDB1] leading-relaxed max-w-2xl mx-auto">
                 No manual ledger typing at month end. Grove exports cleanly structured CSV and Excel files ready for tax software.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-              <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-border-subtle shadow-2xs space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest flex items-center justify-center font-mono font-bold text-xs">
+              <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-[#10271F]/80 border border-border-subtle dark:border-[rgba(130,180,150,0.18)] shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest dark:bg-[#17352A] dark:text-[#42C995] flex items-center justify-center font-mono font-bold text-xs">
                   01
                 </div>
-                <h3 className="font-serif font-bold text-xl text-black">Real-Time Accrual</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                <h3 className="font-serif font-bold text-xl text-black dark:text-[#F1F5F2]">Real-Time Accrual</h3>
+                <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                   As guests check out or restaurant orders are paid, tariffs and applicable taxes post automatically to sequential invoice registers.
                 </p>
               </div>
 
-              <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-border-subtle shadow-2xs space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest flex items-center justify-center font-mono font-bold text-xs">
+              <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-[#10271F]/80 border border-border-subtle dark:border-[rgba(130,180,150,0.18)] shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest dark:bg-[#17352A] dark:text-[#42C995] flex items-center justify-center font-mono font-bold text-xs">
                   02
                 </div>
-                <h3 className="font-serif font-bold text-xl text-black">Midnight Freeze</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                <h3 className="font-serif font-bold text-xl text-black dark:text-[#F1F5F2]">Midnight Freeze</h3>
+                <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                   At midnight, the automated night audit freezes daily collections, balances credit card and UPI reconciliations, and verifies sequentiality.
                 </p>
               </div>
 
-              <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-border-subtle shadow-2xs space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest flex items-center justify-center font-mono font-bold text-xs">
+              <div className="p-6 sm:p-8 rounded-[28px] bg-white dark:bg-[#10271F]/80 border border-border-subtle dark:border-[rgba(130,180,150,0.18)] shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-forest/10 text-brand-forest dark:bg-[#17352A] dark:text-[#42C995] flex items-center justify-center font-mono font-bold text-xs">
                   03
                 </div>
-                <h3 className="font-serif font-bold text-xl text-black">1-Click GSTR Export</h3>
-                <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+                <h3 className="font-serif font-bold text-xl text-black dark:text-[#F1F5F2]">1-Click GSTR Export</h3>
+                <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                   On the 1st of every month, hotel owners export a comprehensive tax report formatted for GSTR-1 Table 4 (B2B), Table 7 (B2C), and GSTR-3B.
                 </p>
               </div>
@@ -353,20 +353,20 @@ export default function CompliancePage() {
 
           {/* ── 6. FAST-TRACK CONVERSION CALLOUT ── */}
           <section className="pt-6">
-            <div className="rounded-[28px] sm:rounded-[36px] bg-white/70 backdrop-blur-xl border border-white/80 p-8 sm:p-12 lg:p-14 text-center shadow-lg relative overflow-hidden">
+            <div className="rounded-[28px] sm:rounded-[36px] bg-white/70 backdrop-blur-xl border border-white/80 dark:bg-[#10271F]/80 dark:border-[rgba(130,180,150,0.18)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] p-8 sm:p-12 lg:p-14 text-center shadow-lg relative overflow-hidden">
               <div
                 className="pointer-events-none absolute -bottom-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-emerald-500/10 rounded-full blur-3xl"
                 aria-hidden="true"
               />
 
               <div className="max-w-2xl mx-auto space-y-4 relative z-10">
-                <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 block">
+                <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 dark:text-[#42C995] block">
                   Audited Operational Calm
                 </span>
-                <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-black tracking-tight leading-tight">
+                <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-black dark:text-[#F1F5F2] tracking-tight leading-tight">
                   Run a 100% Tax-Compliant Property.
                 </h2>
-                <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+                <p className="text-sm sm:text-base text-ink-muted dark:text-[#A9BDB1] leading-relaxed">
                   Eliminate billing disputes, lost guest ID records, and manual tax calculations with Grove PMS.
                 </p>
 
@@ -380,14 +380,14 @@ export default function CompliancePage() {
                   </Link>
                   <Link
                     href="/pricing"
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white border border-[#1C2D29]/15 text-brand-forest font-serif font-bold text-sm sm:text-base hover:bg-brand-sand/60 transition-colors text-center shadow-2xs flex items-center justify-center gap-1.5"
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white border border-[#1C2D29]/15 text-brand-forest font-serif font-bold text-sm sm:text-base hover:bg-brand-sand/60 transition-colors text-center shadow-2xs flex items-center justify-center gap-1.5 dark:bg-[#142A22] dark:text-[#F1F5F2] dark:border-[rgba(130,180,150,0.25)]"
                   >
                     <span>View Pricing (₹999/mo)</span>
                   </Link>
                 </div>
-                <p className="mt-4 text-xs text-ink-muted">
+                <p className="mt-4 text-xs text-ink-muted dark:text-[#A9BDB1]">
                   Interested in PostgreSQL multi-tenant isolation &amp; encryption?{' '}
-                  <Link href="/security" className="font-semibold text-brand-forest underline hover:text-brand-forest-light">
+                  <Link href="/security" className="font-semibold text-brand-forest dark:text-[#42C995] underline hover:text-brand-forest-light dark:hover:text-[#6EE7B7]">
                     Review Data Security Architecture →
                   </Link>
                 </p>

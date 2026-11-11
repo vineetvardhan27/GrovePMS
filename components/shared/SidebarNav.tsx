@@ -69,7 +69,8 @@ export default function SidebarNav({ authorizedPaths }: SidebarNavProps) {
           <div key={item.name} className="space-y-1">
             {showDivider && (
               <div
-                className="my-2 mx-1.5 border-t border-white/[0.08]"
+                className="my-2.5 mx-2 border-t"
+                style={{ borderColor: 'var(--sidebar-separator)' }}
                 aria-hidden="true"
               />
             )}
@@ -82,27 +83,21 @@ export default function SidebarNav({ authorizedPaths }: SidebarNavProps) {
                 }
               }}
               className={`
-                flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13.5px] min-h-[42px] relative group
-                transition-all duration-200 ease-out select-none
-                ${isActive
-                  ? 'bg-gradient-to-r from-[#24584B] via-[#1E4D41] to-[#163C36] text-white font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.12]'
-                  : 'text-[#B7C9C3] hover:text-white hover:bg-white/[0.06] hover:ring-1 hover:ring-white/[0.08] font-normal group-hover:translate-x-0.5'
-                }
+                sidebar-nav-item group
+                ${isActive ? 'sidebar-nav-item-active' : 'sidebar-nav-item-idle'}
               `}
             >
               {/* Active left slim 3px emerald indicator */}
               {isActive && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#6CBF91] rounded-r-full shadow-[0_0_8px_rgba(108,191,145,0.85)]"
+                  className="sidebar-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
                   aria-hidden="true"
                 />
               )}
 
               <Icon
-                className={`w-5 h-5 shrink-0 transition-colors duration-200 ${
-                  isActive
-                    ? 'text-[#6CBF91] drop-shadow-[0_1px_3px_rgba(108,191,145,0.45)]'
-                    : 'text-[#B7C9C3]/75 group-hover:text-[#6CBF91]'
+                className={`w-5 h-5 shrink-0 ${
+                  isActive ? 'sidebar-nav-icon-active' : 'sidebar-nav-icon-idle'
                 }`}
               />
 

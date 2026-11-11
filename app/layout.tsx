@@ -5,6 +5,7 @@ import '@fontsource/google-sans/600.css';
 import '@fontsource/google-sans/700.css';
 import './globals.css';
 import { AuthProvider } from '../components/providers/AuthProvider';
+import { ThemeProvider } from '../components/providers/ThemeProvider';
 import JsonLd from '@/components/seo/JsonLd';
 import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/structuredData';
 
@@ -100,19 +101,41 @@ export default function RootLayout({
   const websiteSchema = getWebSiteSchema();
 
   return (
-    <html lang="en" className="font-sans">
+    <html lang="en" suppressHydrationWarning className="font-sans">
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/mortezaom/google-sans-cdn@master/fonts.css"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('grove-theme') || 'system';
+                  var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+                  if (r === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.colorScheme = 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', r);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="bg-brand-sand text-ink antialiased font-sans">
         <JsonLd data={[orgSchema, websiteSchema]} />
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

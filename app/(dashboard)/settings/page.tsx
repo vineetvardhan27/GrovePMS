@@ -1,6 +1,7 @@
 import { Percent, BedDouble, ArrowRight, UtensilsCrossed, Users, Settings, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '../../../components/shared/PageHeader';
+import ThemeSettingsCard from '../../../components/settings/ThemeSettingsCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -192,6 +193,9 @@ export default function SettingsPage() {
         description="Property, staff credentials, and operational configuration"
         icon={Settings}
       />
+
+      {/* Theme Appearance Selector */}
+      <ThemeSettingsCard />
 
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">

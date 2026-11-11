@@ -30,6 +30,7 @@ import { signOut } from '../../app/(auth)/login/actions';
 import type { StaffProfile } from '../../lib/auth/types';
 import { AvailableStaffAccount } from '../../lib/auth/switchAccount';
 import AccountSwitcher from './AccountSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 const ALL_NAV_ITEMS = [
   { name: 'Dashboard',       href: '/dashboard',     icon: LayoutDashboard, section: 'core' },
@@ -118,26 +119,30 @@ export default function MobileNavDrawer({
 
       {/* Drawer Panel */}
       <div
-        className="fixed inset-y-0 left-0 w-[285px] h-full text-white flex flex-col shadow-2xl z-[10000] overflow-hidden border-r border-white/[0.09]"
+        className="fixed inset-y-0 left-0 w-[285px] h-full text-white flex flex-col shadow-2xl z-[10000] overflow-hidden border-r"
         style={{
           height: '100dvh',
-          background: 'linear-gradient(180deg, #163C36 0%, #102F2B 55%, #0B2623 100%)',
+          background: 'var(--sidebar-gradient)',
+          borderColor: 'var(--sidebar-border-right)',
         }}
         role="dialog"
         aria-label="Navigation Menu"
       >
         {/* Subtle luminous ambient highlight */}
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/[0.05] via-transparent to-black/20"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/[0.06] via-transparent to-black/25"
           aria-hidden="true"
         />
 
         {/* Header */}
-        <div className="px-4 py-4 border-b border-white/[0.09] flex items-center justify-between shrink-0 relative z-10">
+        <div
+          className="px-4 py-4 border-b flex items-center justify-between shrink-0 relative z-10"
+          style={{ borderColor: 'var(--sidebar-header-border)' }}
+        >
           <div className="flex items-center gap-3.5 min-w-0">
             {/* Framed logo */}
-            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-white/[0.14] to-white/[0.04] p-[1.5px] ring-1 ring-white/[0.14] shadow-[0_4px_12px_rgba(0,0,0,0.3)] shrink-0 overflow-hidden flex items-center justify-center">
-              <div className="h-full w-full rounded-[10px] bg-[#0E2824]/90 backdrop-blur-xs flex items-center justify-center p-1 overflow-hidden">
+            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-white/[0.18] to-white/[0.05] p-[1.5px] ring-1 ring-white/[0.14] shadow-[0_4px_12px_rgba(0,0,0,0.25)] shrink-0 overflow-hidden flex items-center justify-center">
+              <div className="h-full w-full rounded-[10px] bg-[#0E2824]/90 dark:bg-[#071714]/90 backdrop-blur-xs flex items-center justify-center p-1 overflow-hidden">
                 {(staff as any).hotel_logo_url ? (
                   <img
                     src={(staff as any).hotel_logo_url}
@@ -152,25 +157,40 @@ export default function MobileNavDrawer({
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-[14px] font-semibold text-white truncate leading-tight">
+              <h2
+                className="text-[14px] font-semibold truncate leading-tight"
+                style={{ color: 'var(--sidebar-text-primary)' }}
+              >
                 {staff.hotel_name}
               </h2>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#6CBF91] shadow-[0_0_6px_rgba(108,191,145,0.7)] shrink-0 animate-pulse" />
-                <span className="text-[10px] font-medium tracking-wider uppercase text-[#B7C9C3]/75 truncate">
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                  style={{
+                    backgroundColor: 'var(--sidebar-icon-active)',
+                    boxShadow: '0 0 6px var(--sidebar-nav-active-indicator-glow)',
+                  }}
+                />
+                <span
+                  className="text-[10px] font-bold tracking-widest uppercase truncate"
+                  style={{ color: 'var(--sidebar-text-muted)' }}
+                >
                   Control Centre
                 </span>
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-[#B7C9C3] hover:bg-white/10 hover:text-white transition-colors cursor-pointer shrink-0"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <ThemeToggle variant="icon" />
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--sidebar-text-muted)] hover:bg-white/10 hover:text-[var(--sidebar-text-primary)] transition-colors cursor-pointer"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -188,7 +208,8 @@ export default function MobileNavDrawer({
               <div key={item.name} className="space-y-1">
                 {showDivider && (
                   <div
-                    className="my-2 mx-1.5 border-t border-white/[0.08]"
+                    className="my-2.5 mx-2 border-t"
+                    style={{ borderColor: 'var(--sidebar-separator)' }}
                     aria-hidden="true"
                   />
                 )}
@@ -197,27 +218,21 @@ export default function MobileNavDrawer({
                   href={item.href}
                   onClick={handleClose}
                   className={`
-                    flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13.5px] min-h-[42px] relative group
-                    transition-all duration-200 ease-out select-none
-                    ${isActive
-                      ? 'bg-gradient-to-r from-[#24584B] via-[#1E4D41] to-[#163C36] text-white font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/[0.12]'
-                      : 'text-[#B7C9C3] hover:text-white hover:bg-white/[0.06] hover:ring-1 hover:ring-white/[0.08] font-normal group-hover:translate-x-0.5'
-                    }
+                    sidebar-nav-item group
+                    ${isActive ? 'sidebar-nav-item-active' : 'sidebar-nav-item-idle'}
                   `}
                 >
                   {/* Active left slim 3px emerald indicator */}
                   {isActive && (
                     <span
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#6CBF91] rounded-r-full shadow-[0_0_8px_rgba(108,191,145,0.85)]"
+                      className="sidebar-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
                       aria-hidden="true"
                     />
                   )}
 
                   <Icon
-                    className={`w-5 h-5 shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'text-[#6CBF91] drop-shadow-[0_1px_3px_rgba(108,191,145,0.45)]'
-                        : 'text-[#B7C9C3]/75 group-hover:text-[#6CBF91]'
+                    className={`w-5 h-5 shrink-0 ${
+                      isActive ? 'sidebar-nav-icon-active' : 'sidebar-nav-icon-idle'
                     }`}
                   />
 
@@ -229,16 +244,35 @@ export default function MobileNavDrawer({
         </nav>
 
         {/* Footer: staff profile + switch account + sign-out */}
-        <div className="px-3.5 py-4 border-t border-white/[0.09] bg-black/15 backdrop-blur-xs space-y-3 shrink-0 relative z-10">
+        <div
+          className="px-3.5 py-4 border-t space-y-3 shrink-0 relative z-10 backdrop-blur-xs"
+          style={{
+            backgroundColor: 'var(--sidebar-profile-bg)',
+            borderColor: 'var(--sidebar-profile-border)',
+          }}
+        >
           <div className="flex items-center gap-3 px-1.5">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ring-1 ring-white/15 shadow-sm ${roleMeta.avatarBg}`}>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ring-1 ring-white/15 dark:ring-white/10 shadow-sm ${roleMeta.avatarBg}`}>
               {initials(staff.full_name)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-white truncate leading-tight">{staff.full_name}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <RoleIcon className="w-3 h-3 text-[#6CBF91]" />
-                <span className="text-[11px] font-medium text-[#B7C9C3]/75 capitalize">{roleMeta.title}</span>
+              <p
+                className="text-[13px] font-semibold truncate leading-tight"
+                style={{ color: 'var(--sidebar-text-primary)' }}
+              >
+                {staff.full_name}
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <RoleIcon
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: 'var(--sidebar-icon-active)' }}
+                />
+                <span
+                  className="text-[11px] font-medium capitalize truncate"
+                  style={{ color: 'var(--sidebar-text-muted)' }}
+                >
+                  {roleMeta.title}
+                </span>
               </div>
             </div>
           </div>
@@ -252,9 +286,9 @@ export default function MobileNavDrawer({
             <form action={signOut} className="shrink-0">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-[#B7C9C3] hover:text-white text-xs font-medium border border-white/[0.07] hover:border-white/15 transition-all duration-200 min-h-[32px] cursor-pointer group"
+                className="sidebar-signout-btn flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-medium min-h-[32px] cursor-pointer group"
               >
-                <LogOut className="w-3.5 h-3.5 text-[#B7C9C3]/80 group-hover:text-[#6CBF91] transition-colors" />
+                <LogOut className="w-3.5 h-3.5 transition-colors group-hover:text-[var(--sidebar-icon-active)]" />
                 <span>Sign Out</span>
               </button>
             </form>

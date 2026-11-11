@@ -10,14 +10,14 @@ const PRODUCT_NAME = 'Grove';
 export function HeroDashboardSkeleton() {
   return (
     <div className="relative w-full max-w-5xl mx-auto mt-10 sm:mt-14">
-      <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 bg-white/70 backdrop-blur-md overflow-hidden text-left shadow-[0_20px_50px_-12px_rgba(15,36,33,0.10)] min-h-[380px] sm:min-h-[420px] flex flex-col">
+      <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 dark:border-white/[0.09] bg-white/70 dark:bg-[#10231D]/80 backdrop-blur-md overflow-hidden text-left shadow-[0_20px_50px_-12px_rgba(15,36,33,0.10)] min-h-[380px] sm:min-h-[420px] flex flex-col">
         {/* Top bar skeleton */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-3 sm:py-3.5 border-b border-white/60 bg-white/40">
+        <div className="flex items-center justify-between px-5 sm:px-7 py-3 sm:py-3.5 border-b border-white/60 dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.03]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-brand-sand/80 animate-pulse border border-white/60" />
-            <div className="w-20 sm:w-24 h-3.5 rounded-md bg-brand-sand/80 animate-pulse" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-brand-sand/80 dark:bg-white/10 animate-pulse border border-white/60 dark:border-white/10" />
+            <div className="w-20 sm:w-24 h-3.5 rounded-md bg-brand-sand/80 dark:bg-white/10 animate-pulse" />
           </div>
-          <div className="w-14 h-6 rounded-full bg-status-green/10 border border-status-green/20 animate-pulse" />
+          <div className="w-14 h-6 rounded-full bg-status-green/10 dark:bg-emerald-500/15 border border-status-green/20 dark:border-emerald-500/30 animate-pulse" />
         </div>
         {/* Body skeleton */}
         <div className="p-4 sm:p-6 lg:p-7 space-y-4 sm:space-y-5 flex-1">
@@ -25,13 +25,13 @@ export function HeroDashboardSkeleton() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 h-20 sm:h-24 animate-pulse border border-white/80"
+                className="bg-white/60 dark:bg-[#142A23]/70 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 h-20 sm:h-24 animate-pulse border border-white/80 dark:border-white/[0.08]"
               />
             ))}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 sm:gap-4">
-            <div className="sm:col-span-3 h-48 sm:h-52 bg-white/50 backdrop-blur-md rounded-2xl p-4 border border-white/75 animate-pulse" />
-            <div className="sm:col-span-2 h-48 sm:h-52 bg-white/50 backdrop-blur-md rounded-2xl p-4 border border-white/75 animate-pulse" />
+            <div className="sm:col-span-3 h-48 sm:h-52 bg-white/50 dark:bg-[#142A23]/60 backdrop-blur-md rounded-2xl p-4 border border-white/75 dark:border-white/[0.08] animate-pulse" />
+            <div className="sm:col-span-2 h-48 sm:h-52 bg-white/50 dark:bg-[#142A23]/60 backdrop-blur-md rounded-2xl p-4 border border-white/75 dark:border-white/[0.08] animate-pulse" />
           </div>
         </div>
       </div>
@@ -119,45 +119,44 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
       <div
         className="grove-control-centre-panel rounded-[28px] sm:rounded-[32px] overflow-hidden text-left relative"
         style={{
-          background:
-            'linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(19, 56, 52, 0.02) 40%, rgba(15, 46, 43, 0.08) 100%), linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 253, 249, 0.48) 50%, rgba(255, 255, 255, 0.60) 100%)',
+          background: 'var(--dashboard-glass-bg)',
           backdropFilter: 'blur(24px) saturate(200%) brightness(105%) contrast(102%)',
           WebkitBackdropFilter: 'blur(24px) saturate(200%) brightness(105%) contrast(102%)',
-          border: '1px solid rgba(255, 255, 255, 0.82)',
+          border: '1px solid var(--dashboard-glass-border)',
           boxShadow: inView || reduced
-            ? '0 28px 70px -16px rgba(15, 36, 33, 0.13), 0 8px 24px -6px rgba(15, 36, 33, 0.05), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.05)'
+            ? 'var(--dashboard-glass-shadow)'
             : '0 4px 12px rgba(15, 36, 33, 0.04)',
           transition: 'box-shadow 1s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         {/* Subtle architectural grid texture visible through translucent glass */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
+          className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-75"
           aria-hidden="true"
         />
 
         {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent z-20"
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 dark:via-white/20 to-transparent z-20"
           aria-hidden="true"
         />
 
         {/* Soft upper curved glass glare reflection */}
         <div
-          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 via-white/5 to-transparent rounded-t-[28px] sm:rounded-t-[32px] z-20"
+          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 dark:from-white/10 via-white/5 dark:via-transparent to-transparent rounded-t-[28px] sm:rounded-t-[32px] z-20"
           aria-hidden="true"
         />
 
         {/* Subtle bottom ambient glass refraction */}
         <div
-          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 to-transparent z-20"
+          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 dark:via-emerald-500/20 to-transparent z-20"
           aria-hidden="true"
         />
 
         {/* ── Product Chrome Header Bar ── */}
         <div className="flex items-center justify-between px-5 sm:px-7 py-3 sm:py-3.5 mb-2 relative z-10">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-white/80 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90 flex items-center justify-center shrink-0">
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden bg-white/80 dark:bg-white/10 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] dark:shadow-none border border-white/90 dark:border-white/15 flex items-center justify-center shrink-0">
               <Image
                 src="/Grove.png"
                 alt="Grove Logo"
@@ -168,20 +167,20 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
               />
             </div>
             <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="font-serif font-bold text-brand-forest text-sm sm:text-base tracking-tight leading-none">
+              <span className="font-serif font-bold text-brand-forest dark:text-[#F1F5F2] text-sm sm:text-base tracking-tight leading-none">
                 {PRODUCT_NAME}
               </span>
-              <span className="text-[11px] sm:text-xs text-ink-muted/80 font-medium tracking-normal leading-none">
+              <span className="text-[11px] sm:text-xs text-ink-muted/80 dark:text-[#A3B5AC] font-medium tracking-normal leading-none">
                 — Control Centre
               </span>
             </div>
           </div>
           <div
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-status-green/10 border border-status-green/25 shadow-[0_1px_3px_rgba(46,125,79,0.08),inset_0_1px_1px_rgba(255,255,255,0.85)]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-status-green/10 dark:bg-emerald-500/15 border border-status-green/25 dark:border-emerald-500/30 shadow-[0_1px_3px_rgba(46,125,79,0.08),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-none"
             title="Real-time operational status"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" aria-hidden="true" />
-            <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#1F5C3A] tracking-wider uppercase">
+            <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#1F5C3A] dark:text-[#42C995] tracking-wider uppercase">
               Live
             </span>
           </div>
@@ -199,7 +198,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
             ].map((kpi, i) => (
               <div
                 key={kpi.label}
-                className="relative group bg-white/65 hover:bg-white/80 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 border border-white/80 hover:border-white shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.95)] hover:shadow-[0_8px_26px_-6px_rgba(15,36,33,0.09),0_2px_6px_rgba(0,0,0,0.03),inset_0_1.5px_1.5px_rgba(255,255,255,1)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+                className="relative group bg-white/65 hover:bg-white/80 dark:bg-[#10231D]/80 dark:hover:bg-[#142A23]/90 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 lg:p-5 border border-white/80 hover:border-white dark:border-white/[0.09] dark:hover:border-emerald-500/30 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.95)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(10px)',
@@ -208,13 +207,13 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
               >
                 {/* Subtle top edge specular reflection */}
                 <div
-                  className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                  className="pointer-events-none absolute inset-x-3 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
                   aria-hidden="true"
                 />
-                <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.14em] font-semibold text-ink-muted/80 block">
+                <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.14em] font-semibold text-ink-muted/80 dark:text-[#A3B5AC] block">
                   {kpi.label}
                 </span>
-                <div className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-brand-forest mt-1 sm:mt-1.5 tracking-tight flex items-baseline leading-none">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-brand-forest dark:text-[#42C995] mt-1 sm:mt-1.5 tracking-tight flex items-baseline leading-none">
                   <AnimatedCounter
                     target={kpi.value}
                     suffix={kpi.suffix}
@@ -231,7 +230,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 sm:gap-4">
             {/* Room Matrix Panel */}
             <div
-              className="sm:col-span-3 bg-white/55 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/75 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] relative overflow-hidden flex flex-col justify-between"
+              className="sm:col-span-3 bg-white/55 dark:!bg-[#10231D]/75 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/75 dark:border-white/[0.09] shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col justify-between"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateX(0)' : `translateX(${isMobile ? '0' : '-12px'})`,
@@ -240,16 +239,16 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
             >
               {/* Specular highlight */}
               <div
-                className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
                 aria-hidden="true"
               />
 
               <div>
                 <div className="flex items-center justify-between mb-2.5 sm:mb-3.5">
-                  <span className="text-[11px] sm:text-xs font-bold text-brand-forest uppercase tracking-[0.14em]">
+                  <span className="text-[11px] sm:text-xs font-bold text-brand-forest dark:text-[#F1F5F2] uppercase tracking-[0.14em]">
                     Room Matrix
                   </span>
-                  <span className="text-[10px] sm:text-[10.5px] font-medium text-ink-muted/75">
+                  <span className="text-[10px] sm:text-[10.5px] font-medium text-ink-muted/75 dark:text-[#A3B5AC]">
                     Floor 1–3
                   </span>
                 </div>
@@ -269,12 +268,12 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
 
                     // Glassmorphic room tile styles: subtle translucency with fine status-tinted borders
                     const statusClass = isOccupied
-                      ? 'bg-status-red/[0.06] hover:bg-status-red/[0.10] border-status-red/20 hover:border-status-red/35 text-status-red'
+                      ? 'bg-status-red/[0.06] hover:bg-status-red/[0.10] border-status-red/20 hover:border-status-red/35 text-status-red dark:bg-status-red/15 dark:border-status-red/30 dark:text-[#E16B6B]'
                       : isReserved
-                      ? 'bg-status-blue/[0.06] hover:bg-status-blue/[0.10] border-status-blue/20 hover:border-status-blue/35 text-status-blue'
+                      ? 'bg-status-blue/[0.06] hover:bg-status-blue/[0.10] border-status-blue/20 hover:border-status-blue/35 text-status-blue dark:bg-status-blue/15 dark:border-status-blue/30 dark:text-[#64A5E8]'
                       : isCleaning
-                      ? 'bg-status-amber/[0.06] hover:bg-status-amber/[0.10] border-status-amber/20 hover:border-status-amber/35 text-status-amber'
-                      : 'bg-status-green/[0.06] hover:bg-status-green/[0.10] border-status-green/22 hover:border-status-green/35 text-status-green';
+                      ? 'bg-status-amber/[0.06] hover:bg-status-amber/[0.10] border-status-amber/20 hover:border-status-amber/35 text-status-amber dark:bg-status-amber/15 dark:border-status-amber/30 dark:text-[#E8A84A]'
+                      : 'bg-status-green/[0.06] hover:bg-status-green/[0.10] border-status-green/22 hover:border-status-green/35 text-status-green dark:bg-status-green/15 dark:border-status-green/30 dark:text-[#42C995]';
 
                     const statusLabel = isOccupied
                       ? 'OCC'
@@ -288,7 +287,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
                       <div
                         key={room.num}
                         data-tile-idx={i}
-                        className={`relative p-2 sm:p-2.5 rounded-xl border text-center transition-all backdrop-blur-xs shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)] cursor-default select-none ${statusClass} ${
+                        className={`relative p-2 sm:p-2.5 rounded-xl border text-center transition-all backdrop-blur-xs shadow-[inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-none cursor-default select-none ${statusClass} ${
                           isTransitioning ? 'ring-1.5 ring-status-green/40 ring-offset-1' : ''
                         }`}
                         style={{
@@ -306,7 +305,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
                             : `transform 0.3s ease, box-shadow 0.3s ease, opacity 0.4s ease ${700 + i * 50}ms`,
                         }}
                       >
-                        <span className="text-xs sm:text-sm font-bold text-ink tracking-tight block">
+                        <span className="text-xs sm:text-sm font-bold text-ink dark:text-[#F1F5F2] tracking-tight block">
                           {room.num}
                         </span>
                         <span className="block text-[9px] sm:text-[9.5px] font-bold uppercase tracking-[0.14em] mt-0.5">
@@ -321,7 +320,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
 
             {/* Recent Activity Panel */}
             <div
-              className="sm:col-span-2 bg-white/55 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/75 shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] relative overflow-hidden flex flex-col justify-between"
+              className="sm:col-span-2 bg-white/55 dark:!bg-[#10231D]/75 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/75 dark:border-white/[0.09] shadow-[0_4px_20px_-4px_rgba(15,36,33,0.05),0_1px_3px_rgba(0,0,0,0.02),inset_0_1.5px_1.5px_rgba(255,255,255,0.9)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)] relative overflow-hidden flex flex-col justify-between"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateX(0)' : `translateX(${isMobile ? '0' : '12px'})`,
@@ -330,33 +329,33 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
             >
               {/* Specular highlight */}
               <div
-                className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                className="pointer-events-none absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent"
                 aria-hidden="true"
               />
 
               <div>
-                <span className="text-[11px] sm:text-xs font-bold text-brand-forest uppercase tracking-[0.14em] block mb-2.5 sm:mb-3.5">
+                <span className="text-[11px] sm:text-xs font-bold text-brand-forest dark:text-[#F1F5F2] uppercase tracking-[0.14em] block mb-2.5 sm:mb-3.5">
                   Recent Activity
                 </span>
                 <div className="space-y-2 sm:space-y-2.5">
                   {activities.map((act, i) => (
                     <div
                       key={i}
-                      className="group flex items-start gap-2.5 p-2 sm:p-2.5 rounded-xl bg-white/60 hover:bg-white/80 border border-white/70 hover:border-white shadow-[0_1px_3px_rgba(15,36,33,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all duration-150"
+                      className="group flex items-start gap-2.5 p-2 sm:p-2.5 rounded-xl bg-white/60 hover:bg-white/80 dark:!bg-white/[0.04] dark:hover:!bg-white/[0.08] border border-white/70 hover:border-white dark:border-white/[0.08] dark:hover:border-white/[0.14] shadow-[0_1px_3px_rgba(15,36,33,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-none transition-all duration-150"
                       style={{
                         opacity: inView || reduced ? 1 : 0,
                         transform: inView || reduced ? 'translateY(0)' : 'translateY(6px)',
                         transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${850 + i * (isMobile ? 60 : 100)}ms`,
                       }}
                     >
-                      <div className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-status-green/10 border border-status-green/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-status-green" strokeWidth={2.2} />
+                      <div className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-status-green/10 dark:bg-emerald-500/15 border border-status-green/20 dark:border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-status-green dark:text-[#42C995]" strokeWidth={2.2} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-[11px] sm:text-xs font-medium text-ink leading-tight block truncate">
+                        <span className="text-[11px] sm:text-xs font-medium text-ink dark:text-[#F1F5F2] leading-tight block truncate">
                           {act.text}
                         </span>
-                        <span className="text-[9px] sm:text-[9.5px] text-ink-muted/80 font-normal mt-0.5 block">
+                        <span className="text-[9px] sm:text-[9.5px] text-ink-muted/80 dark:text-[#A3B5AC] font-normal mt-0.5 block">
                           {act.time}
                         </span>
                       </div>
@@ -374,7 +373,7 @@ export default function HeroDashboard({ inView }: { inView: boolean }) {
         className="absolute -inset-8 -z-10 rounded-[40px] pointer-events-none opacity-80"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 30%, rgba(31, 61, 58, 0.08) 0%, rgba(46, 90, 84, 0.03) 50%, transparent 75%)',
+            'radial-gradient(ellipse at 50% 30%, var(--dashboard-ambient-glow, rgba(31, 61, 58, 0.08)) 0%, transparent 75%)',
         }}
         aria-hidden="true"
       />

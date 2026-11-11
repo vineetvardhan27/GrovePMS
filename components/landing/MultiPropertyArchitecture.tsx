@@ -377,8 +377,8 @@ export default function MultiPropertyArchitecture({
                   cx={port.x}
                   cy={bridgeHeight}
                   r={5}
-                  fill="#F6F2EC"
-                  stroke="#1F3D3A"
+                  fill="var(--page-background)"
+                  stroke="var(--brand-forest-light)"
                   strokeWidth="1.2"
                   opacity={isActive || reduced ? 0.9 : 0}
                   style={{
@@ -392,7 +392,7 @@ export default function MultiPropertyArchitecture({
                   cx={port.x}
                   cy={bridgeHeight}
                   r={2.5}
-                  fill="#1F3D3A"
+                  fill="var(--brand-forest-light)"
                   opacity={isActive || reduced ? 1 : 0}
                   style={{
                     transition: reduced
@@ -424,7 +424,7 @@ export default function MultiPropertyArchitecture({
                     ? 'opacity 0.2s ease'
                     : `opacity 600ms cubic-bezier(0.16, 1, 0.3, 1) ${hotel.delayDesktop}ms, transform 600ms cubic-bezier(0.16, 1, 0.3, 1) ${hotel.delayDesktop}ms, border-color 200ms ease, box-shadow 250ms ease`,
                   boxShadow:
-                    '0 1px 4px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(221, 213, 198, 0.8)',
+                    '0 1px 4px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px var(--border-subtle)',
                 }}
               >
                 {/* Architectural grid texture */}
@@ -614,8 +614,8 @@ export default function MultiPropertyArchitecture({
                     cx={branchEndX}
                     cy={br.y}
                     r={3.5}
-                    fill="#1F3D3A"
-                    stroke="#F6F2EC"
+                    fill="var(--brand-forest-light)"
+                    stroke="var(--page-background)"
                     strokeWidth="1.2"
                     opacity={isActive || reduced ? 1 : 0}
                     style={{
@@ -670,7 +670,7 @@ export default function MultiPropertyArchitecture({
                     ? 'opacity 0.2s ease'
                     : `opacity 550ms cubic-bezier(0.16, 1, 0.3, 1) ${hotel.delayMobile}ms, transform 550ms cubic-bezier(0.16, 1, 0.3, 1) ${hotel.delayMobile}ms`,
                   boxShadow:
-                    '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(221, 213, 198, 0.8)',
+                    '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px var(--border-subtle)',
                 }}
               >
                 {/* Architectural grid texture */}

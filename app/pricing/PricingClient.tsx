@@ -666,15 +666,10 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
         ref={cardRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative rounded-[28px] sm:rounded-[34px] border border-[#1C2D29]/14 overflow-hidden will-change-transform"
+        className="relative rounded-[28px] sm:rounded-[34px] overflow-hidden will-change-transform pricing-dual-card-container"
         style={{
-          background:
-            'linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.065) 100%), rgba(20, 28, 26, 0.045)',
-          backdropFilter: 'blur(22px) saturate(125%) brightness(101%)',
-          WebkitBackdropFilter: 'blur(22px) saturate(125%) brightness(101%)',
           opacity: inView || reduced ? 1 : 0,
           transform: getCardTransform(),
-          boxShadow: getCardShadow(),
           transition: reduced
             ? 'opacity 0.2s ease'
             : tilt.isHovered && !isTouchDevice
@@ -684,19 +679,25 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
       >
         {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 to-transparent z-30"
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-16 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 dark:via-white/15 to-transparent z-30"
           aria-hidden="true"
         />
 
         {/* Soft upper curved glass glare reflection */}
         <div
-          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 via-white/5 to-transparent rounded-t-[28px] sm:rounded-t-[34px] z-30"
+          className="pointer-events-none absolute inset-x-12 sm:inset-x-20 top-0 h-8 bg-gradient-to-b from-white/30 dark:from-transparent via-white/5 dark:via-transparent to-transparent rounded-t-[28px] sm:rounded-t-[34px] z-30"
           aria-hidden="true"
         />
 
         {/* Subtle bottom ambient glass refraction */}
         <div
-          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 to-transparent z-30"
+          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 dark:via-[#42C995]/15 to-transparent z-30"
+          aria-hidden="true"
+        />
+
+        {/* Subtle architectural grid texture for main container */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grove-grid-texture opacity-40 dark:opacity-15"
           aria-hidden="true"
         />
 
@@ -704,17 +705,11 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
           {/* ══════════════════════════════════════════════
            * LEFT COLUMN: PRICING SIDE
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white/45 lg:bg-transparent relative overflow-hidden backdrop-blur-md lg:backdrop-blur-none">
-            {/* Subtle architectural grid texture */}
-            <div
-              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
-              aria-hidden="true"
-            />
-
+          <div className="lg:col-span-5 p-6 sm:p-8 lg:p-9 xl:p-10 flex flex-col justify-between space-y-6 bg-white/45 lg:bg-transparent dark:bg-transparent relative overflow-hidden backdrop-blur-md lg:backdrop-blur-none dark:backdrop-blur-none">
             <div className="relative z-10">
               {/* Top label & active status */}
               <div
-                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10"
+                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)]"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(10px)',
@@ -723,10 +718,10 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                     : 'opacity 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms',
                 }}
               >
-                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-forest">
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-forest dark:text-[#42C995]">
                   ACTIVE OPERATING SYSTEM
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-status-green/10 text-status-green border border-status-green/20 text-[10px] font-bold uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-status-green/10 dark:bg-[#17352A] text-status-green dark:text-[#42C995] border border-status-green/20 dark:border-[#42C995]/30 text-[10px] font-bold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-pulse" />
                   <span>Ready Today</span>
                 </span>
@@ -743,17 +738,17 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                     : 'opacity 550ms cubic-bezier(0.16, 1, 0.3, 1) 140ms, transform 550ms cubic-bezier(0.16, 1, 0.3, 1) 140ms',
                 }}
               >
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight">
+                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest dark:!text-[#F1F5F2] tracking-tight">
                   Grove PMS
                 </h2>
-                <p className="text-xs sm:text-[13px] text-ink-muted mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-[13px] text-ink-muted dark:text-[#A9BDB1] mt-1.5 leading-relaxed">
                   Complete hotel management platform engineered for day-to-day front desk and back-office efficiency.
                 </p>
               </div>
 
               {/* PRIMARY FOCAL POINT: ₹999 / month */}
               <div
-                className="mt-6 pt-5 border-t border-border-subtle/70"
+                className="mt-6 pt-5 border-t border-border-subtle/70 dark:border-[rgba(130,180,150,0.15)]"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(14px)',
@@ -763,21 +758,21 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 }}
               >
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-5xl sm:text-6xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">
+                  <span className="text-5xl sm:text-6xl font-serif font-bold text-brand-forest dark:text-[#42C995] tracking-tight tabular-nums">
                     ₹999
                   </span>
-                  <span className="text-sm sm:text-base text-ink-muted font-medium">
+                  <span className="text-sm sm:text-base text-ink-muted dark:text-[#82998C] font-medium">
                     / month
                   </span>
                 </div>
-                <p className="text-xs text-ink-muted mt-1.5 font-medium">
+                <p className="text-xs text-ink-muted dark:text-[#A9BDB1] mt-1.5 font-medium">
                   Simple monthly subscription · No long-term lock-in
                 </p>
               </div>
 
-              {/* ONBOARDING INSET PANEL (Smoked Glass Surface) */}
+              {/* ONBOARDING INSET PANEL (Elevated Surface) */}
               <div
-                className="mt-5 p-4 rounded-[20px] bg-white/50 border border-[#1C2D29]/12 transition-all duration-200 hover:border-brand-forest/30 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] backdrop-blur-xs"
+                className="mt-5 p-4 rounded-[20px] bg-white/50 dark:bg-[#132D23]/80 border border-[#1C2D29]/12 dark:border-[rgba(130,180,150,0.22)] transition-all duration-200 hover:border-brand-forest/30 dark:hover:border-[#42C995]/40 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.30)] backdrop-blur-xs dark:backdrop-blur-none"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(12px)',
@@ -786,32 +781,27 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                     : 'opacity 550ms cubic-bezier(0.16, 1, 0.3, 1) 250ms, transform 550ms cubic-bezier(0.16, 1, 0.3, 1) 250ms',
                 }}
               >
-                {/* Architectural grid texture */}
-                <div
-                  className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
-                  aria-hidden="true"
-                />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-forest">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-forest dark:text-[#42C995]">
                       WHITE-GLOVE SETUP
                     </span>
-                    <span className="font-serif font-bold text-brand-forest text-base sm:text-lg tabular-nums">
+                    <span className="font-serif font-bold text-brand-forest dark:text-[#42C995] text-base sm:text-lg tabular-nums">
                       ₹10,000
                     </span>
                   </div>
-                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                  <p className="text-xs text-ink-muted dark:text-[#A9BDB1] mt-1 leading-relaxed">
                     White-glove property setup, GST mapping, room configuration, and staff training handled by our team.
                   </p>
                 </div>
               </div>
 
               {/* CORE FEATURES (Compact Two-Column Feature List) */}
-              <div className="mt-6 pt-5 border-t border-border-subtle/70 space-y-2.5">
+              <div className="mt-6 pt-5 border-t border-border-subtle/70 dark:border-[rgba(130,180,150,0.15)] space-y-2.5">
                 {coreFeatureRows.map((row, rowIdx) => (
                   <div
                     key={rowIdx}
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 text-xs sm:text-[13px] text-ink"
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 text-xs sm:text-[13px] text-ink dark:text-[#F1F5F2]"
                     style={{
                       opacity: inView || reduced ? 1 : 0,
                       transform: inView || reduced ? 'translateX(0)' : 'translateX(-8px)',
@@ -822,10 +812,10 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                   >
                     {row.map((item) => (
                       <div key={item} className="flex items-center gap-2 group/feat">
-                        <div className="w-3.5 h-3.5 rounded-full bg-status-green/15 text-status-green flex items-center justify-center shrink-0">
+                        <div className="w-3.5 h-3.5 rounded-full bg-status-green/15 dark:bg-[#17352A] text-status-green dark:text-[#42C995] flex items-center justify-center shrink-0">
                           <Check className="w-2.5 h-2.5 stroke-[2.5]" />
                         </div>
-                        <span className="leading-tight group-hover/feat:text-brand-forest transition-colors">
+                        <span className="leading-tight group-hover/feat:text-brand-forest dark:group-hover/feat:text-[#42C995] transition-colors">
                           {item}
                         </span>
                       </div>
@@ -837,7 +827,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
 
             {/* PHYSICAL 3D BUTTON & WALKTHROUGH LINK */}
             <div
-              className="pt-5 border-t border-border-subtle/70 space-y-2.5 relative z-10"
+              className="pt-5 border-t border-border-subtle/70 dark:border-[rgba(130,180,150,0.15)] space-y-2.5 relative z-10"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateY(0)' : 'translateY(12px)',
@@ -848,7 +838,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
             >
               <Link
                 href="/subscription"
-                className="w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 sm:py-4 px-6 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base group cursor-pointer select-none hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] dark:from-[#245D46] dark:to-[#173E2E] dark:hover:from-[#2D7357] dark:hover:to-[#1D4F3B] text-white font-semibold py-3.5 sm:py-4 px-6 rounded-full border border-white/25 dark:border-[#42C995]/30 shadow-[0_4px_16px_rgba(22,61,55,0.22)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4),0_0_15px_rgba(66,201,149,0.15)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base group cursor-pointer select-none hover:-translate-y-0.5"
               >
                 <span>Get Started with Grove</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
@@ -856,7 +846,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
               <div className="text-center pt-1">
                 <Link
                   href="/contact"
-                  className="text-xs font-semibold text-brand-forest hover:underline inline-flex items-center gap-1 group py-1"
+                  className="text-xs font-semibold text-brand-forest dark:text-[#42C995] hover:underline inline-flex items-center gap-1 group py-1"
                 >
                   <span>Schedule a Property Walkthrough</span>
                   <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -866,19 +856,13 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
           </div>
 
           {/* ══════════════════════════════════════════════
-           * RIGHT COLUMN: ONBOARDING PANEL (SMOKED GLASS SURFACE)
+           * RIGHT COLUMN: ONBOARDING PANEL
            * ══════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-white/30 border-t lg:border-t-0 lg:border-l border-[#1C2D29]/10 flex flex-col justify-between space-y-6 relative overflow-hidden backdrop-blur-sm">
-            {/* Subtle architectural grid texture */}
-            <div
-              className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture opacity-60"
-              aria-hidden="true"
-            />
-
+          <div className="lg:col-span-7 p-6 sm:p-8 lg:p-9 xl:p-10 bg-white/30 dark:bg-[#0B1E17]/50 border-t lg:border-t-0 lg:border-l border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)] flex flex-col justify-between space-y-6 relative overflow-hidden backdrop-blur-sm dark:backdrop-blur-none">
             <div className="relative z-10">
               {/* Top Header */}
               <div
-                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10"
+                className="flex items-center justify-between pb-3.5 border-b border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)]"
                 style={{
                   opacity: inView || reduced ? 1 : 0,
                   transform: inView || reduced ? 'translateY(0)' : 'translateY(10px)',
@@ -888,14 +872,14 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-[7px] bg-brand-forest text-white flex items-center justify-center shadow-2xs">
+                  <div className="w-5 h-5 rounded-[7px] bg-brand-forest dark:bg-[#17352A] text-white dark:text-[#42C995] flex items-center justify-center shadow-2xs">
                     <Sparkles className="w-3 h-3" />
                   </div>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-forest">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-forest dark:text-[#42C995]">
                     WHITE-GLOVE IMPLEMENTATION
                   </span>
                 </div>
-                <span className="text-[11px] font-semibold text-ink-muted">Turnkey Setup</span>
+                <span className="text-[11px] font-semibold text-ink-muted dark:text-[#82998C]">Turnkey Setup</span>
               </div>
 
               <div
@@ -908,10 +892,10 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                     : 'opacity 550ms cubic-bezier(0.16, 1, 0.3, 1) 200ms, transform 550ms cubic-bezier(0.16, 1, 0.3, 1) 200ms',
                 }}
               >
-                <h3 className="text-2xl sm:text-[1.75rem] font-serif font-bold text-brand-forest leading-tight">
+                <h3 className="text-2xl sm:text-[1.75rem] font-serif font-bold text-brand-forest dark:!text-[#F1F5F2] leading-tight">
                   What&apos;s included in onboarding?
                 </h3>
-                <p className="text-xs sm:text-[13px] text-ink-muted mt-1.5 leading-relaxed max-w-xl">
+                <p className="text-xs sm:text-[13px] text-ink-muted dark:text-[#A9BDB1] mt-1.5 leading-relaxed max-w-xl">
                   We don&apos;t just hand you a login. We configure Grove around your property and prepare your team for day one.
                 </p>
               </div>
@@ -921,7 +905,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                 {onboardingServices.map((service, i) => (
                   <div
                     key={service.step}
-                    className="group relative p-3.5 sm:p-4 rounded-[18px] bg-white/60 hover:bg-white/80 border border-[#1C2D29]/10 hover:border-[#1C2D29]/22 shadow-[0_2px_8px_rgba(10,20,18,0.03),inset_0_1px_1px_rgba(255,255,255,0.85)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(10,20,18,0.06)] transition-all duration-200 cursor-default overflow-hidden backdrop-blur-xs"
+                    className="group relative p-3.5 sm:p-4 rounded-[18px] bg-white/60 hover:bg-white/80 dark:bg-[#132D23]/75 dark:hover:bg-[#17352A]/95 border border-[#1C2D29]/10 hover:border-[#1C2D29]/22 dark:border-[rgba(130,180,150,0.18)] dark:hover:border-[#42C995]/40 shadow-[0_2px_8px_rgba(10,20,18,0.03),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(10,20,18,0.06)] dark:hover:shadow-[0_6px_22px_rgba(0,0,0,0.4),0_0_12px_rgba(66,201,149,0.12)] transition-all duration-200 cursor-default overflow-hidden backdrop-blur-xs dark:backdrop-blur-none"
                     style={{
                       opacity: inView || reduced ? 1 : 0,
                       transform: inView || reduced ? 'translateY(0)' : 'translateY(14px)',
@@ -930,25 +914,20 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
                         : `opacity 450ms cubic-bezier(0.16, 1, 0.3, 1) ${260 + i * 65}ms, transform 450ms cubic-bezier(0.16, 1, 0.3, 1) ${260 + i * 65}ms`,
                     }}
                   >
-                    {/* Architectural grid texture */}
-                    <div
-                      className="pointer-events-none absolute inset-0 z-0 rounded-[inherit] grove-grid-texture"
-                      aria-hidden="true"
-                    />
                     <div className="relative z-10 flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-[7px] bg-status-green/10 text-status-green flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-status-green group-hover:text-white transition-all duration-200">
+                      <div className="w-5 h-5 rounded-[7px] bg-status-green/10 dark:bg-[#17352A] text-status-green dark:text-[#42C995] dark:border dark:border-[#42C995]/25 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-status-green group-hover:text-white dark:group-hover:bg-[#42C995] dark:group-hover:text-[#081510] transition-all duration-200">
                         <Check className="w-3 h-3 stroke-[2.5] transition-transform duration-200 group-hover:scale-105" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-1">
-                          <h4 className="text-xs font-bold text-ink leading-snug group-hover:text-brand-forest transition-colors">
+                          <h4 className="text-xs font-bold text-ink dark:text-[#F1F5F2] leading-snug group-hover:text-brand-forest dark:group-hover:text-[#42C995] transition-colors">
                             {service.title}
                           </h4>
-                          <span className="text-[10px] font-mono font-semibold text-ink-muted/50 group-hover:text-brand-forest/50 transition-colors">
+                          <span className="text-[10px] font-mono font-semibold text-ink-muted/50 dark:text-[#82998C] group-hover:text-brand-forest/50 dark:group-hover:text-[#42C995]/70 transition-colors">
                             {service.step}
                           </span>
                         </div>
-                        <p className="text-[11px] text-ink-muted leading-relaxed mt-1">
+                        <p className="text-[11px] text-ink-muted dark:text-[#A9BDB1] leading-relaxed mt-1">
                           {service.desc}
                         </p>
                       </div>
@@ -960,7 +939,7 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
 
             {/* READY TO GO LIVE AREA (STATUS PILL + TURNAROUND) */}
             <div
-              className="pt-5 border-t border-border-subtle/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10"
+              className="pt-5 border-t border-border-subtle/80 dark:border-[rgba(130,180,150,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs relative z-10"
               style={{
                 opacity: inView || reduced ? 1 : 0,
                 transform: inView || reduced ? 'translateY(0)' : 'translateY(8px)',
@@ -970,25 +949,25 @@ function PremiumPricing3DCard({ inView }: { inView: boolean }) {
               }}
             >
               <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">
-                <div className="flex items-center gap-1.5 text-ink-muted">
-                  <Clock className="w-3.5 h-3.5 text-brand-forest shrink-0" />
-                  <span>Typical turnaround: <strong>48–72 hours</strong></span>
+                <div className="flex items-center gap-1.5 text-ink-muted dark:text-[#A9BDB1]">
+                  <Clock className="w-3.5 h-3.5 text-brand-forest dark:text-[#42C995] shrink-0" />
+                  <span>Typical turnaround: <strong className="text-ink dark:text-[#F1F5F2]">48–72 hours</strong></span>
                 </div>
 
-                <span className="text-border-subtle hidden sm:inline">•</span>
+                <span className="text-border-subtle dark:text-[rgba(130,180,150,0.3)] hidden sm:inline">•</span>
 
                 {/* Status Pill: ✓ READY TO GO LIVE with slow 2.8s pulse */}
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-status-green/10 text-status-green border border-status-green/25 font-bold text-[10px] uppercase tracking-wider shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-status-green/10 dark:bg-[#17352A] text-status-green dark:text-[#42C995] border border-status-green/25 dark:border-[#42C995]/30 font-bold text-[10px] uppercase tracking-wider shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-status-green animate-[pulse_2.8s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
                   <span>✓ Ready to Go Live</span>
                 </span>
               </div>
 
               <div className="text-left sm:text-right">
-                <span className="font-serif font-bold text-brand-forest text-base sm:text-lg tabular-nums">
+                <span className="font-serif font-bold text-brand-forest dark:text-[#42C995] text-base sm:text-lg tabular-nums">
                   ₹10,000
                 </span>
-                <span className="text-[11px] text-ink-muted block sm:inline sm:ml-1 font-medium">
+                <span className="text-[11px] text-ink-muted dark:text-[#82998C] block sm:inline sm:ml-1 font-medium">
                   one-time onboarding
                 </span>
               </div>
@@ -1157,19 +1136,28 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
          * ═══════════════════════════════════════════════════════ */}
         <section
           ref={pricingCard.ref}
-          className="pb-20 sm:pb-28 px-4 sm:px-6 lg:px-8 border-b border-border-subtle"
+          className="pb-20 sm:pb-28 px-4 sm:px-6 lg:px-8 border-b border-border-subtle dark:border-[rgba(137,184,153,0.12)] relative overflow-hidden landing-section-flow"
         >
+          {/* Subtle radial emerald backdrop lighting */}
+          <div
+            className="pointer-events-none absolute inset-0 -z-10"
+            style={{
+              background:
+                'radial-gradient(ellipse 75% 50% at 50% 30%, rgba(66, 201, 149, 0.08) 0%, rgba(16, 37, 29, 0.25) 50%, transparent 75%)',
+            }}
+            aria-hidden="true"
+          />
           <div className="max-w-5xl mx-auto">
             <PremiumPricing3DCard inView={pricingCard.inView} />
 
             {/* No commission assurance statement */}
             <FadeIn inView={pricingCard.inView} delay={300} direction="up" distance={8}>
               <div className="mt-6 text-center">
-                <p className="text-xs sm:text-sm text-ink-muted font-medium inline-flex items-center flex-wrap justify-center gap-2 sm:gap-4">
+                <p className="text-xs sm:text-sm text-ink-muted dark:text-[#A9BDB1] font-medium inline-flex items-center flex-wrap justify-center gap-2 sm:gap-4">
                   <span>✓ No per-booking commission</span>
-                  <span className="text-border-subtle hidden sm:inline">•</span>
+                  <span className="text-border-subtle dark:text-[rgba(130,180,150,0.3)] hidden sm:inline">•</span>
                   <span>✓ No percentage of hotel turnover</span>
-                  <span className="text-border-subtle hidden sm:inline">•</span>
+                  <span className="text-border-subtle dark:text-[rgba(130,180,150,0.3)] hidden sm:inline">•</span>
                   <span>✓ Your property keeps 100% of guest revenue</span>
                 </p>
               </div>
@@ -1614,21 +1602,21 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
          * ═══════════════════════════════════════════════════════ */}
         <section
           ref={roadmapSection.ref}
-          className="py-16 sm:py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-border-subtle"
+          className="py-16 sm:py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-border-subtle dark:border-[rgba(130,180,150,0.12)]"
         >
           <div className="text-center mb-10 sm:mb-14">
             <FadeIn inView={roadmapSection.inView} delay={0}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest text-xs font-semibold mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-forest/8 border border-brand-forest/15 text-brand-forest dark:bg-[#17352A] dark:border-[#42C995]/25 dark:text-[#42C995] text-xs font-semibold mb-3">
                 <span className="uppercase tracking-[0.16em] text-[10px] font-bold">
-                  05 · Future Editions & Roadmap
+                  05 · Future Editions &amp; Roadmap
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-serif font-bold text-brand-forest">
+              <h2 className="text-2xl sm:text-4xl font-serif font-bold text-brand-forest dark:text-[#F1F5F2]">
                 Start Small. Scale With Grove.
               </h2>
             </FadeIn>
             <FadeIn inView={roadmapSection.inView} delay={80}>
-              <p className="text-sm sm:text-base text-ink-muted mt-3 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-sm sm:text-base text-ink-muted dark:text-[#A9BDB1] mt-3 max-w-2xl mx-auto leading-relaxed">
                 Grove PMS Starter includes everything required to run your hotel operations today.
                 Advanced editions with OTA channel syncing and multi-property management are in active development.
               </p>
@@ -1638,41 +1626,30 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 lg:gap-5 items-stretch pt-4">
             {/* Active Available Tier: Starter (Featured Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={100} direction="up" distance={16}>
-              <div
-                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
-                style={{
-                  background:
-                    'linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(20, 32, 28, 0.035) 40%, rgba(14, 28, 25, 0.075) 100%), rgba(20, 30, 27, 0.055)',
-                  backdropFilter: 'blur(22px) saturate(130%)',
-                  WebkitBackdropFilter: 'blur(22px) saturate(130%)',
-                  border: '1.5px solid rgba(31, 61, 58, 0.32)',
-                  boxShadow:
-                    '0 16px 36px -8px rgba(10, 25, 22, 0.12), 0 3px 10px -2px rgba(10, 25, 22, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.90), inset 0 -1px 2px 0 rgba(14, 25, 22, 0.04)',
-                }}
-              >
+              <div className="pricing-roadmap-card-starter rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1">
                 {/* Delicate specular top-edge glass highlight */}
                 <div
-                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 to-transparent z-10"
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/85 dark:via-[#42C995]/25 to-transparent z-10"
                   aria-hidden="true"
                 />
-                <div className="absolute -top-3 left-6 z-20 bg-gradient-to-b from-[#28534E] to-[#1B3835] text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-white/25 shadow-xs">
+                <div className="absolute -top-3 left-6 z-20 bg-gradient-to-b from-[#28534E] to-[#1B3835] text-white dark:from-[#17382D] dark:to-[#10271F] dark:text-[#42C995] dark:border-[#42C995]/35 dark:shadow-[0_0_12px_rgba(66,201,149,0.18)] text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-white/25 shadow-xs">
                   Available Now
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest dark:text-[#F1F5F2] pt-1">
                     Starter
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                  <p className="text-xs text-ink-muted dark:text-[#A9BDB1] mt-1 leading-relaxed">
                     For independent hotels, boutique stays, and homestays
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹999</span>
-                    <span className="text-xs text-ink-muted font-medium">/ month</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest dark:text-[#42C995] tracking-tight tabular-nums">₹999</span>
+                    <span className="text-xs text-ink-muted dark:text-[#A9BDB1] font-medium">/ month</span>
                   </div>
-                  <p className="text-[11px] text-ink-muted mt-0.5">
+                  <p className="text-[11px] text-ink-muted dark:text-[#A9BDB1] mt-0.5">
                     + ₹10,000 one-time onboarding
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink border-t border-[#1C2D29]/10 pt-4">
+                  <div className="mt-5 space-y-2 text-xs text-ink dark:text-[#DCE8E0] border-t border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)] pt-4">
                     {[
                       'Reservations & Room Matrix',
                       'Guest Management & Folios',
@@ -1682,7 +1659,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                       'Single Property Deployment',
                     ].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-status-green shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-status-green dark:text-[#42C995] shrink-0" />
                         <span>{f}</span>
                       </div>
                     ))}
@@ -1691,7 +1668,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/subscription"
-                  className="mt-6 w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] transition-all duration-200 flex items-center justify-center gap-2 text-sm hover:-translate-y-0.5 group cursor-pointer"
+                  className="mt-6 w-full bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white font-semibold py-3.5 rounded-full border border-white/25 shadow-[0_4px_16px_rgba(22,61,55,0.22),inset_0_1px_1px_rgba(255,255,255,0.30)] dark:from-[#174838] dark:to-[#103328] dark:hover:from-[#1E5A46] dark:hover:to-[#153F32] dark:border-[#42C995]/35 dark:shadow-[0_4px_20px_rgba(0,0,0,0.4),0_0_16px_rgba(66,201,149,0.15)] transition-all duration-200 flex items-center justify-center gap-2 text-sm hover:-translate-y-0.5 group cursor-pointer"
                 >
                   <span>Get Started with Grove</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
@@ -1701,42 +1678,31 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
             {/* Coming Soon Tier 1: Growth (Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={180} direction="up" distance={16}>
-              <div
-                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
-                style={{
-                  background:
-                    'linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.055) 100%), rgba(20, 28, 26, 0.045)',
-                  backdropFilter: 'blur(22px) saturate(125%)',
-                  WebkitBackdropFilter: 'blur(22px) saturate(125%)',
-                  border: '1px solid rgba(28, 45, 41, 0.12)',
-                  boxShadow:
-                    '0 12px 28px -6px rgba(10, 20, 18, 0.065), 0 3px 8px -2px rgba(10, 20, 18, 0.03), 0 0 0 1px rgba(28, 45, 41, 0.04), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.035)',
-                }}
-              >
+              <div className="pricing-roadmap-card-upcoming rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1">
                 {/* Delicate specular top-edge glass highlight */}
                 <div
-                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 dark:via-[#42C995]/20 to-transparent z-10"
                   aria-hidden="true"
                 />
-                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
+                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted dark:bg-[#152D24] dark:text-[#A9BDB1] dark:border-[rgba(130,180,150,0.22)] text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
                   Coming Soon
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest dark:text-[#F1F5F2] pt-1">
                     Growth
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                  <p className="text-xs text-ink-muted dark:text-[#A9BDB1] mt-1 leading-relaxed">
                     For expanding boutique hotels requiring automation
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹1,999</span>
-                    <span className="text-xs text-ink-muted font-medium">/ month</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest dark:text-[#42C995] tracking-tight tabular-nums">₹1,999</span>
+                    <span className="text-xs text-ink-muted dark:text-[#A9BDB1] font-medium">/ month</span>
                   </div>
-                  <p className="text-[11px] text-ink-muted mt-0.5">
+                  <p className="text-[11px] text-ink-muted dark:text-[#A9BDB1] mt-0.5">
                     Planned upcoming tier
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-[#1C2D29]/10 pt-4">
-                    <p className="font-semibold text-ink text-xs mb-1">Includes Starter plus:</p>
+                  <div className="mt-5 space-y-2 text-xs text-ink-muted dark:text-[#DCE8E0] border-t border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)] pt-4">
+                    <p className="font-semibold text-ink dark:text-[#F1F5F2] text-xs mb-1">Includes Starter plus:</p>
                     {[
                       'F&B KOT & Table Order Posting',
                       'Banquet & Event Invoicing',
@@ -1745,7 +1711,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                       'Advanced Analytics & Forecasts',
                     ].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-ink-muted/50 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-ink-muted/50 dark:text-[#42C995]/70 shrink-0" />
                         <span>{f}</span>
                       </div>
                     ))}
@@ -1754,7 +1720,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/contact?plan=growth"
-                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
+                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink dark:bg-[#142A22] dark:hover:bg-[#1A382E] dark:text-[#F1F5F2] dark:border-[rgba(130,180,150,0.25)] dark:shadow-none font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <span>Notify Me at Launch</span>
                 </Link>
@@ -1763,42 +1729,31 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
             {/* Coming Soon Tier 2: Pro (Smoked Glass Card) */}
             <FadeIn inView={roadmapSection.inView} delay={260} direction="up" distance={16}>
-              <div
-                className="rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1"
-                style={{
-                  background:
-                    'linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(20, 28, 26, 0.025) 40%, rgba(20, 28, 26, 0.055) 100%), rgba(20, 28, 26, 0.045)',
-                  backdropFilter: 'blur(22px) saturate(125%)',
-                  WebkitBackdropFilter: 'blur(22px) saturate(125%)',
-                  border: '1px solid rgba(28, 45, 41, 0.12)',
-                  boxShadow:
-                    '0 12px 28px -6px rgba(10, 20, 18, 0.065), 0 3px 8px -2px rgba(10, 20, 18, 0.03), 0 0 0 1px rgba(28, 45, 41, 0.04), inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 1.5px 0 rgba(14, 25, 22, 0.035)',
-                }}
-              >
+              <div className="pricing-roadmap-card-upcoming rounded-[26px] p-6 sm:p-7 relative h-full flex flex-col justify-between transition-all duration-260 ease-out hover:-translate-y-1">
                 {/* Delicate specular top-edge glass highlight */}
                 <div
-                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 to-transparent z-10"
+                  className="pointer-events-none absolute inset-x-5 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/75 dark:via-[#42C995]/20 to-transparent z-10"
                   aria-hidden="true"
                 />
-                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
+                <div className="absolute -top-3 left-6 z-20 bg-[#FAF7F2] text-ink-muted dark:bg-[#152D24] dark:text-[#A9BDB1] dark:border-[rgba(130,180,150,0.22)] text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1 rounded-full border border-[#1C2D29]/15 shadow-2xs backdrop-blur-xs">
                   Coming Soon
                 </div>
                 <div>
-                  <h3 className="font-serif font-bold text-2xl text-brand-forest pt-1">
+                  <h3 className="font-serif font-bold text-2xl text-brand-forest dark:text-[#F1F5F2] pt-1">
                     Pro
                   </h3>
-                  <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                  <p className="text-xs text-ink-muted dark:text-[#A9BDB1] mt-1 leading-relaxed">
                     For multi-property groups and resort operations
                   </p>
                   <div className="flex items-baseline gap-1.5 mt-4">
-                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest tracking-tight tabular-nums">₹3,999</span>
-                    <span className="text-xs text-ink-muted font-medium">/ month</span>
+                    <span className="text-3xl sm:text-4xl font-serif font-bold text-brand-forest dark:text-[#42C995] tracking-tight tabular-nums">₹3,999</span>
+                    <span className="text-xs text-ink-muted dark:text-[#A9BDB1] font-medium">/ month</span>
                   </div>
-                  <p className="text-[11px] text-ink-muted mt-0.5">
+                  <p className="text-[11px] text-ink-muted dark:text-[#A9BDB1] mt-0.5">
                     Planned upcoming tier
                   </p>
-                  <div className="mt-5 space-y-2 text-xs text-ink-muted border-t border-[#1C2D29]/10 pt-4">
-                    <p className="font-semibold text-ink text-xs mb-1">Includes Growth plus:</p>
+                  <div className="mt-5 space-y-2 text-xs text-ink-muted dark:text-[#DCE8E0] border-t border-[#1C2D29]/10 dark:border-[rgba(130,180,150,0.15)] pt-4">
+                    <p className="font-semibold text-ink dark:text-[#F1F5F2] text-xs mb-1">Includes Growth plus:</p>
                     {[
                       'Two-Way OTA Channel Manager',
                       'Multi-Property Central Dashboard',
@@ -1807,7 +1762,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
                       'Custom Accounting Integrations',
                     ].map((f) => (
                       <div key={f} className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-ink-muted/50 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-ink-muted/50 dark:text-[#42C995]/70 shrink-0" />
                         <span>{f}</span>
                       </div>
                     ))}
@@ -1816,7 +1771,7 @@ export default function PricingClient({ staffName, staffRole }: PricingClientPro
 
                 <Link
                   href="/contact?plan=pro"
-                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
+                  className="mt-6 w-full bg-white/60 hover:bg-white/85 text-ink dark:bg-[#142A22] dark:hover:bg-[#1A382E] dark:text-[#F1F5F2] dark:border-[rgba(130,180,150,0.25)] dark:shadow-none font-semibold py-3.5 rounded-full border border-[#1C2D29]/15 hover:border-[#1C2D29]/30 transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Inquire for Multi-Property</span>

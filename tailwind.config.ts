@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -24,6 +25,13 @@ const config: Config = {
         border: {
           subtle: "#DDD5C6",
         },
+        card: {
+          DEFAULT: "var(--card-bg)",
+          elevated: "var(--card-elevated-bg)",
+        },
+        input: {
+          DEFAULT: "var(--input-bg)",
+        },
         // Status Colors (Functional - PRD & Design System)
         status: {
           green: "#2E7D4F", // Available, Fully Paid, Clean
@@ -32,6 +40,11 @@ const config: Config = {
           blue: "#2B5C8A",  // Reserved, Credit-Pay Later
           orange: "#D9662B", // Cleaning Required
           slate: "#4A4A47", // Maintenance, Blocked
+        },
+        // Premium Dark Mode Accents
+        emerald: {
+          brand: "#3FA778",
+          highlight: "#55C995",
         },
         // Semantic Action & Feedback Colors
         action: {
@@ -60,8 +73,8 @@ const config: Config = {
       boxShadow: {
         "2xs": "0 1px 2px 0 rgba(0, 0, 0, 0.04)",
         xs:    "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
-        card:  "0 1px 4px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px #DDD5C6",
-        modal: "0 8px 32px 0 rgba(0, 0, 0, 0.12), 0 2px 8px 0 rgba(0, 0, 0, 0.06)",
+        card:  "0 1px 4px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px var(--border-subtle)",
+        modal: "0 8px 32px 0 rgba(0, 0, 0, 0.25), 0 2px 8px 0 rgba(0, 0, 0, 0.12)",
       },
       minHeight: {
         touch: "44px",

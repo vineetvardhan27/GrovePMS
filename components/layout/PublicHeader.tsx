@@ -7,9 +7,10 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ArrowRight } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 const PRODUCT_NAME = 'Grove';
-const PRODUCT_TAGLINE = 'Hospitality OS';
+const PRODUCT_TAGLINE = 'HOSPITALITY OS';
 
 const NAV_LINKS = [
   { label: 'Features', href: '/hotel-management-software' },
@@ -65,8 +66,7 @@ export default function PublicHeader({
 
   useEffect(() => {
     const handleScroll = () => {
-      // 40px threshold for smooth transition between compact and expanded glass states
-      const isScrolled = window.scrollY > 40;
+      const isScrolled = window.scrollY > 30;
       setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
     };
 
@@ -119,75 +119,67 @@ export default function PublicHeader({
           pointer-events-auto
           mx-auto
           relative
-          min-h-[64px] sm:min-h-[72px] lg:min-h-[76px]
+          h-[58px] sm:h-[62px]
           rounded-full
           flex items-center justify-between
-          gap-3 sm:gap-4 lg:gap-6
-          px-3.5 py-2 sm:px-6 sm:py-2.5 lg:px-7
-          ${
-            scrolled
-              ? 'w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-[1720px]'
-              : 'w-[calc(100%-20px)] sm:w-[90%] lg:w-[86%] xl:w-[84%] max-w-[1360px]'
-          }
+          px-3.5 sm:px-5 lg:px-6
+          w-[calc(100%-24px)] sm:w-[92%] lg:w-[88%] max-w-[1140px]
+          transition-all duration-300
         `}
         style={{
           background: scrolled
             ? 'var(--glass-bg-scrolled)'
             : 'var(--glass-bg-top)',
-          backdropFilter: scrolled
-            ? 'blur(32px) saturate(220%) brightness(105%) contrast(102%)'
-            : 'blur(28px) saturate(210%) brightness(106%) contrast(102%)',
-          WebkitBackdropFilter: scrolled
-            ? 'blur(32px) saturate(220%) brightness(105%) contrast(102%)'
-            : 'blur(28px) saturate(210%) brightness(106%) contrast(102%)',
+          backdropFilter: 'blur(28px) saturate(210%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(210%)',
           border: scrolled
             ? '1px solid var(--glass-border-scrolled)'
             : '1px solid var(--glass-border-top)',
           boxShadow: scrolled
-            ? '0 20px 48px -10px rgba(15, 36, 33, 0.15), 0 4px 16px -2px rgba(15, 36, 33, 0.06), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1.5px 0 var(--glass-highlight), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.08)'
-            : '0 16px 40px -8px rgba(15, 36, 33, 0.11), 0 4px 14px -2px rgba(15, 36, 33, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1.5px 1.5px 0 var(--glass-highlight), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.06)',
+            ? '0 16px 40px -8px rgba(15, 36, 33, 0.12), 0 2px 8px rgba(15, 36, 33, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.08), inset 0 1px 1px 0 var(--glass-highlight)'
+            : '0 10px 30px -6px rgba(15, 36, 33, 0.08), 0 2px 6px rgba(15, 36, 33, 0.03), 0 0 0 1px rgba(31, 61, 58, 0.06), inset 0 1px 1px 0 var(--glass-highlight)',
         }}
       >
         {/* Crisp specular top-edge glass highlight */}
         <div
-          className="pointer-events-none absolute inset-x-8 sm:inset-x-14 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/95 to-transparent"
+          className="pointer-events-none absolute inset-x-8 sm:inset-x-14 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/20 to-transparent"
           aria-hidden="true"
         />
 
         {/* Soft upper curved glass glare reflection */}
         <div
-          className="pointer-events-none absolute inset-x-16 sm:inset-x-24 top-0 h-6 bg-gradient-to-b from-white/35 via-white/10 to-transparent rounded-t-full"
+          className="pointer-events-none absolute inset-x-16 sm:inset-x-24 top-0 h-5 bg-gradient-to-b from-white/30 dark:from-white/10 via-white/5 dark:via-transparent to-transparent rounded-t-full"
           aria-hidden="true"
         />
 
         {/* Subtle bottom ambient glass refraction with dark forest green/teal depth */}
         <div
-          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#1F3D3A]/25 to-transparent"
+          className="pointer-events-none absolute inset-x-14 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[#1F3D3A]/20 dark:via-emerald-500/20 to-transparent"
           aria-hidden="true"
         />
 
         {/* ── Left: Brand Identity ── */}
-        <div className="flex items-center justify-start xl:flex-1 shrink-0">
+        <div className="flex items-center shrink-0">
           <Link
             href="/"
-            className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 focus-visible:ring-offset-2 rounded-full"
+            className="flex items-center gap-2 sm:gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/40 dark:focus-visible:ring-emerald-highlight/40 focus-visible:ring-offset-2 rounded-full"
             aria-label="Grove Hospitality OS – Home"
           >
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl overflow-hidden bg-white/75 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 motion-reduce:transition-none">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden bg-white/80 dark:bg-white/10 backdrop-blur-md shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] dark:shadow-none border border-white/90 dark:border-white/15 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 motion-reduce:transition-none">
               <Image
                 src="/Grove.png"
                 alt="Grove Logo"
-                width={40}
-                height={40}
-                className="w-full h-full object-contain"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain p-0.5"
                 priority
               />
             </div>
-            <div className="leading-none">
-              <span className="font-serif font-bold text-brand-forest text-sm sm:text-base lg:text-lg block tracking-tight">
+            <div className="leading-tight">
+              <span className="font-serif font-bold text-brand-forest dark:text-[#F1F5F2] text-sm sm:text-base block tracking-tight">
                 {PRODUCT_NAME}
               </span>
-              <span className="text-[8.5px] sm:text-[9.5px] lg:text-[10px] text-ink-muted uppercase tracking-[0.16em] font-semibold block mt-0.5">
+              <span className="text-[8.5px] sm:text-[9px] text-ink-muted dark:text-[#A5B5AD] uppercase tracking-[0.16em] font-semibold block mt-0.5">
                 {PRODUCT_TAGLINE}
               </span>
             </div>
@@ -196,7 +188,7 @@ export default function PublicHeader({
 
         {/* ── Center: Navigation Links ── */}
         <nav
-          className="hidden lg:flex items-center justify-center shrink-0 gap-0.5 xl:gap-1"
+          className="hidden lg:flex items-center justify-center shrink-0 gap-0.5 xl:gap-1 mx-2 xl:mx-4"
           aria-label="Main navigation"
         >
           {NAV_LINKS.map((link) => {
@@ -206,10 +198,10 @@ export default function PublicHeader({
               <Link
                 key={link.label}
                 href={link.href}
-                className={`text-[13px] xl:text-[14px] font-medium px-3 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1 motion-reduce:transition-none ${
+                className={`whitespace-nowrap text-[13px] xl:text-[13.5px] font-medium px-2.5 xl:px-3 py-1.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 dark:focus-visible:ring-emerald-highlight/40 focus-visible:ring-offset-1 motion-reduce:transition-none ${
                   isActive
-                    ? 'text-brand-forest font-semibold bg-white/75 shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95)] border border-white/90'
-                    : 'text-ink/85 hover:text-brand-forest hover:bg-white/60 hover:shadow-[0_2px_8px_rgba(31,61,58,0.05),inset_0_1px_1px_rgba(255,255,255,0.9)] hover:border-white/70 border border-transparent'
+                    ? 'text-brand-forest dark:text-white font-semibold bg-white/80 dark:bg-white/10 shadow-[0_2px_8px_rgba(31,61,58,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.95)] dark:shadow-none border border-white/90 dark:border-white/15'
+                    : 'text-ink/80 dark:text-[#A5B5AD] hover:text-brand-forest dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 border border-transparent'
                 }`}
               >
                 {link.label}
@@ -218,18 +210,21 @@ export default function PublicHeader({
           })}
         </nav>
 
-        {/* ── Right: Authentication and Primary CTA ── */}
-        <div className="hidden lg:flex items-center justify-end xl:flex-1 shrink-0 gap-2.5 xl:gap-3">
+        {/* ── Right: Authentication, Theme Toggle and Primary CTA ── */}
+        <div className="hidden lg:flex items-center justify-end shrink-0 gap-2 xl:gap-2.5">
+          <ThemeToggle
+            variant="icon"
+            className="!w-8 !h-8 !rounded-full bg-white/40 dark:bg-white/10 hover:bg-white/75 dark:hover:bg-white/20 border-white/70 dark:border-white/15 shadow-2xs"
+          />
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-ink-muted hidden 2xl:inline">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs text-ink-muted dark:text-[#A5B5AD] hidden 2xl:inline whitespace-nowrap">
                 {staffName} · <span className="capitalize">{staffRole}</span>
               </span>
               <Link
                 href="/dashboard"
-                className="grove-cta-button relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full flex items-center gap-1.5 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2 focus-visible:ring-offset-white/80"
+                className="relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] dark:from-[#2E7D58] dark:to-[#1E573C] dark:hover:from-[#38946A] dark:hover:to-[#246647] text-white text-[13px] font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 border border-white/25 dark:border-white/20 shadow-sm whitespace-nowrap transition-all duration-200"
               >
-                <span className="pointer-events-none absolute inset-x-2.5 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
                 <span>Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" />
               </Link>
@@ -238,13 +233,13 @@ export default function PublicHeader({
             <>
               <Link
                 href="/login"
-                className="text-[13px] xl:text-[13.5px] font-medium text-ink/85 hover:text-brand-forest px-3.5 py-2 rounded-full transition-all duration-150 hover:bg-white/60 hover:shadow-[0_2px_8px_rgba(31,61,58,0.05),inset_0_1px_1px_rgba(255,255,255,0.9)] hover:border-white/70 border border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30 focus-visible:ring-offset-1 motion-reduce:transition-none"
+                className="whitespace-nowrap text-[13px] xl:text-[13.5px] font-medium text-ink/80 dark:text-[#A5B5AD] hover:text-brand-forest dark:hover:text-white px-3 py-1.5 rounded-full transition-all duration-150 hover:bg-white/60 dark:hover:bg-white/10 border border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30"
               >
                 Sign In
               </Link>
               <Link
                 href="/register-hotel"
-                className="grove-cta-button relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] text-white text-[13px] xl:text-[13.5px] font-semibold px-4.5 sm:px-5 py-2.5 rounded-full flex items-center gap-1.5 border border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2 focus-visible:ring-offset-white/80"
+                className="relative group bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] active:from-[#18312C] active:to-[#152B27] dark:from-[#2E7D58] dark:to-[#1E573C] dark:hover:from-[#38946A] dark:hover:to-[#246647] text-white text-[13px] font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 border border-white/25 dark:border-white/20 shadow-sm dark:shadow-[0_2px_12px_rgba(66,184,131,0.25)] whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest dark:focus-visible:ring-emerald-highlight focus-visible:ring-offset-2"
               >
                 <span className="pointer-events-none absolute inset-x-2.5 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden="true" />
                 <span>Get Started</span>
@@ -255,11 +250,15 @@ export default function PublicHeader({
         </div>
 
         {/* ── Mobile Menu Toggle ── */}
-        <div className="flex lg:hidden items-center">
+        <div className="flex lg:hidden items-center gap-2">
+          <ThemeToggle
+            variant="icon"
+            className="!w-8 !h-8 !rounded-full bg-white/40 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 border-white/60 dark:border-white/10 shadow-xs"
+          />
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-10 h-10 flex items-center justify-center text-ink-muted hover:text-brand-forest rounded-full transition-all bg-white/40 hover:bg-white/70 border border-white/60 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30"
+            className="w-9 h-9 flex items-center justify-center text-ink-muted hover:text-brand-forest dark:text-[#A5B5AD] dark:hover:text-white rounded-full transition-all bg-white/40 dark:bg-white/10 hover:bg-white/70 dark:hover:bg-white/20 border border-white/60 dark:border-white/10 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest/30"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="grove-mobile-nav"
@@ -273,34 +272,14 @@ export default function PublicHeader({
       {mobileMenuOpen && (
         <div
           id="grove-mobile-nav"
-          className={`
-            grove-navbar-capsule
-            pointer-events-auto
-            lg:hidden
-            mx-auto mt-2
-            relative
-            rounded-[24px]
-            overflow-hidden
-            ${
-              scrolled
-                ? 'w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-[1720px]'
-                : 'w-[calc(100%-20px)] sm:w-[90%] max-w-[1360px]'
-            }
-          `}
+          className="pointer-events-auto lg:hidden mx-auto mt-2 relative rounded-[24px] overflow-hidden w-[calc(100%-24px)] sm:w-[92%] max-w-[1140px] bg-white/90 dark:bg-[#12231F]/95 backdrop-blur-xl border border-white/80 dark:border-white/[0.12] shadow-xl dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.6)]"
           style={{
-            background:
-              'linear-gradient(180deg, rgba(255, 255, 255, 0.40) 0%, rgba(19, 56, 52, 0.04) 50%, rgba(15, 46, 43, 0.12) 100%), linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 252, 246, 0.65) 100%)',
-            backdropFilter: 'blur(32px) saturate(220%) brightness(106%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(220%) brightness(106%)',
-            border: '1px solid rgba(255, 255, 255, 0.82)',
-            boxShadow:
-              '0 20px 50px -10px rgba(15, 36, 33, 0.18), 0 0 0 1px rgba(31, 61, 58, 0.10), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.06)',
             animation: 'groveMenuSlideIn 200ms ease-out',
           }}
         >
           {/* Top light reflection */}
           <div
-            className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-95"
+            className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white dark:via-white/20 to-transparent opacity-95"
             aria-hidden="true"
           />
 
@@ -315,8 +294,8 @@ export default function PublicHeader({
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block text-sm font-medium px-4 py-2.5 rounded-xl transition-all ${
                     isActive
-                      ? 'text-brand-forest font-semibold bg-white/75 shadow-xs border border-white/80'
-                      : 'text-ink-muted hover:text-brand-forest hover:bg-white/60 hover:border-white/60 border border-transparent'
+                      ? 'text-brand-forest dark:text-white font-semibold bg-white/75 dark:bg-white/10 shadow-xs border border-white/80 dark:border-white/15'
+                      : 'text-ink-muted dark:text-[#A5B5AD] hover:text-brand-forest dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 border border-transparent'
                   }`}
                 >
                   {link.label}
@@ -326,16 +305,16 @@ export default function PublicHeader({
           </nav>
 
           <div className="px-3.5 pb-3.5">
-            <hr className="border-border-subtle/50 mb-3" />
+            <hr className="border-border-subtle/50 dark:border-white/10 mb-3" />
             {isAuthenticated ? (
               <div className="space-y-2">
-                <div className="px-2 py-1 text-xs text-ink-muted">
-                  Signed in as <span className="font-medium text-ink">{staffName}</span> ({staffRole})
+                <div className="px-2 py-1 text-xs text-ink-muted dark:text-[#A5B5AD]">
+                  Signed in as <span className="font-medium text-ink dark:text-white">{staffName}</span> ({staffRole})
                 </div>
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="grove-cta-button block bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2"
+                  className="block bg-gradient-to-b from-[#28534E] to-[#1B3835] dark:from-[#2E7D58] dark:to-[#1E573C] text-white text-sm font-semibold px-4 py-2.5 rounded-xl text-center border border-white/20 shadow-xs"
                 >
                   Open Dashboard →
                 </Link>
@@ -345,14 +324,14 @@ export default function PublicHeader({
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-sm font-medium text-ink text-center px-4 py-2.5 rounded-xl border border-white/80 bg-white/50 hover:bg-white/80 transition-colors shadow-2xs"
+                  className="block text-sm font-medium text-ink dark:text-[#F1F5F2] text-center px-4 py-2.5 rounded-xl border border-white/80 dark:border-white/15 bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/15 transition-colors shadow-2xs"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register-hotel"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="grove-cta-button block bg-gradient-to-b from-[#28534E] to-[#1B3835] hover:from-[#2E5E58] hover:to-[#1F3D3A] text-white text-sm font-semibold px-4 py-3 rounded-xl text-center border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-forest focus-visible:ring-offset-2"
+                  className="block bg-gradient-to-b from-[#28534E] to-[#1B3835] dark:from-[#2E7D58] dark:to-[#1E573C] text-white text-sm font-semibold px-4 py-2.5 rounded-xl text-center border border-white/20 shadow-xs"
                 >
                   Get Started →
                 </Link>
@@ -364,4 +343,3 @@ export default function PublicHeader({
     </header>
   );
 }
-

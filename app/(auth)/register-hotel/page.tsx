@@ -36,6 +36,7 @@ import {
   Coffee,
 } from 'lucide-react';
 import PasswordInput from '@/components/shared/PasswordInput';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 import { registerHotelAndOwner, RegisterHotelState } from './actions';
 import VisualRoomBuilder from '@/components/rooms/visual-builder/VisualRoomBuilder';
 import {
@@ -563,11 +564,11 @@ export default function RegisterHotelPage() {
       <div className="pointer-events-none fixed top-1/3 right-1/4 w-[500px] h-[300px] bg-amber-500/5 blur-[120px] rounded-full" />
 
       {/* ── TOP LUXURY NAVIGATION BAR ── */}
-      <header className="sticky top-0 z-30 w-full bg-[#FAF8F5]/85 backdrop-blur-md border-b border-border-subtle/80">
+      <header className="sticky top-0 z-30 w-full bg-[#FAF8F5]/85 dark:bg-[#101D19]/85 backdrop-blur-md border-b border-border-subtle/80 dark:border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo & Platform Name */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white border border-border-subtle/80 shadow-2xs flex items-center justify-center p-1.5 transition-transform duration-200 group-hover:scale-105">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white dark:bg-card-elevated border border-border-subtle/80 dark:border-white/[0.12] shadow-2xs flex items-center justify-center p-1.5 transition-transform duration-200 group-hover:scale-105">
               <Image
                 src="/Grove.png"
                 alt="Grove Logo"
@@ -579,10 +580,10 @@ export default function RegisterHotelPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-lg sm:text-xl text-black tracking-tight">
+                <span className="font-serif font-bold text-lg sm:text-xl text-black dark:text-white tracking-tight">
                   Grove PMS
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-brand-forest/10 text-brand-forest text-[10.5px] font-semibold border border-brand-forest/15">
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-brand-forest/10 dark:bg-emerald-brand/15 text-brand-forest dark:text-emerald-highlight text-[10.5px] font-semibold border border-brand-forest/15 dark:border-emerald-highlight/20">
                   Hospitality OS
                 </span>
               </div>
@@ -594,16 +595,17 @@ export default function RegisterHotelPage() {
 
           {/* Right Header Navigation Actions */}
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-1.5 text-xs text-ink-muted border-r border-border-subtle/80 pr-4">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-forest" />
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-ink-muted border-r border-border-subtle/80 dark:border-white/[0.08] pr-4">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-forest dark:text-emerald-highlight" />
               <span>Dedicated Tenant Isolation</span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-3 text-xs">
+              <ThemeToggle variant="icon" />
               <span className="hidden sm:inline text-ink-muted">Existing Operator?</span>
               <Link
                 href="/login"
-                className="px-4 py-2 rounded-full bg-white border border-border-subtle/80 hover:bg-brand-sand/60 text-brand-forest font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-white dark:bg-card-elevated border border-border-subtle/80 dark:border-white/[0.12] hover:bg-brand-sand/60 text-brand-forest dark:text-emerald-highlight font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
               >
                 <span>Sign In</span>
                 <ArrowRight className="w-3 h-3" />

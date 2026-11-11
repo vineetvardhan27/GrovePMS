@@ -250,7 +250,16 @@ export default function InventoryManagementFeaturePage() {
         </section>
 
         {/* ── CONNECTED OPERATIONS WORKFLOW ── */}
-        <section className="py-16 sm:py-20 bg-white/60 border-y border-[#1C2D29]/8">
+        <section className="py-16 sm:py-20 landing-section-flow border-y border-[#1C2D29]/8 dark:border-[rgba(137,184,153,0.12)] relative overflow-hidden">
+          {/* Soft hospitality ambient glow */}
+          <div
+            className="pointer-events-none absolute inset-0 -z-10"
+            style={{
+              background:
+                'radial-gradient(ellipse 70% 45% at 50% 25%, rgba(66, 201, 149, 0.065) 0%, transparent 70%)',
+            }}
+            aria-hidden="true"
+          />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-bold uppercase tracking-widest text-brand-forest/70 block mb-2">

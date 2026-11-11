@@ -96,13 +96,11 @@ export default function ReservationsShowcase() {
       <div
         className="rounded-[28px] sm:rounded-[34px] overflow-hidden text-left relative p-5 sm:p-7 lg:p-8"
         style={{
-          background:
-            'linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(255, 253, 249, 0.54) 50%, rgba(255, 255, 255, 0.68) 100%)',
+          background: 'var(--dashboard-glass-bg)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.90)',
-          boxShadow:
-            '0 28px 70px -16px rgba(15, 36, 33, 0.12), 0 8px 24px -6px rgba(15, 36, 33, 0.04), 0 0 0 1px rgba(31, 61, 58, 0.06), inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 2px 0 rgba(15, 36, 33, 0.04)',
+          border: '1px solid var(--dashboard-glass-border)',
+          boxShadow: 'var(--dashboard-glass-shadow)',
         }}
       >
         <div

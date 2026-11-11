@@ -24,6 +24,7 @@ import {
 import { canSwitchAccounts } from '../../lib/auth/switchAccountHelpers';
 import { StaffRole } from '../../lib/types/database.types';
 import { signOut } from '../../app/(auth)/login/actions';
+import ThemeToggle from './ThemeToggle';
 
 const ROLE_META: Record<
   StaffRole,
@@ -306,6 +307,15 @@ export default function AccountSwitcher({
                 Account switching is not available for your role.
               </div>
             )}
+            {/* THEME SELECTOR */}
+            <div className="pt-2.5 border-t border-border-subtle">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted px-2 mb-2">
+                Interface Theme
+              </p>
+              <div className="px-1 flex justify-center">
+                <ThemeToggle variant="segmented" className="w-full justify-between" />
+              </div>
+            </div>
           </div>
 
           {/* Footer Actions */}
